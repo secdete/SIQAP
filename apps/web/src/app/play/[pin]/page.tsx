@@ -4,6 +4,7 @@ import { useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import { getSocket } from "@/lib/socket";
 import { usePlayerStore } from "@/lib/store";
+import { sounds } from "@/lib/sound";
 import {
   CheckCircle2,
   XCircle,
@@ -104,6 +105,11 @@ export default function PlayPage({ params }: { params: Promise<{ pin: string }> 
 
     socket.on("player:result", (data) => {
       setResult(data);
+      if (data.isCorrect) {
+        sounds.correct();
+      } else {
+        sounds.wrong();
+      }
     });
 
     socket.on("player:final", (data) => {
@@ -128,6 +134,7 @@ export default function PlayPage({ params }: { params: Promise<{ pin: string }> 
   const handleSelectOption = (index: number) => {
     if (hasAnswered || phase !== "QUESTION_ACTIVE" || !question) return;
 
+    sounds.tap();
     setSelectedOption(index);
     const socket = getSocket();
     socket.emit("player:answer", {

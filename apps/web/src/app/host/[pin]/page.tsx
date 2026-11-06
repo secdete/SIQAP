@@ -6,6 +6,7 @@ import { QRCodeSVG } from "qrcode.react";
 import confetti from "canvas-confetti";
 import { getSocket } from "@/lib/socket";
 import { useHostStore } from "@/lib/store";
+import { sounds } from "@/lib/sound";
 import {
   Play,
   SkipForward,
@@ -118,11 +119,15 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
 
     socket.on("question:tick", (data) => {
       setTick(data.remainingMs, data.answeredCount);
+      if (data.remainingMs <= 5000 && data.remainingMs > 0) {
+        sounds.tick();
+      }
     });
 
     socket.on("question:reveal", (data) => {
       setReveal(data);
       setPhase("QUESTION_REVEAL");
+      sounds.correct();
     });
 
     socket.on("leaderboard:update", (data) => {
