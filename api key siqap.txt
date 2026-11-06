@@ -1,0 +1,29 @@
+1.ini rencananya mau buat pameran websitenya tapi kalo emang berjalan baik nantinya akan di publik seperti kahoot tapi yag pastinya ada fitur unggulan dibanding kahoot
+2.untuk sementara mungkin gratis dulu, anti bisa di v2
+3.100-300 mungkin untuk sesi gratis
+4.mungkin bisa dibuatkan saja untuk login lewat google dan ada anonim juga
+5.hosting kemungkinan di jagoanhosting atau niaga tapi saya belum tau bagus dimanaa rencananya kalo hosting pun 1 bulan atau 3 bulan dulu
+6.mode generator mungkin bagus diawal agar lebih mempercepat pembuatan soal
+
+Note: tolong ini benar benar konsepnya mirip dengan kahoot mungkin 100% bisa sama jadi cari fitur unggulan untuk bersaing
+
+1.awal desember atau akhir bulan ini
+2.Siqap
+3.vps mungkin bisa dari yang anda sarankan tadi yaitu niaga atau dari saya jagoanhosting dan untuk api ai sendiri saya belum berlangganan dengan apapun
+4.pameran dilakukan offline, tapi harus ada backup untuk online
+
+Note: Ada saran nama produk?
+
+1.tetapp di sikap aja karenaa ini tugass kuliah juga jadi sistem informasi akademik pelajar - SIQAP
+2.25 november
+3.kalo ada free tier lebih bagus tapi apa saran dari lu untukk free tier
+4.hp sendiri
+
+1.sepertinya ada kalo gaada kita bawa sendiri
+2.taruhlah 250
+3.topik pengetahuan umum 
+ 
+gua bingung diantara kedua itu yang mana sedangkan lu tau gua ada usaha jasa website sekura kan
+
+
+api key:sk-o1p7ynS2TUdYZpwUPymPShDB6ndSOwXYtRRlGRAbpOT4gycA

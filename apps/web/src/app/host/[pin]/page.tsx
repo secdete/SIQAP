@@ -7,6 +7,7 @@ import confetti from "canvas-confetti";
 import { getSocket } from "@/lib/socket";
 import { useHostStore } from "@/lib/store";
 import { sounds } from "@/lib/sound";
+import { exportSessionToExcel } from "@/lib/export-excel";
 import {
   Play,
   SkipForward,
@@ -19,6 +20,7 @@ import {
   Medal,
   Sparkles,
   Volume2,
+  FileSpreadsheet,
 } from "lucide-react";
 
 const OPTION_THEMES = [
@@ -560,10 +562,25 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
         )}
       </div>
 
-      <div className="pb-6">
+      <div className="pb-6 flex items-center justify-center space-x-4">
+        <button
+          onClick={() =>
+            exportSessionToExcel({
+              pin,
+              quizTitle: question?.text ? `Sesi Kuis SIQAP PIN ${pin}` : "Kuis SIQAP",
+              podium,
+              totalPlayers: players.length || podium.length,
+            })
+          }
+          className="px-6 h-12 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition flex items-center justify-center space-x-2 shadow-lg shadow-emerald-600/30 cursor-pointer"
+        >
+          <FileSpreadsheet className="w-5 h-5" />
+          <span>Export Excel (.xlsx)</span>
+        </button>
+
         <button
           onClick={() => router.push("/quizzes")}
-          className="px-8 h-12 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl transition flex items-center justify-center space-x-2 mx-auto"
+          className="px-6 h-12 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl transition flex items-center justify-center space-x-2 cursor-pointer"
         >
           <RotateCcw className="w-4 h-4" />
           <span>Kembali ke Daftar Kuis</span>
