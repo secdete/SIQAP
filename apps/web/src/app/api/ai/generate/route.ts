@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { GenerateQuizInput, GenerateQuizOutput } from "@siqap/shared";
 
 const AI_BASE = process.env.AI_API_BASE || process.env.OPENAI_API_BASE || "http://localhost:20128/v1";
-const AI_KEY = process.env.AI_API_KEY || process.env.OPENAI_API_KEY || "sk-b9b9c5b43d6c3e8-ha4tfh-107b5040";
+const AI_KEY = process.env.AI_API_KEY || "sk-b9b9cf5b43d6c3e8-ha4tfh-107b5040";
 const MODEL_NAME = process.env.AI_MODEL || "gemini/gemini-3.8-flash";
 
 export async function POST(req: NextRequest) {
@@ -71,6 +71,7 @@ Aturan penting:
               { role: "user", content: userPrompt },
             ],
             temperature: 0.7,
+            stream: false,
             response_format: { type: "json_object" },
           }),
         });
