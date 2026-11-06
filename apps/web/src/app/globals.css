@@ -1,0 +1,48 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #0f172a;
+  --foreground: #f8fafc;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Custom Shape Icon helpers */
+.shape-triangle {
+  width: 0;
+  height: 0;
+  border-left: 14px solid transparent;
+  border-right: 14px solid transparent;
+  border-bottom: 24px solid white;
+}
+
+.shape-diamond {
+  width: 20px;
+  height: 20px;
+  background-color: white;
+  transform: rotate(45deg);
+}
+
+.shape-circle {
+  width: 22px;
+  height: 22px;
+  background-color: white;
+  border-radius: 50%;
+}
+
+.shape-square {
+  width: 20px;
+  height: 20px;
+  background-color: white;
+  border-radius: 3px;
+}
