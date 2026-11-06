@@ -1,0 +1,14 @@
+export const PIN_LENGTH = 6;
+export const NICKNAME_MIN = 2;
+export const NICKNAME_MAX = 20;
+export const MAX_PLAYERS_HARD_CAP = 300;      // angka final ditentukan setelah load test
+export const QUESTION_TIME_MIN_SEC = 5;
+export const QUESTION_TIME_MAX_SEC = 120;
+export const QUESTION_TIME_DEFAULT_SEC = 20;
+export const MAX_POINTS_DEFAULT = 1000;
+export const STREAK_BONUS_STEP = 100;
+export const STREAK_BONUS_CAP = 500;
+export const LEADERBOARD_TOP_N = 5;
+export const HOST_DISCONNECT_PAUSE_MS = 30_000;   // host putus > 30 dtk: game auto-pause
+export const HOST_DISCONNECT_END_MS = 600_000;    // host putus > 10 menit: game diakhiri
+export const REDIS_TTL_SEC = 6 * 60 * 60;         // state sesi aktif hidup 6 jam

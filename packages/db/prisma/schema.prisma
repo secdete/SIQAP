@@ -1,0 +1,181 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// -------------------------------------------------------------
+// Auth.js (NextAuth) Models
+// -------------------------------------------------------------
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// -------------------------------------------------------------
+// Core Domain Models
+// -------------------------------------------------------------
+
+model User {
+  id            String        @id @default(cuid())
+  name          String?
+  email         String?       @unique
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  accounts      Account[]
+  sessions      Session[]
+  quizzes       Quiz[]
+  gameSessions  GameSession[]
+}
+
+enum QuizVisibility {
+  PUBLIC
+  PRIVATE
+}
+
+model Quiz {
+  id          String         @id @default(cuid())
+  ownerId     String
+  title       String
+  description String?
+  coverUrl    String?
+  visibility  QuizVisibility @default(PRIVATE)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  owner        User          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  questions    Question[]
+  gameSessions GameSession[]
+
+  @@index([ownerId])
+}
+
+enum QuestionType {
+  multiple_choice
+  true_false
+}
+
+enum PointsMode {
+  standard
+  double
+  none
+}
+
+model Question {
+  id             String       @id @default(cuid())
+  quizId         String
+  order          Int
+  type           QuestionType @default(multiple_choice)
+  text           String
+  imageUrl       String?
+  timeLimitSec   Int          @default(20)
+  pointsMode     PointsMode   @default(standard)
+  options        Json         // array of { text: string }
+  correctIndexes Json         // array of number
+  explanation    String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  quiz    Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  answers Answer[]
+
+  @@index([quizId, order])
+}
+
+enum SessionStatus {
+  LOBBY
+  ACTIVE
+  ENDED
+}
+
+model GameSession {
+  id        String        @id @default(cuid())
+  quizId    String
+  hostId    String?
+  pin       String
+  status    SessionStatus @default(LOBBY)
+  settings  Json?         // { maxPlayers, streakBonus, shuffleQuestions, ... }
+  startedAt DateTime?
+  endedAt   DateTime?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  quiz    Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  host    User?    @relation(fields: [hostId], references: [id], onDelete: SetNull)
+  players Player[]
+  answers Answer[]
+
+  @@index([pin])
+  @@index([hostId])
+}
+
+model Player {
+  id         String   @id @default(cuid())
+  sessionId  String
+  nickname   String
+  finalScore Int      @default(0)
+  finalRank  Int?
+  joinedAt   DateTime @default(now())
+
+  session GameSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  answers Answer[]
+
+  @@index([sessionId])
+}
+
+model Answer {
+  id             String   @id @default(cuid())
+  sessionId      String
+  playerId       String
+  questionIndex  Int
+  questionId     String?
+  optionIndexes  Json     // array of number
+  isCorrect      Boolean
+  responseTimeMs Int
+  pointsAwarded  Int
+  createdAt      DateTime @default(now())
+
+  session  GameSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  player   Player      @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  question Question?   @relation(fields: [questionId], references: [id], onDelete: SetNull)
+
+  @@index([sessionId, questionId])
+  @@index([sessionId, playerId])
+}

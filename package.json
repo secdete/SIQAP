@@ -1,0 +1,20 @@
+{
+  "name": "siqap-monorepo",
+  "private": true,
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev --parallel",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "check-types": "turbo run check-types",
+    "db:generate": "pnpm --filter @siqap/db db:generate",
+    "db:push": "pnpm --filter @siqap/db db:push",
+    "db:migrate": "pnpm --filter @siqap/db db:migrate",
+    "db:studio": "pnpm --filter @siqap/db db:studio"
+  },
+  "devDependencies": {
+    "turbo": "^2.4.4",
+    "typescript": "^5.7.3"
+  },
+  "packageManager": "pnpm@9.12.0"
+}
