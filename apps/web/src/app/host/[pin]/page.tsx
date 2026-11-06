@@ -7,7 +7,6 @@ import confetti from "canvas-confetti";
 import { getSocket } from "@/lib/socket";
 import { useHostStore } from "@/lib/store";
 import { sounds } from "@/lib/sound";
-import { exportSessionToExcel } from "@/lib/export-excel";
 import {
   Play,
   SkipForward,
@@ -522,9 +521,11 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
             <div className="text-sm font-extrabold text-slate-400 mb-2">
               {podium[1].score} pts
             </div>
-            <div className="w-full h-44 bg-gradient-to-t from-slate-800 to-slate-700 rounded-t-3xl flex flex-col items-center justify-center text-4xl font-black text-white shadow-xl">
-              <span className="text-slate-400 text-xs uppercase font-extrabold mb-1">Juara 2</span>
-              🥈
+            <div className="w-full h-44 bg-gradient-to-t from-slate-800 to-slate-700 rounded-t-3xl flex flex-col items-center justify-center text-white shadow-xl">
+              <span className="text-slate-400 text-xs uppercase font-extrabold mb-2">Juara 2</span>
+              <div className="w-12 h-12 rounded-full bg-slate-300 text-slate-900 flex items-center justify-center font-black text-xl shadow-md">
+                2
+              </div>
             </div>
           </div>
         )}
@@ -538,9 +539,11 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
             <div className="text-base font-black text-amber-400 mb-2">
               {podium[0].score} pts
             </div>
-            <div className="w-full h-64 bg-gradient-to-t from-amber-600 via-amber-500 to-amber-400 rounded-t-3xl flex flex-col items-center justify-center text-5xl font-black text-black shadow-2xl shadow-amber-500/30">
-              <span className="text-amber-950 text-xs uppercase font-black tracking-widest mb-1">Juara 1</span>
-              🥇
+            <div className="w-full h-64 bg-gradient-to-t from-amber-600 via-amber-500 to-amber-400 rounded-t-3xl flex flex-col items-center justify-center text-black shadow-2xl shadow-amber-500/30">
+              <span className="text-amber-950 text-xs uppercase font-black tracking-widest mb-2">Juara 1</span>
+              <div className="w-16 h-16 rounded-full bg-white text-amber-600 flex items-center justify-center font-black text-3xl shadow-lg border-2 border-amber-300">
+                1
+              </div>
             </div>
           </div>
         )}
@@ -554,9 +557,11 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
             <div className="text-sm font-extrabold text-slate-400 mb-2">
               {podium[2].score} pts
             </div>
-            <div className="w-full h-36 bg-gradient-to-t from-amber-950 to-amber-900 rounded-t-3xl flex flex-col items-center justify-center text-4xl font-black text-amber-200 shadow-xl">
-              <span className="text-amber-300 text-xs uppercase font-extrabold mb-1">Juara 3</span>
-              🥉
+            <div className="w-full h-36 bg-gradient-to-t from-amber-950 to-amber-900 rounded-t-3xl flex flex-col items-center justify-center text-amber-200 shadow-xl">
+              <span className="text-amber-300 text-xs uppercase font-extrabold mb-2">Juara 3</span>
+              <div className="w-10 h-10 rounded-full bg-amber-700 text-amber-100 flex items-center justify-center font-black text-lg shadow-md border border-amber-500/30">
+                3
+              </div>
             </div>
           </div>
         )}
@@ -564,14 +569,15 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
 
       <div className="pb-6 flex items-center justify-center space-x-4">
         <button
-          onClick={() =>
+          onClick={async () => {
+            const { exportSessionToExcel } = await import("@/lib/export-excel");
             exportSessionToExcel({
               pin,
               quizTitle: question?.text ? `Sesi Kuis SIQAP PIN ${pin}` : "Kuis SIQAP",
               podium,
               totalPlayers: players.length || podium.length,
-            })
-          }
+            });
+          }}
           className="px-6 h-12 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition flex items-center justify-center space-x-2 shadow-lg shadow-emerald-600/30 cursor-pointer"
         >
           <FileSpreadsheet className="w-5 h-5" />

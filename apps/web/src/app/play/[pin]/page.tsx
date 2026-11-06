@@ -17,27 +17,23 @@ import {
 
 const OPTION_STYLES = [
   {
-    bg: "bg-red-600 hover:bg-red-500 active:bg-red-700",
-    border: "border-red-400",
-    icon: <div className="shape-triangle mb-2" />,
+    btnClass: "btn-game-red",
+    icon: <div className="shape-triangle mb-3" />,
     label: "Segitiga",
   },
   {
-    bg: "bg-blue-600 hover:bg-blue-500 active:bg-blue-700",
-    border: "border-blue-400",
-    icon: <div className="shape-diamond mb-2" />,
+    btnClass: "btn-game-blue",
+    icon: <div className="shape-diamond mb-3" />,
     label: "Belah Ketupat",
   },
   {
-    bg: "bg-amber-500 hover:bg-amber-400 active:bg-amber-600",
-    border: "border-amber-300",
-    icon: <div className="shape-circle mb-2" />,
+    btnClass: "btn-game-yellow",
+    icon: <div className="shape-circle mb-3" />,
     label: "Lingkaran",
   },
   {
-    bg: "bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700",
-    border: "border-emerald-400",
-    icon: <div className="shape-square mb-2" />,
+    btnClass: "btn-game-green",
+    icon: <div className="shape-square mb-3" />,
     label: "Persegi",
   },
 ];
@@ -214,15 +210,15 @@ export default function PlayPage({ params }: { params: Promise<{ pin: string }> 
             </p>
           </div>
         ) : (
-          <div className="flex-1 grid grid-cols-2 gap-3 h-full">
+          <div className="flex-1 grid grid-cols-2 gap-4 h-full py-2">
             {OPTION_STYLES.slice(0, optionsCount).map((opt, idx) => (
               <button
                 key={idx}
                 onClick={() => handleSelectOption(idx)}
-                className={`flex flex-col items-center justify-center rounded-2xl p-4 shadow-lg transition transform active:scale-95 cursor-pointer ${opt.bg}`}
+                className={`flex flex-col items-center justify-center rounded-3xl p-6 cursor-pointer touch-manipulation select-none ${opt.btnClass}`}
               >
                 {opt.icon}
-                <span className="text-white font-extrabold text-sm sm:text-base drop-shadow">
+                <span className="text-white font-black text-lg tracking-wide drop-shadow-md">
                   {opt.label}
                 </span>
               </button>
