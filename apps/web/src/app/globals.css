@@ -1,13 +1,27 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --background: #090d16;
-  --foreground: #f8fafc;
-  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --background: #FBF2EB;
+  --foreground: #560035;
+  --font-sans: 'Montserrat', system-ui, -apple-system, sans-serif;
+
+  --siqap-maroon: #7B034D;
+  --siqap-orange: #FC8235;
+  --siqap-peach: #FFA566;
+  --siqap-dark: #560035;
+  --siqap-sand: #FBF2EB;
+  --siqap-cream: #FFF7F2;
+  --siqap-border: #F3E1D5;
+  --siqap-muted: #7E5B6E;
+
+  --quiz-red: #C93C42;
+  --quiz-yellow: #F5B031;
+  --quiz-green: #2DB87A;
+  --quiz-purple: #6F52E0;
 }
 
 body {
@@ -18,149 +32,133 @@ body {
   margin: 0;
   padding: 0;
   -webkit-font-smoothing: antialiased;
-  background-image: 
-    radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
-    radial-gradient(circle at 80% 80%, rgba(6, 182, 212, 0.1) 0%, transparent 40%);
-  background-attachment: fixed;
 }
 
-/* Tactile 3D Buttons for Game Feel (Kahoot-inspired game arcade feel, but original SIQAP branding) */
+/* Tactile 3D Buttons for Multiple Choice (Kahoot Arcade Feel, SIQAP Design) */
 .btn-game-red {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-  border-bottom: 5px solid #991b1b;
-  box-shadow: 0 10px 25px -5px rgba(239, 68, 68, 0.4);
+  background: linear-gradient(135deg, #d32f2f 0%, #C93C42 100%);
+  border-bottom: 5px solid #8e1515;
+  box-shadow: 0 10px 20px -5px rgba(201, 60, 66, 0.4);
   transition: all 0.1s ease;
+  color: #ffffff;
 }
 .btn-game-red:active {
   transform: translateY(4px);
   border-bottom-width: 1px;
-  box-shadow: 0 4px 10px -2px rgba(239, 68, 68, 0.3);
-}
-
-.btn-game-blue {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  border-bottom: 5px solid #1e40af;
-  box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.4);
-  transition: all 0.1s ease;
-}
-.btn-game-blue:active {
-  transform: translateY(4px);
-  border-bottom-width: 1px;
-  box-shadow: 0 4px 10px -2px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 4px 10px -2px rgba(201, 60, 66, 0.3);
 }
 
 .btn-game-yellow {
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-  border-bottom: 5px solid #92400e;
-  box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.4);
+  background: linear-gradient(135deg, #f59e0b 0%, #F5B031 100%);
+  border-bottom: 5px solid #b45309;
+  box-shadow: 0 10px 20px -5px rgba(245, 176, 49, 0.4);
   transition: all 0.1s ease;
+  color: #560035;
 }
 .btn-game-yellow:active {
   transform: translateY(4px);
   border-bottom-width: 1px;
-  box-shadow: 0 4px 10px -2px rgba(245, 158, 11, 0.3);
+  box-shadow: 0 4px 10px -2px rgba(245, 176, 49, 0.3);
 }
 
 .btn-game-green {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  border-bottom: 5px solid #065f46;
-  box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.4);
+  background: linear-gradient(135deg, #10b981 0%, #2DB87A 100%);
+  border-bottom: 5px solid #047857;
+  box-shadow: 0 10px 20px -5px rgba(45, 184, 122, 0.4);
   transition: all 0.1s ease;
+  color: #560035;
 }
 .btn-game-green:active {
   transform: translateY(4px);
   border-bottom-width: 1px;
-  box-shadow: 0 4px 10px -2px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 4px 10px -2px rgba(45, 184, 122, 0.3);
+}
+
+.btn-game-purple {
+  background: linear-gradient(135deg, #7c3aed 0%, #6F52E0 100%);
+  border-bottom: 5px solid #4c1d95;
+  box-shadow: 0 10px 20px -5px rgba(111, 82, 224, 0.4);
+  transition: all 0.1s ease;
+  color: #ffffff;
+}
+.btn-game-purple:active {
+  transform: translateY(4px);
+  border-bottom-width: 1px;
+  box-shadow: 0 4px 10px -2px rgba(111, 82, 224, 0.3);
 }
 
 /* Accessibility Geometry Symbols */
 .shape-triangle {
   width: 0;
   height: 0;
-  border-left: 18px solid transparent;
-  border-right: 18px solid transparent;
-  border-bottom: 30px solid white;
+  border-left: 16px solid transparent;
+  border-right: 16px solid transparent;
+  border-bottom: 28px solid white;
   filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
 }
 
 .shape-diamond {
-  width: 26px;
-  height: 26px;
-  background-color: white;
+  width: 24px;
+  height: 24px;
+  background-color: currentColor;
   transform: rotate(45deg);
-  border-radius: 4px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  border-radius: 3px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
 }
 
 .shape-circle {
-  width: 28px;
-  height: 28px;
-  background-color: white;
+  width: 26px;
+  height: 26px;
+  background-color: currentColor;
   border-radius: 50%;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
 }
 
 .shape-square {
-  width: 26px;
-  height: 26px;
+  width: 24px;
+  height: 24px;
   background-color: white;
   border-radius: 4px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
-/* Animated Grid Background */
-.bg-grid-pattern {
-  background-size: 40px 40px;
-  background-image: 
-    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+/* Pattern Background inspired by SIQAP poster dot pattern */
+.bg-poster-dots {
+  background-image: radial-gradient(#7B034D 1.5px, transparent 1.5px);
+  background-size: 24px 24px;
+  opacity: 0.12;
+}
+
+.bg-poster-dots-orange {
+  background-image: radial-gradient(#FC8235 2px, transparent 2px);
+  background-size: 24px 24px;
+  opacity: 0.2;
 }
 
 /* Fade-in animation for phase transitions */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(12px); }
+  from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 .animate-fade-in {
-  animation: fadeIn 0.35s ease-out both;
-}
-
-/* Countdown pulse for timer ring */
-@keyframes timerPulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.6); }
-  50%       { box-shadow: 0 0 0 10px rgba(99, 102, 241, 0); }
-}
-.timer-ring-pulse {
-  animation: timerPulse 1s ease-in-out infinite;
+  animation: fadeIn 0.3s ease-out both;
 }
 
 /* Countdown number pop for QUESTION_INTRO */
 @keyframes countdownPop {
-  0%   { opacity: 0; transform: scale(1.8); }
-  40%  { opacity: 1; transform: scale(0.9); }
-  70%  { transform: scale(1.05); }
+  0%   { opacity: 0; transform: scale(1.6); }
+  50%  { opacity: 1; transform: scale(0.95); }
   100% { opacity: 1; transform: scale(1); }
 }
 .animate-countdown-pop {
-  animation: countdownPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation: countdownPop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
 /* Slide-up stagger for leaderboard entries */
 @keyframes slideUpIn {
-  from { opacity: 0; transform: translateY(24px); }
+  from { opacity: 0; transform: translateY(20px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 .animate-slide-up {
-  animation: slideUpIn 0.4s ease-out both;
-}
-
-/* Result reveal bounce */
-@keyframes resultBounce {
-  0%   { opacity: 0; transform: scale(0.5); }
-  60%  { transform: scale(1.1); }
-  80%  { transform: scale(0.95); }
-  100% { opacity: 1; transform: scale(1); }
-}
-.animate-result-bounce {
-  animation: resultBounce 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation: slideUpIn 0.35s ease-out both;
 }

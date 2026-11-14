@@ -22,25 +22,34 @@ import {
   FileSpreadsheet,
 } from "lucide-react";
 
+// 4 Kahoot-style Answer Theme Options for Host Screen
 const OPTION_THEMES = [
   {
-    bg: "bg-red-600 border-red-500",
-    dimBg: "bg-red-950/40 border-red-900/40 opacity-40",
+    bg: "bg-[#C93C42] border-[#a82a2f]",
+    dimBg: "bg-[#C93C42]/20 border-[#C93C42]/40 opacity-40",
+    textColor: "text-white",
+    badge: "▲ A",
     icon: <div className="shape-triangle shrink-0 mr-3" />,
   },
   {
-    bg: "bg-blue-600 border-blue-500",
-    dimBg: "bg-blue-950/40 border-blue-900/40 opacity-40",
+    bg: "bg-[#F5B031] border-[#d9941a]",
+    dimBg: "bg-[#F5B031]/20 border-[#F5B031]/40 opacity-40",
+    textColor: "text-[#560035]",
+    badge: "◆ B",
     icon: <div className="shape-diamond shrink-0 mr-3" />,
   },
   {
-    bg: "bg-amber-500 border-amber-400",
-    dimBg: "bg-amber-950/40 border-amber-900/40 opacity-40",
+    bg: "bg-[#2DB87A] border-[#1f935f]",
+    dimBg: "bg-[#2DB87A]/20 border-[#2DB87A]/40 opacity-40",
+    textColor: "text-[#560035]",
+    badge: "● C",
     icon: <div className="shape-circle shrink-0 mr-3" />,
   },
   {
-    bg: "bg-emerald-600 border-emerald-500",
-    dimBg: "bg-emerald-950/40 border-emerald-900/40 opacity-40",
+    bg: "bg-[#6F52E0] border-[#5339b8]",
+    dimBg: "bg-[#6F52E0]/20 border-[#6F52E0]/40 opacity-40",
+    textColor: "text-white",
+    badge: "■ D",
     icon: <div className="shape-square shrink-0 mr-3" />,
   },
 ];
@@ -73,73 +82,69 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
     setIsPaused,
   } = useHostStore();
 
+  const [soundEnabled, setSoundEnabled] = useState(true);
   const [joinUrl, setJoinUrl] = useState("");
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       setJoinUrl(`${window.location.origin}/join?pin=${pin}`);
     }
+  }, [pin]);
 
+  useEffect(() => {
     const socket = getSocket();
     if (!socket.connected) {
       socket.connect();
     }
 
-    // Try to restore hostToken from localStorage if not in store
-    if (!hostToken && typeof window !== "undefined") {
-      const saved = localStorage.getItem(`siqap_${pin}_host`);
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved);
-          socket.emit("host:rejoin", { pin, hostToken: parsed.hostToken }, (ack) => {
-            if (ack.ok) {
-              setHostInfo(pin, parsed.hostToken);
-            }
-          });
-        } catch {}
-      }
+    const savedToken = hostToken || localStorage.getItem(`siqap_host_${pin}`);
+    if (savedToken && !hostToken) {
+      setHostInfo(pin, savedToken);
     }
 
-    // Register event listeners
-    socket.on("lobby:update", (data) => {
-      setLobby(data.players, data.count);
+    socket.emit("host:rejoin", { pin, hostToken: savedToken || "" }, (res) => {
+      if (!res.ok) {
+        console.warn("Host reconnect failed:", res);
+      }
+    });
+
+    socket.on("lobby:update", ({ players: newPlayers, count }) => {
+      setLobby(newPlayers, count);
+      if (soundEnabled) sounds.join();
     });
 
     socket.on("game:phase", (data) => {
       setPhase(data.phase);
-      setIsPaused(data.paused);
-      if (data.phase === "PODIUM") {
-        confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
-      }
     });
 
-    socket.on("question:show", (data) => {
-      setQuestion(data);
+    socket.on("question:show", (payload) => {
       setPhase("QUESTION_ACTIVE");
+      setQuestion(payload);
     });
 
-    socket.on("question:tick", (data) => {
-      setTick(data.remainingMs, data.answeredCount);
-      if (data.remainingMs <= 5000 && data.remainingMs > 0) {
-        sounds.tick();
-      }
+    socket.on("question:tick", ({ remainingMs: ms, answeredCount: answered }) => {
+      setTick(ms, answered);
     });
 
-    socket.on("question:reveal", (data) => {
-      setReveal(data);
+    socket.on("question:reveal", (payload) => {
       setPhase("QUESTION_REVEAL");
-      sounds.correct();
+      setReveal(payload);
+      if (soundEnabled) sounds.reveal();
     });
 
-    socket.on("leaderboard:update", (data) => {
-      setLeaderboard(data.top);
+    socket.on("leaderboard:update", (payload) => {
       setPhase("LEADERBOARD");
+      setLeaderboard(payload.top);
+      if (soundEnabled) sounds.leaderboard();
     });
 
-    socket.on("game:end", (data) => {
-      setPodium(data.podium);
+    socket.on("game:end", (payload) => {
       setPhase("PODIUM");
-      confetti({ particleCount: 150, spread: 90, origin: { y: 0.6 } });
+      setPodium(payload.podium);
+      if (soundEnabled) {
+        sounds.podium();
+        confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 } });
+      }
     });
 
     return () => {
@@ -151,118 +156,131 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
       socket.off("leaderboard:update");
       socket.off("game:end");
     };
-  }, [pin, hostToken, setHostInfo, setIsPaused, setLeaderboard, setLobby, setPhase, setPodium, setQuestion, setReveal, setTick]);
+  }, [pin, hostToken, players, soundEnabled]);
 
-  // Host Action Handlers
   const handleStartGame = () => {
     const socket = getSocket();
-    socket.emit("host:start", { pin }, (ack) => {
-      if (!ack.ok) alert(`Gagal memulai: ${ack.error}`);
+    socket.emit("host:start", { pin }, (res) => {
+      if (!res.ok) alert(res.message || "Gagal memulai permainan");
     });
   };
 
   const handleNextStep = () => {
     const socket = getSocket();
-    socket.emit("host:next", { pin }, (ack) => {
-      if (!ack.ok) alert(`Gagal lanjut: ${ack.error}`);
+    socket.emit("host:next", { pin }, (res) => {
+      if (!res.ok) alert(res.message || "Gagal melanjutkan");
     });
   };
 
   const handleSkipQuestion = () => {
     const socket = getSocket();
-    socket.emit("host:skip", { pin }, (ack) => {
-      if (!ack.ok) alert(`Gagal skip: ${ack.error}`);
+    socket.emit("host:skip", { pin }, (res) => {
+      if (!res.ok) alert(res.message || "Gagal melewati pertanyaan");
     });
   };
 
   const handleTogglePause = () => {
     const socket = getSocket();
-    const eventName = isPaused ? "host:resume" : "host:pause";
-    socket.emit(eventName, { pin }, (ack) => {
-      if (!ack.ok) alert(`Gagal pause/resume: ${ack.error}`);
+    const action = isPaused ? "host:resume" : "host:pause";
+    socket.emit(action, { pin }, (res) => {
+      if (res.ok) setIsPaused(!isPaused);
+      else alert(res.message || "Gagal mengubah status jeda");
     });
   };
 
   const handleKickPlayer = (playerId: string) => {
     const socket = getSocket();
-    socket.emit("host:kick", { pin, playerId }, (ack) => {
-      if (!ack.ok) alert(`Gagal kick pemain: ${ack.error}`);
+    socket.emit("host:kick", { pin, playerId }, (res) => {
+      if (!res.ok) console.warn("Failed to kick player:", res);
     });
   };
 
   // ---------------------------------------------------------------------------
-  // Phase 1: LOBBY
+  // Phase 1: LOBBY (FigCraft Node 879 Style)
   // ---------------------------------------------------------------------------
   if (phase === "LOBBY") {
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col p-6 max-w-7xl mx-auto">
-        {/* Header Bar */}
-        <div className="flex items-center justify-between pb-6 border-b border-slate-800">
+      <div className="min-h-screen bg-siqap-maroon text-white flex flex-col p-6 sm:p-10 justify-between">
+        {/* Top Header Bar */}
+        <div className="flex items-center justify-between pb-4 border-b-2 border-siqap-orange/50">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center font-black text-xl text-white">
+            <div className="w-10 h-10 rounded-xl bg-siqap-orange flex items-center justify-center font-black text-xl text-white">
               S
             </div>
-            <span className="text-2xl font-black text-white">SIQAP Host Live</span>
+            <div>
+              <span className="text-xl font-black tracking-tight text-white">
+                SIQAP<span className="text-siqap-orange">.</span>
+              </span>
+              <span className="text-[10px] text-siqap-peach block font-bold uppercase tracking-wider">
+                Layar Host Proyektor
+              </span>
+            </div>
           </div>
 
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={() => setSoundEnabled(!soundEnabled)}
+              className={`p-2.5 rounded-xl border-2 transition ${
+                soundEnabled ? "bg-siqap-orange border-siqap-orange text-white" : "bg-siqap-dark border-white/20 text-white/50"
+              }`}
+            >
+              <Volume2 className="w-5 h-5" />
+            </button>
+
             <button
               onClick={handleStartGame}
               disabled={players.length === 0}
-              className="px-8 h-12 bg-gradient-to-r from-indigo-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 disabled:opacity-40 text-white font-extrabold rounded-xl flex items-center space-x-2 shadow-lg shadow-indigo-600/30 transition cursor-pointer disabled:cursor-not-allowed text-base"
+              className="px-8 py-3 bg-siqap-orange hover:bg-orange-600 disabled:opacity-40 text-white font-black rounded-2xl flex items-center space-x-2 shadow-xl shadow-orange-500/30 transition text-base cursor-pointer"
             >
-              <Play className="w-5 h-5 fill-white" />
-              <span>Mulai Kuis ({players.length} Pemain)</span>
+              <Play className="w-5 h-5 fill-current" />
+              <span>Mulai Kuis ({players.length})</span>
             </button>
           </div>
         </div>
 
-        {/* Big PIN & QR Banner */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6 bg-slate-900 border-2 border-slate-800 rounded-3xl p-8 shadow-2xl">
-          <div className="md:col-span-2 flex flex-col justify-center text-left">
-            <span className="text-sm font-bold text-indigo-400 uppercase tracking-widest mb-1">
-              Buka link berikut di HP atau scan QR:
-            </span>
-            <div className="text-xl sm:text-2xl font-semibold text-slate-300">
-              {joinUrl.replace(/^https?:\/\//, "")}
+        {/* PIN & QR Card (FigCraft Node 886 Style: Warm Cream with Thick Orange Border) */}
+        <div className="my-8 max-w-4xl mx-auto w-full bg-siqap-cream border-4 border-siqap-orange rounded-3xl p-8 sm:p-10 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-8">
+          <div className="text-center md:text-left flex-1">
+            <div className="inline-block px-4 py-1.5 rounded-full bg-siqap-maroon text-white font-bold text-xs uppercase tracking-wider mb-3">
+              Bergabung via Smartphone
             </div>
-
-            <div className="mt-6 flex flex-col sm:flex-row sm:items-baseline space-y-2 sm:space-y-0 sm:space-x-4">
-              <span className="text-sm uppercase font-extrabold text-slate-500 tracking-wider">
-                Game PIN:
-              </span>
-              <div className="text-6xl sm:text-7xl font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-white via-indigo-200 to-cyan-300">
-                {pin}
-              </div>
+            <h2 className="text-lg font-bold text-siqap-muted">Buka browser di HP dan masukkan PIN:</h2>
+            <div className="text-6xl sm:text-7xl font-black text-siqap-maroon tracking-widest my-3">
+              {pin}
             </div>
+            <p className="text-sm font-bold text-siqap-orange">
+              atau langsung scan kode QR di samping
+            </p>
           </div>
 
-          <div className="flex flex-col items-center justify-center bg-white p-4 rounded-2xl shadow-inner">
-            {joinUrl && <QRCodeSVG value={joinUrl} size={180} />}
-            <span className="mt-2 text-xs font-bold text-slate-900">Scan untuk Join Instan</span>
+          <div className="p-4 bg-white border-2 border-siqap-border rounded-2xl shadow-md flex flex-col items-center">
+            {joinUrl && <QRCodeSVG value={joinUrl} size={170} />}
+            <span className="mt-2 text-[11px] font-black text-siqap-maroon uppercase tracking-wider">
+              Scan untuk Join Instan
+            </span>
           </div>
         </div>
 
         {/* Players Grid */}
-        <div className="mt-8 flex-1">
+        <div className="max-w-4xl mx-auto w-full flex-1">
           <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center space-x-2 text-slate-300 font-bold">
-              <Users className="w-5 h-5 text-indigo-400" />
-              <span>Pemain Bergabung ({players.length})</span>
+            <div className="flex items-center space-x-2 text-white font-bold">
+              <Users className="w-5 h-5 text-siqap-orange" />
+              <span>Peserta Bergabung ({players.length})</span>
             </div>
           </div>
 
           {players.length === 0 ? (
-            <div className="h-48 border-2 border-dashed border-slate-800 rounded-2xl flex flex-col items-center justify-center text-slate-500 text-sm">
+            <div className="h-40 border-2 border-dashed border-white/20 rounded-2xl flex flex-col items-center justify-center text-siqap-peach text-sm font-semibold">
               <Users className="w-10 h-10 mb-2 opacity-50" />
-              <span>Menunggu peserta memasukkan PIN di HP...</span>
+              <span>Menunggu peserta memasukkan PIN di smartphone...</span>
             </div>
           ) : (
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-3 max-h-56 overflow-y-auto p-2">
               {players.map((p) => (
                 <div
                   key={p.playerId}
-                  className="group px-4 py-2 bg-slate-900 border border-slate-800 rounded-xl flex items-center space-x-2 font-bold text-white shadow-sm hover:border-red-500 transition"
+                  className="group px-4 py-2 bg-siqap-dark border-2 border-siqap-orange/50 rounded-xl flex items-center space-x-2 font-bold text-white shadow-md hover:border-red-500 transition"
                 >
                   <span>{p.nickname}</span>
                   <button
@@ -286,14 +304,14 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
   // ---------------------------------------------------------------------------
   if (phase === "QUESTION_INTRO") {
     return (
-      <div className="min-h-screen bg-indigo-950 flex flex-col items-center justify-center p-6 text-center animate-fade-in">
-        <div className="text-xl font-bold text-indigo-300 tracking-wider uppercase mb-4">
-          Soal #{Number(question?.questionIndex ?? 0) + 1}
+      <div className="min-h-screen bg-siqap-maroon flex flex-col items-center justify-center p-6 text-center animate-fade-in">
+        <div className="text-xl font-black text-siqap-orange tracking-widest uppercase mb-4">
+          SOAL #{Number(question?.questionIndex ?? 0) + 1}
         </div>
-        <h1 className="text-6xl sm:text-7xl font-black text-white max-w-4xl leading-tight">
+        <h1 className="text-5xl sm:text-7xl font-black text-white max-w-4xl leading-tight">
           {question?.text || "Pertanyaan Siap Dimulai..."}
         </h1>
-        <div className="mt-8 text-indigo-400 font-semibold animate-pulse">
+        <div className="mt-8 text-siqap-peach font-bold text-lg animate-pulse">
           Mulai dalam beberapa detik...
         </div>
       </div>
@@ -301,7 +319,7 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
   }
 
   // ---------------------------------------------------------------------------
-  // Phase 3 & 4: QUESTION_ACTIVE & QUESTION_REVEAL
+  // Phase 3 & 4: QUESTION_ACTIVE & QUESTION_REVEAL (FigCraft Node 831 Style)
   // ---------------------------------------------------------------------------
   if (phase === "QUESTION_ACTIVE" || phase === "QUESTION_REVEAL") {
     const isReveal = phase === "QUESTION_REVEAL";
@@ -310,15 +328,15 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
     const totalVotes = distribution.reduce((a, b) => a + b, 0);
 
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col p-6 max-w-7xl mx-auto">
+      <div className="min-h-screen bg-siqap-maroon flex flex-col p-6 sm:p-10 justify-between max-w-7xl mx-auto">
         {/* Top Control Bar */}
-        <div className="flex items-center justify-between pb-4 border-b border-slate-800 mb-6">
+        <div className="flex items-center justify-between pb-4 border-b-2 border-siqap-orange/40 mb-6">
           <div className="flex items-center space-x-3">
-            <span className="text-xs font-black uppercase tracking-wider bg-indigo-900 text-indigo-300 px-3 py-1.5 rounded-lg">
+            <span className="text-xs font-black uppercase tracking-wider bg-siqap-dark text-siqap-peach px-3 py-1.5 rounded-xl border border-siqap-orange/30">
               Soal {Number(question?.questionIndex ?? 0) + 1} / {question?.total ?? 1}
             </span>
             {question?.pointsMode === "double" && (
-              <span className="text-xs font-black uppercase tracking-wider bg-amber-500 text-black px-3 py-1.5 rounded-lg flex items-center space-x-1">
+              <span className="text-xs font-black uppercase tracking-wider bg-siqap-orange text-white px-3 py-1.5 rounded-xl flex items-center space-x-1 shadow-md">
                 <Sparkles className="w-3.5 h-3.5" />
                 <span>Poin Ganda (2x)</span>
               </span>
@@ -330,14 +348,14 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
               <>
                 <button
                   onClick={handleTogglePause}
-                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-bold text-sm flex items-center space-x-1.5 transition"
+                  className="px-4 py-2 bg-siqap-dark hover:bg-black/40 text-white rounded-xl font-bold text-sm flex items-center space-x-1.5 border border-white/20 transition"
                 >
                   <Pause className="w-4 h-4" />
                   <span>{isPaused ? "Lanjutkan" : "Jeda"}</span>
                 </button>
                 <button
                   onClick={handleSkipQuestion}
-                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-bold text-sm flex items-center space-x-1.5 transition"
+                  className="px-4 py-2 bg-siqap-dark hover:bg-black/40 text-white rounded-xl font-bold text-sm flex items-center space-x-1.5 border border-white/20 transition"
                 >
                   <SkipForward className="w-4 h-4" />
                   <span>Lewati</span>
@@ -346,7 +364,7 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
             ) : (
               <button
                 onClick={handleNextStep}
-                className="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white font-extrabold rounded-xl flex items-center space-x-2 shadow-lg shadow-indigo-600/30 transition text-sm"
+                className="px-6 py-2.5 bg-siqap-orange hover:bg-orange-600 text-white font-black rounded-xl flex items-center space-x-2 shadow-lg shadow-orange-500/30 transition text-sm cursor-pointer"
               >
                 <span>Lanjut</span>
                 <SkipForward className="w-4 h-4" />
@@ -355,40 +373,40 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
           </div>
         </div>
 
-        {/* Question Text Box */}
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 mb-6 shadow-xl flex items-center justify-between min-h-36">
-          <h2 className="text-2xl sm:text-4xl font-black text-white leading-snug max-w-4xl">
+        {/* Question Panel Box (FigCraft Node 847 Style: Warm Cream with Thick Orange Border) */}
+        <div className="bg-siqap-cream border-4 border-siqap-orange rounded-3xl p-8 mb-6 shadow-2xl flex items-center justify-between min-h-36">
+          <h2 className="text-2xl sm:text-4xl font-black text-siqap-maroon leading-snug max-w-4xl">
             {question?.text}
           </h2>
 
           {/* Countdown timer circle / Answered Counter */}
           {!isReveal ? (
-            <div className="flex items-center space-x-6 shrink-0 pl-6 border-l border-slate-800">
+            <div className="flex items-center space-x-6 shrink-0 pl-6 border-l-2 border-siqap-border">
               <div className="flex flex-col items-center">
-                <div className="w-16 h-16 rounded-full border-4 border-indigo-500 flex items-center justify-center font-black text-2xl text-white">
+                <div className="w-18 h-18 rounded-full border-4 border-siqap-orange bg-white flex items-center justify-center font-black text-2xl text-siqap-maroon shadow-md">
                   {Math.ceil(remainingMs / 1000)}
                 </div>
-                <span className="text-[10px] text-slate-400 uppercase tracking-widest mt-1">Detik</span>
+                <span className="text-[10px] text-siqap-muted uppercase tracking-widest font-bold mt-1">Detik</span>
               </div>
 
               <div className="flex flex-col items-center">
-                <div className="text-3xl font-black text-white">{answeredCount}</div>
-                <span className="text-[10px] text-slate-400 uppercase tracking-widest">Jawaban Masuk</span>
+                <div className="text-3xl font-black text-siqap-maroon">{answeredCount}</div>
+                <span className="text-[10px] text-siqap-muted uppercase tracking-widest font-bold">Jawaban</span>
               </div>
             </div>
           ) : (
             reveal?.explanation && (
-              <div className="shrink-0 max-w-sm pl-6 border-l border-slate-800 text-left">
-                <span className="text-xs font-bold text-indigo-400 uppercase tracking-wider block mb-1">
-                  Pembahasan:
+              <div className="shrink-0 max-w-sm pl-6 border-l-2 border-siqap-border text-left">
+                <span className="text-xs font-bold text-siqap-orange uppercase tracking-wider block mb-1">
+                  💡 Pembahasan Materi:
                 </span>
-                <p className="text-xs text-slate-300 leading-relaxed">{reveal.explanation}</p>
+                <p className="text-xs text-siqap-maroon font-semibold leading-relaxed">{reveal.explanation}</p>
               </div>
             )
           )}
         </div>
 
-        {/* Options Grid */}
+        {/* 4 Answer Choice Buttons Grid (Kahoot-Style Multiple Choice) */}
         <div className="grid grid-cols-2 gap-4 flex-1">
           {question?.options.map((optionText, idx) => {
             const isCorrect = correctIndexes.includes(idx);
@@ -399,21 +417,23 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
             return (
               <div
                 key={idx}
-                className={`relative rounded-2xl p-6 border-2 flex flex-col justify-between overflow-hidden shadow-lg transition ${
+                className={`relative rounded-2xl p-6 border-3 flex flex-col justify-between overflow-hidden shadow-xl transition ${
                   isReveal
                     ? isCorrect
-                      ? "bg-emerald-600 border-emerald-400 shadow-emerald-500/20"
-                      : theme.dimBg
-                    : `${theme.bg}`
+                      ? "bg-emerald-600 border-white shadow-emerald-500/40 text-white"
+                      : `${theme.dimBg} text-white/50`
+                    : `${theme.bg} ${theme.textColor}`
                 }`}
               >
-                <div className="flex items-center text-white z-10">
-                  {theme.icon}
-                  <span className="text-xl sm:text-2xl font-black">{optionText}</span>
+                <div className="flex items-center z-10">
+                  <span className="font-black text-base uppercase mr-3 bg-black/20 px-2.5 py-1 rounded-lg">
+                    {theme.badge}
+                  </span>
+                  <span className="text-xl sm:text-2xl font-black leading-tight">{optionText}</span>
                 </div>
 
                 {isReveal && (
-                  <div className="mt-4 flex items-center justify-between text-white z-10">
+                  <div className="mt-4 flex items-center justify-between z-10">
                     <div className="flex items-center space-x-1.5 text-sm font-bold">
                       {isCorrect ? (
                         <>
@@ -423,7 +443,7 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
                       ) : (
                         <>
                           <XCircle className="w-5 h-5 text-white/60" />
-                          <span className="text-white/80">Salah</span>
+                          <span>Salah</span>
                         </>
                       )}
                     </div>
@@ -434,7 +454,7 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
                 {/* Vote fill bar on reveal */}
                 {isReveal && (
                   <div
-                    className="absolute inset-y-0 left-0 bg-white/10 transition-all duration-700 pointer-events-none"
+                    className="absolute inset-y-0 left-0 bg-white/20 transition-all duration-700 pointer-events-none"
                     style={{ width: `${votePercent}%` }}
                   />
                 )}
@@ -447,49 +467,49 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
   }
 
   // ---------------------------------------------------------------------------
-  // Phase 5: LEADERBOARD
+  // Phase 5: LEADERBOARD (FigCraft Node 765 Style)
   // ---------------------------------------------------------------------------
   if (phase === "LEADERBOARD") {
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col p-6 max-w-4xl mx-auto">
-        <div className="flex items-center justify-between pb-6 border-b border-slate-800 mb-8">
+      <div className="min-h-screen bg-siqap-maroon text-white flex flex-col p-6 sm:p-10 max-w-4xl mx-auto justify-between">
+        <div className="flex items-center justify-between pb-6 border-b-2 border-siqap-orange mb-8">
           <div className="flex items-center space-x-3">
-            <Trophy className="w-8 h-8 text-amber-400" />
+            <Trophy className="w-8 h-8 text-siqap-orange" />
             <h1 className="text-3xl font-black text-white">Papan Peringkat Sementara</h1>
           </div>
 
           <button
             onClick={handleNextStep}
-            className="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 text-white font-extrabold rounded-xl flex items-center space-x-2 shadow-lg shadow-indigo-600/30 transition text-sm"
+            className="px-6 py-2.5 bg-siqap-orange hover:bg-orange-600 text-white font-black rounded-xl flex items-center space-x-2 shadow-lg shadow-orange-500/30 transition text-sm cursor-pointer"
           >
             <span>Soal Berikutnya</span>
             <SkipForward className="w-4 h-4" />
           </button>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-3 flex-1">
           {leaderboard.map((entry, idx) => (
             <div
               key={entry.playerId}
-              className="p-4 bg-slate-900 border border-slate-800 rounded-2xl flex items-center justify-between shadow-lg"
+              className="p-4 bg-siqap-dark border-2 border-siqap-orange/40 rounded-2xl flex items-center justify-between shadow-lg"
             >
               <div className="flex items-center space-x-4">
                 <div
                   className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-lg ${
                     idx === 0
-                      ? "bg-amber-400 text-black shadow-md shadow-amber-400/30"
+                      ? "bg-siqap-orange text-white shadow-md shadow-orange-500/40"
                       : idx === 1
-                      ? "bg-slate-300 text-black"
+                      ? "bg-siqap-beige text-siqap-maroon"
                       : idx === 2
-                      ? "bg-amber-700 text-white"
-                      : "bg-slate-800 text-slate-300"
+                      ? "bg-[#8C4E6E] text-white"
+                      : "bg-white/10 text-white"
                   }`}
                 >
                   #{entry.rank}
                 </div>
                 <span className="text-xl font-bold text-white">{entry.nickname}</span>
               </div>
-              <div className="text-2xl font-black text-indigo-400">{entry.score} pts</div>
+              <div className="text-2xl font-black text-siqap-orange">{entry.score} pts</div>
             </div>
           ))}
         </div>
@@ -498,32 +518,32 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
   }
 
   // ---------------------------------------------------------------------------
-  // Phase 6: PODIUM / ENDED
+  // Phase 6: PODIUM / ENDED (FigCraft Node 692 Style)
   // ---------------------------------------------------------------------------
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col p-6 max-w-5xl mx-auto text-center justify-between">
+    <div className="min-h-screen bg-siqap-maroon text-white flex flex-col p-6 sm:p-10 max-w-5xl mx-auto text-center justify-between">
       <div>
-        <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 font-bold text-sm mb-4">
-          <Medal className="w-4 h-4" />
-          <span>Hasil Akhir Kuis</span>
+        <div className="inline-flex items-center space-x-2 px-5 py-2 rounded-full bg-siqap-orange text-white font-black text-sm mb-4 shadow-md">
+          <Medal className="w-5 h-5" />
+          <span>HASIL AKHIR KUIS SIQAP</span>
         </div>
-        <h1 className="text-5xl font-black text-white">Podium Pemenang SIQAP</h1>
+        <h1 className="text-4xl sm:text-5xl font-black text-white">Podium Para Juara!</h1>
       </div>
 
-      {/* Olympic Podium Display */}
-      <div className="flex items-end justify-center space-x-4 my-12 h-80">
+      {/* Olympic Podium Display (Poster Colors) */}
+      <div className="flex items-end justify-center space-x-4 my-10 h-80">
         {/* 2nd Place */}
         {podium[1] && (
           <div className="flex flex-col items-center w-48">
-            <div className="text-lg font-bold text-slate-200 mb-2 truncate max-w-full">
+            <div className="text-lg font-bold text-siqap-beige mb-2 truncate max-w-full">
               {podium[1].nickname}
             </div>
-            <div className="text-sm font-extrabold text-slate-400 mb-2">
+            <div className="text-sm font-extrabold text-white/80 mb-2">
               {podium[1].score} pts
             </div>
-            <div className="w-full h-44 bg-gradient-to-t from-slate-800 to-slate-700 rounded-t-3xl flex flex-col items-center justify-center text-white shadow-xl">
-              <span className="text-slate-400 text-xs uppercase font-extrabold mb-2">Juara 2</span>
-              <div className="w-12 h-12 rounded-full bg-slate-300 text-slate-900 flex items-center justify-center font-black text-xl shadow-md">
+            <div className="w-full h-44 bg-siqap-beige rounded-t-3xl flex flex-col items-center justify-center text-siqap-maroon shadow-2xl border-2 border-white/40">
+              <span className="text-siqap-maroon text-xs uppercase font-black mb-2">Juara 2</span>
+              <div className="w-12 h-12 rounded-full bg-siqap-maroon text-white flex items-center justify-center font-black text-xl shadow-md">
                 2
               </div>
             </div>
@@ -533,15 +553,15 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
         {/* 1st Place (Center & Tallest) */}
         {podium[0] && (
           <div className="flex flex-col items-center w-56">
-            <div className="text-2xl font-black text-amber-300 mb-2 truncate max-w-full drop-shadow">
+            <div className="text-2xl font-black text-siqap-orange mb-2 truncate max-w-full drop-shadow">
               {podium[0].nickname}
             </div>
-            <div className="text-base font-black text-amber-400 mb-2">
+            <div className="text-base font-black text-white mb-2">
               {podium[0].score} pts
             </div>
-            <div className="w-full h-64 bg-gradient-to-t from-amber-600 via-amber-500 to-amber-400 rounded-t-3xl flex flex-col items-center justify-center text-black shadow-2xl shadow-amber-500/30">
-              <span className="text-amber-950 text-xs uppercase font-black tracking-widest mb-2">Juara 1</span>
-              <div className="w-16 h-16 rounded-full bg-white text-amber-600 flex items-center justify-center font-black text-3xl shadow-lg border-2 border-amber-300">
+            <div className="w-full h-64 bg-siqap-orange rounded-t-3xl flex flex-col items-center justify-center text-white shadow-2xl shadow-orange-500/50 border-3 border-white">
+              <span className="text-white text-xs uppercase font-black tracking-widest mb-2">Juara 1</span>
+              <div className="w-16 h-16 rounded-full bg-white text-siqap-orange flex items-center justify-center font-black text-3xl shadow-lg border-2 border-siqap-orange">
                 1
               </div>
             </div>
@@ -551,15 +571,15 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
         {/* 3rd Place */}
         {podium[2] && (
           <div className="flex flex-col items-center w-48">
-            <div className="text-lg font-bold text-slate-200 mb-2 truncate max-w-full">
+            <div className="text-lg font-bold text-siqap-peach mb-2 truncate max-w-full">
               {podium[2].nickname}
             </div>
-            <div className="text-sm font-extrabold text-slate-400 mb-2">
+            <div className="text-sm font-extrabold text-white/80 mb-2">
               {podium[2].score} pts
             </div>
-            <div className="w-full h-36 bg-gradient-to-t from-amber-950 to-amber-900 rounded-t-3xl flex flex-col items-center justify-center text-amber-200 shadow-xl">
-              <span className="text-amber-300 text-xs uppercase font-extrabold mb-2">Juara 3</span>
-              <div className="w-10 h-10 rounded-full bg-amber-700 text-amber-100 flex items-center justify-center font-black text-lg shadow-md border border-amber-500/30">
+            <div className="w-full h-32 bg-[#8C4E6E] rounded-t-3xl flex flex-col items-center justify-center text-white shadow-xl border-2 border-white/20">
+              <span className="text-white/80 text-xs uppercase font-black mb-2">Juara 3</span>
+              <div className="w-12 h-12 rounded-full bg-white text-[#8C4E6E] flex items-center justify-center font-black text-xl shadow-md">
                 3
               </div>
             </div>
@@ -567,29 +587,13 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
         )}
       </div>
 
-      <div className="pb-6 flex items-center justify-center space-x-4">
-        <button
-          onClick={async () => {
-            const { exportSessionToExcel } = await import("@/lib/export-excel");
-            exportSessionToExcel({
-              pin,
-              quizTitle: question?.text ? `Sesi Kuis SIQAP PIN ${pin}` : "Kuis SIQAP",
-              podium,
-              totalPlayers: players.length || podium.length,
-            });
-          }}
-          className="px-6 h-12 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition flex items-center justify-center space-x-2 shadow-lg shadow-emerald-600/30 cursor-pointer"
-        >
-          <FileSpreadsheet className="w-5 h-5" />
-          <span>Export Excel (.xlsx)</span>
-        </button>
-
+      {/* Action Footer */}
+      <div className="flex items-center justify-center space-x-4">
         <button
           onClick={() => router.push("/quizzes")}
-          className="px-6 h-12 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl transition flex items-center justify-center space-x-2 cursor-pointer"
+          className="px-6 py-3 rounded-2xl bg-white text-siqap-maroon font-black text-sm hover:bg-siqap-cream transition shadow-md"
         >
-          <RotateCcw className="w-4 h-4" />
-          <span>Kembali ke Daftar Kuis</span>
+          Kembali ke Koleksi
         </button>
       </div>
     </div>

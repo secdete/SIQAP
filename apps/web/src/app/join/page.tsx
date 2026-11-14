@@ -2,9 +2,10 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { getSocket } from "@/lib/socket";
 import { usePlayerStore } from "@/lib/store";
-import { AlertCircle, ArrowRight, Loader2, Sparkles } from "lucide-react";
+import { AlertCircle, ArrowRight, Loader2, Sparkles, ArrowLeft } from "lucide-react";
 
 function JoinContent() {
   const router = useRouter();
@@ -83,84 +84,109 @@ function JoinContent() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-sm">
-        {/* Brand Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-cyan-400 font-black text-2xl text-white shadow-xl shadow-indigo-600/30 mb-3">
-            S
+    <div className="min-h-screen bg-siqap-sand flex flex-col justify-between">
+      {/* Top Bar */}
+      <header className="border-b-2 border-siqap-orange bg-siqap-maroon text-white p-4">
+        <div className="max-w-md mx-auto flex items-center justify-between">
+          <Link href="/" className="inline-flex items-center space-x-1.5 text-xs font-bold text-siqap-peach hover:text-white transition">
+            <ArrowLeft className="w-4 h-4" />
+            <span>Kembali</span>
+          </Link>
+          <div className="flex items-center space-x-2">
+            <span className="font-black text-xl tracking-tight text-white">
+              SIQAP<span className="text-siqap-orange">.</span>
+            </span>
+            <span className="text-[10px] bg-siqap-orange text-white px-2 py-0.5 rounded-full font-bold">
+              PLAY
+            </span>
           </div>
-          <h1 className="text-2xl font-black text-white tracking-tight">SIQAP Play</h1>
-          <p className="text-xs text-slate-400 mt-1">Gabung kuis interaktif tanpa registrasi akun</p>
         </div>
+      </header>
 
-        {/* Join Card */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl">
-          <form onSubmit={handleJoin} className="flex flex-col space-y-4">
-            {errorMessage && (
-              <div className="p-3 bg-red-950/80 border border-red-800 rounded-xl flex items-start space-x-2 text-red-300 text-xs leading-relaxed">
-                <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
-                <span>{errorMessage}</span>
+      {/* Main Form Container */}
+      <main className="flex-1 flex items-center justify-center p-4">
+        <div className="w-full max-w-sm">
+          {/* Card Form Gabung (FigCraft Node 962 Style) */}
+          <div className="bg-siqap-cream border-3 border-siqap-orange rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+            <div className="text-center mb-6">
+              <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-siqap-maroon font-black text-2xl text-white shadow-lg border-2 border-siqap-orange mb-3">
+                S
               </div>
-            )}
-
-            <div>
-              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">
-                Game PIN
-              </label>
-              <input
-                type="text"
-                maxLength={6}
-                value={pin}
-                onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
-                placeholder="6 Digit PIN"
-                className="w-full h-12 bg-slate-950 border border-slate-700 focus:border-indigo-500 rounded-xl px-4 text-center text-xl font-black tracking-widest text-white placeholder:text-slate-600 focus:outline-none transition"
-                required
-              />
+              <h1 className="text-2xl font-black text-siqap-maroon tracking-tight">Gabung Kuis</h1>
+              <p className="text-xs font-semibold text-siqap-muted mt-1">Masukkan PIN dari layar host dan namamu</p>
             </div>
 
-            <div>
-              <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">
-                Nama Panggilan (Nickname)
-              </label>
-              <input
-                type="text"
-                maxLength={20}
-                value={nickname}
-                onChange={(e) => setNickname(e.target.value)}
-                placeholder="Misal: Budi / Siti"
-                className="w-full h-12 bg-slate-950 border border-slate-700 focus:border-indigo-500 rounded-xl px-4 text-center text-lg font-bold text-white placeholder:text-slate-600 focus:outline-none transition"
-                required
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={isLoading || pin.length !== 6 || nickname.trim().length < 2}
-              className="mt-2 h-12 bg-gradient-to-r from-indigo-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 disabled:opacity-50 text-white font-bold rounded-xl flex items-center justify-center space-x-2 shadow-lg shadow-indigo-600/30 transition cursor-pointer disabled:cursor-not-allowed"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  <span>Menghubungkan...</span>
-                </>
-              ) : (
-                <>
-                  <span>Masuk Ruangan</span>
-                  <ArrowRight className="w-4 h-4" />
-                </>
+            <form onSubmit={handleJoin} className="flex flex-col space-y-4">
+              {errorMessage && (
+                <div className="flex items-start space-x-2 p-3 bg-red-100 border border-red-300 text-red-800 rounded-xl text-xs font-medium">
+                  <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+                  <span>{errorMessage}</span>
+                </div>
               )}
-            </button>
-          </form>
+
+              <div>
+                <label className="block text-xs font-black text-siqap-maroon uppercase tracking-wider mb-1.5 text-left">
+                  Game PIN
+                </label>
+                <input
+                  type="text"
+                  maxLength={6}
+                  value={pin}
+                  onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
+                  placeholder="6 digit angka"
+                  className="w-full text-center text-2xl font-black tracking-widest px-4 py-3 rounded-2xl bg-white border-2 border-siqap-border text-siqap-maroon placeholder:text-gray-300 focus:outline-none focus:border-siqap-orange focus:ring-4 focus:ring-siqap-orange/20 transition"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-black text-siqap-maroon uppercase tracking-wider mb-1.5 text-left">
+                  Nama Panggilan
+                </label>
+                <input
+                  type="text"
+                  maxLength={20}
+                  value={nickname}
+                  onChange={(e) => setNickname(e.target.value)}
+                  placeholder="Ketik nama atau panggilan"
+                  className="w-full text-center text-lg font-bold px-4 py-3 rounded-2xl bg-white border-2 border-siqap-border text-siqap-maroon placeholder:text-gray-300 focus:outline-none focus:border-siqap-orange focus:ring-4 focus:ring-siqap-orange/20 transition"
+                  required
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading || pin.trim().length !== 6 || nickname.trim().length < 2}
+                className="w-full mt-2 py-3.5 rounded-2xl bg-siqap-orange hover:bg-orange-600 disabled:opacity-40 text-white font-black text-base flex items-center justify-center space-x-2 shadow-lg shadow-orange-500/25 transition cursor-pointer"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span>Menghubungkan...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Masuk Permainan</span>
+                    <ArrowRight className="w-5 h-5" />
+                  </>
+                )}
+              </button>
+            </form>
+          </div>
         </div>
-      </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="text-center py-4 text-xs font-bold text-siqap-muted">
+        SIQAP • Bebas ribet tanpa download aplikasi
+      </footer>
     </div>
   );
 }
 
 export default function JoinPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-slate-950 flex items-center justify-center text-slate-400">Memuat...</div>}>
+    <Suspense fallback={<div className="min-h-screen bg-siqap-sand flex items-center justify-center font-bold text-siqap-maroon">Memuat...</div>}>
       <JoinContent />
     </Suspense>
   );

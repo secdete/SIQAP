@@ -15,26 +15,31 @@ import {
   RotateCcw,
 } from "lucide-react";
 
+// 4 Kahoot-Style tactile answer buttons matching FigCraft
 const OPTION_STYLES = [
   {
     btnClass: "btn-game-red",
-    icon: <div className="shape-triangle mb-3" />,
-    label: "Segitiga",
-  },
-  {
-    btnClass: "btn-game-blue",
-    icon: <div className="shape-diamond mb-3" />,
-    label: "Belah Ketupat",
+    icon: <div className="shape-triangle mb-2" />,
+    badge: "▲ A",
+    label: "Opsi A",
   },
   {
     btnClass: "btn-game-yellow",
-    icon: <div className="shape-circle mb-3" />,
-    label: "Lingkaran",
+    icon: <div className="shape-diamond mb-2" />,
+    badge: "◆ B",
+    label: "Opsi B",
   },
   {
     btnClass: "btn-game-green",
-    icon: <div className="shape-square mb-3" />,
-    label: "Persegi",
+    icon: <div className="shape-circle mb-2" />,
+    badge: "● C",
+    label: "Opsi C",
+  },
+  {
+    btnClass: "btn-game-purple",
+    icon: <div className="shape-square mb-2" />,
+    badge: "■ D",
+    label: "Opsi D",
   },
 ];
 
@@ -149,77 +154,79 @@ export default function PlayPage({ params }: { params: Promise<{ pin: string }> 
   // ---------------------------------------------------------------------------
   if (phase === "LOBBY") {
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 text-center">
-        <div className="w-16 h-16 rounded-full bg-indigo-600/20 border-2 border-indigo-500 flex items-center justify-center mb-6 animate-pulse">
-          <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
-        </div>
+      <div className="min-h-screen bg-siqap-sand flex flex-col items-center justify-center p-6 text-center">
+        <div className="w-full max-w-sm bg-siqap-cream border-3 border-siqap-orange rounded-3xl p-8 shadow-2xl">
+          <div className="w-16 h-16 rounded-2xl bg-siqap-maroon border-2 border-siqap-orange text-white flex items-center justify-center mx-auto mb-4 animate-bounce">
+            <Loader2 className="w-8 h-8 text-siqap-orange animate-spin" />
+          </div>
 
-        <h2 className="text-2xl font-black text-white">Anda Sudah Masuk!</h2>
-        <div className="mt-3 px-5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-lg font-bold text-indigo-300">
-          {nickname || "Pemain"}
-        </div>
+          <h2 className="text-2xl font-black text-siqap-maroon">Anda Sudah Bergabung!</h2>
+          <div className="mt-4 px-5 py-3 rounded-2xl bg-siqap-maroon text-xl font-black text-white shadow-md">
+            {nickname || "Peserta"}
+          </div>
 
-        <p className="mt-6 text-sm text-slate-400 max-w-xs">
-          Perhatikan layar proyektor host. Kuis akan segera dimulai begitu host menekan tombol Start!
-        </p>
+          <p className="mt-6 text-xs font-semibold text-siqap-muted leading-relaxed">
+            Perhatikan layar proyektor di depan. Kuis akan segera dimulai begitu host menekan tombol Mulai!
+          </p>
 
-        <div className="mt-8 text-xs text-slate-600">
-          PIN Ruangan: <span className="font-mono font-bold text-slate-400">{pin}</span>
+          <div className="mt-6 pt-4 border-t border-siqap-border text-xs font-bold text-siqap-muted">
+            PIN Sesi: <span className="font-mono font-black text-siqap-orange">{pin}</span>
+          </div>
         </div>
       </div>
     );
   }
 
   // ---------------------------------------------------------------------------
-  // Phase 2: QUESTION_INTRO (3 seconds countdown)
+  // Phase 2: QUESTION_INTRO
   // ---------------------------------------------------------------------------
   if (phase === "QUESTION_INTRO") {
     return (
-      <div className="min-h-screen bg-indigo-950 flex flex-col items-center justify-center p-6 text-center animate-fade-in">
-        <div className="text-sm font-bold text-indigo-300 tracking-wider uppercase mb-4">
+      <div className="min-h-screen bg-siqap-maroon flex flex-col items-center justify-center p-6 text-center animate-fade-in text-white">
+        <div className="text-xs font-black text-siqap-orange tracking-widest uppercase mb-4">
           Bersiaplah...
         </div>
-        <h1 className="text-5xl font-black text-white">Soal Berikutnya!</h1>
-        <p className="mt-4 text-slate-300 text-sm">Lihat soal di layar utama host</p>
+        <h1 className="text-4xl sm:text-5xl font-black">Soal Berikutnya!</h1>
+        <p className="mt-4 text-siqap-peach font-bold text-sm">Lihat pertanyaan di layar proyektor host</p>
       </div>
     );
   }
 
   // ---------------------------------------------------------------------------
-  // Phase 3: QUESTION_ACTIVE
+  // Phase 3: QUESTION_ACTIVE (FigCraft Node 95 Style)
   // ---------------------------------------------------------------------------
   if (phase === "QUESTION_ACTIVE") {
     const optionsCount = question?.options.length || 4;
 
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col p-4">
+      <div className="min-h-screen bg-siqap-sand flex flex-col p-4">
         {/* Status bar */}
-        <div className="flex items-center justify-between pb-3 border-b border-slate-800 mb-4 text-xs font-bold text-slate-400">
+        <div className="flex items-center justify-between px-4 py-2.5 bg-siqap-orange text-white rounded-2xl mb-4 font-black text-xs shadow-md">
           <span>{nickname}</span>
-          <span>PIN: {pin}</span>
+          <span className="bg-black/20 px-2.5 py-1 rounded-lg">PIN: {pin}</span>
         </div>
 
         {hasAnswered ? (
-          <div className="flex-1 flex flex-col items-center justify-center text-center p-6 bg-slate-900/60 rounded-3xl border border-slate-800">
-            <div className="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mb-4">
-              <CheckCircle2 className="w-8 h-8" />
+          <div className="flex-1 flex flex-col items-center justify-center text-center p-6 bg-siqap-cream rounded-3xl border-3 border-siqap-orange shadow-xl">
+            <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mb-4">
+              <CheckCircle2 className="w-10 h-10" />
             </div>
-            <h2 className="text-2xl font-black text-white">Jawaban Terkirim!</h2>
-            <p className="mt-2 text-sm text-slate-400 max-w-xs">
-              Menunggu pemain lain dan waktu timer habis di layar host...
+            <h2 className="text-2xl font-black text-siqap-maroon">Jawaban Terkirim!</h2>
+            <p className="mt-2 text-xs font-semibold text-siqap-muted max-w-xs">
+              Menunggu pemain lain dan waktu timer habis di layar proyektor host...
             </p>
           </div>
         ) : (
-          <div className="flex-1 grid grid-cols-2 gap-4 h-full py-2">
+          <div className="flex-1 grid grid-cols-2 gap-3.5 h-full py-1">
             {OPTION_STYLES.slice(0, optionsCount).map((opt, idx) => (
               <button
                 key={idx}
                 onClick={() => handleSelectOption(idx)}
-                className={`flex flex-col items-center justify-center rounded-3xl p-6 cursor-pointer touch-manipulation select-none ${opt.btnClass}`}
+                className={`flex flex-col items-center justify-center rounded-3xl p-5 cursor-pointer touch-manipulation select-none ${opt.btnClass}`}
               >
                 {opt.icon}
-                <span className="text-white font-black text-lg tracking-wide drop-shadow-md">
-                  {opt.label}
+                <span className="font-black text-base tracking-wider drop-shadow-sm">
+                  {opt.badge}
                 </span>
               </button>
             ))}
@@ -241,119 +248,96 @@ export default function PlayPage({ params }: { params: Promise<{ pin: string }> 
           isCorrect ? "bg-emerald-600" : "bg-red-600"
         }`}
       >
-        <div className="w-20 h-20 rounded-full bg-white/20 flex items-center justify-center mb-4">
+        <div className="w-20 h-20 rounded-full bg-white/20 flex items-center justify-center mb-4 shadow-lg">
           {isCorrect ? <CheckCircle2 className="w-12 h-12 text-white" /> : <XCircle className="w-12 h-12 text-white" />}
         </div>
 
-        <h1 className="text-4xl font-black">{isCorrect ? "BENAR!" : "KURANG TEPAT"}</h1>
+        <h1 className="text-4xl font-black tracking-tight">{isCorrect ? "BENAR!" : "KURANG TEPAT"}</h1>
 
         {result && (
           <div className="mt-6 flex flex-col items-center space-y-3">
-            <div className="text-2xl font-black bg-black/20 px-6 py-2 rounded-xl">
+            <div className="text-2xl font-black bg-black/20 px-6 py-2.5 rounded-2xl shadow-inner">
               +{result.pointsAwarded} Poin
             </div>
 
             {result.streak > 1 && (
-              <div className="flex items-center space-x-1.5 text-amber-300 font-bold text-sm bg-black/30 px-4 py-1.5 rounded-full">
-                <Flame className="w-4 h-4 fill-amber-400 text-amber-400" />
+              <div className="flex items-center space-x-1.5 text-amber-200 font-bold text-sm bg-black/30 px-4 py-1.5 rounded-full">
+                <Flame className="w-4 h-4 fill-amber-300 text-amber-300" />
                 <span>Streak {result.streak}x Beruntun!</span>
               </div>
             )}
 
-            <div className="text-sm font-semibold opacity-90 mt-2">
-              Peringkat Sekarang: <span className="font-bold underline">#{result.rank}</span>
+            <div className="text-sm font-bold opacity-90 mt-2">
+              Peringkat Sementara: <span className="underline font-black text-lg">#{result.rank}</span>
             </div>
-            <div className="text-xs opacity-75">
-              Total Skor: {result.totalScore}
+            <div className="text-xs opacity-80 font-medium">
+              Total Skor: {result.totalScore} pts
             </div>
           </div>
         )}
+
+        <p className="mt-8 text-xs font-semibold opacity-75">
+          Lihat ulasan materi lengkap di layar proyektor host
+        </p>
       </div>
     );
   }
 
   // ---------------------------------------------------------------------------
-  // Phase 5: LEADERBOARD
+  // Phase 5: LEADERBOARD WAIT
   // ---------------------------------------------------------------------------
   if (phase === "LEADERBOARD") {
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 text-center">
-        <Trophy className="w-16 h-16 text-amber-400 mb-4 animate-bounce" />
-        <h2 className="text-3xl font-black text-white">Papan Peringkat</h2>
-        <p className="mt-2 text-slate-400 text-sm max-w-xs">
-          Perhatikan papan peringkat sementara di layar utama host!
+      <div className="min-h-screen bg-siqap-maroon text-white flex flex-col items-center justify-center p-6 text-center">
+        <Trophy className="w-16 h-16 text-siqap-orange mb-4 animate-bounce" />
+        <h2 className="text-2xl font-black">Papan Peringkat Sedang Ditampilkan</h2>
+        <p className="mt-2 text-xs text-siqap-peach font-bold max-w-xs">
+          Lihat posisimu dan teman-temanmu di layar proyektor host!
         </p>
-
-        {result && (
-          <div className="mt-6 p-4 rounded-2xl bg-slate-900 border border-slate-800 text-slate-200 text-sm">
-            Posisi Anda: <span className="font-bold text-indigo-400">#{result.rank}</span> · Skor:{" "}
-            <span className="font-bold text-white">{result.totalScore}</span>
-          </div>
-        )}
       </div>
     );
   }
 
   // ---------------------------------------------------------------------------
-  // Phase 6: PODIUM / ENDED (Final recap)
+  // Phase 6: ENDED
   // ---------------------------------------------------------------------------
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col p-6 max-w-lg mx-auto">
-      <div className="text-center my-6">
-        <div className="inline-flex p-3 rounded-2xl bg-amber-500/10 text-amber-400 mb-3">
-          <Trophy className="w-10 h-10" />
-        </div>
-        <h1 className="text-3xl font-black text-white">Permainan Selesai!</h1>
-        <p className="text-sm text-slate-400 mt-1">Terima kasih sudah berpartisipasi di SIQAP</p>
-      </div>
+    <div className="min-h-screen bg-siqap-maroon text-white flex flex-col items-center justify-center p-6 text-center">
+      <div className="w-full max-w-sm bg-siqap-cream border-3 border-siqap-orange rounded-3xl p-8 shadow-2xl text-siqap-dark">
+        <Trophy className="w-16 h-16 text-siqap-orange mx-auto mb-3" />
+        <h1 className="text-2xl font-black text-siqap-maroon">Permainan Selesai!</h1>
 
-      {finalStats && (
-        <div className="space-y-6">
-          {/* Summary Card */}
-          <div className="grid grid-cols-2 gap-3 p-4 bg-slate-900 border border-slate-800 rounded-2xl text-center">
-            <div className="p-3 bg-slate-950 rounded-xl">
-              <span className="text-xs text-slate-400">Total Skor</span>
-              <div className="text-2xl font-black text-indigo-400 mt-1">{finalStats.finalScore}</div>
+        {finalStats ? (
+          <div className="mt-6 space-y-4">
+            <div className="p-4 bg-siqap-maroon text-white rounded-2xl shadow-md">
+              <span className="text-xs uppercase font-bold text-siqap-peach block">Peringkat Akhir</span>
+              <span className="text-4xl font-black text-white">#{finalStats.finalRank}</span>
             </div>
-            <div className="p-3 bg-slate-950 rounded-xl">
-              <span className="text-xs text-slate-400">Akurasi Soal</span>
-              <div className="text-2xl font-black text-emerald-400 mt-1">
-                {finalStats.correctCount} / {finalStats.totalQuestions}
+
+            <div className="grid grid-cols-2 gap-3 text-center">
+              <div className="p-3 bg-white border border-siqap-border rounded-xl">
+                <span className="text-[10px] uppercase font-bold text-siqap-muted block">Total Skor</span>
+                <span className="text-lg font-black text-siqap-orange">{finalStats.finalScore}</span>
+              </div>
+              <div className="p-3 bg-white border border-siqap-border rounded-xl">
+                <span className="text-[10px] uppercase font-bold text-siqap-muted block">Akurasi</span>
+                <span className="text-lg font-black text-siqap-maroon">
+                  {Math.round((finalStats.correctCount / Math.max(1, finalStats.totalQuestions)) * 100)}%
+                </span>
               </div>
             </div>
           </div>
+        ) : (
+          <p className="mt-4 text-xs font-semibold text-siqap-muted">Terima kasih telah berpartisipasi dalam kuis!</p>
+        )}
 
-          {/* Mistakes Recap */}
-          {finalStats.mistakes && finalStats.mistakes.length > 0 && (
-            <div>
-              <h3 className="text-sm font-bold text-slate-300 uppercase tracking-wider mb-3">
-                Review Pembahasan Kesalahan ({finalStats.mistakes.length})
-              </h3>
-              <div className="space-y-3">
-                {finalStats.mistakes.map((m, idx) => (
-                  <div key={idx} className="p-4 bg-slate-900 border border-slate-800 rounded-xl text-left text-xs space-y-1.5">
-                    <div className="font-bold text-white">Soal #{m.questionIndex + 1}</div>
-                    {m.explanation && (
-                      <div className="text-slate-300 bg-slate-950 p-2.5 rounded-lg border border-slate-800/80 leading-relaxed">
-                        <span className="font-bold text-indigo-400">Pembahasan: </span>
-                        {m.explanation}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      <button
-        onClick={() => router.push("/")}
-        className="mt-8 w-full h-12 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl transition flex items-center justify-center space-x-2"
-      >
-        <RotateCcw className="w-4 h-4" />
-        <span>Kembali ke Beranda</span>
-      </button>
+        <button
+          onClick={() => router.push("/")}
+          className="w-full mt-6 py-3 rounded-2xl bg-siqap-orange hover:bg-orange-600 text-white font-black text-sm transition shadow-lg shadow-orange-500/25"
+        >
+          Selesai & Keluar
+        </button>
+      </div>
     </div>
   );
 }

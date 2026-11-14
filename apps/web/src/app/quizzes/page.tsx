@@ -13,6 +13,7 @@ import {
   Sparkles,
   Loader2,
   AlertCircle,
+  ArrowLeft,
 } from "lucide-react";
 
 interface QuizSummary {
@@ -63,55 +64,76 @@ export default function QuizzesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
-      {/* Navbar */}
-      <header className="border-b border-slate-800 bg-slate-950/80 backdrop-blur sticky top-0 z-50">
+    <div className="min-h-screen bg-siqap-sand text-siqap-dark flex flex-col">
+      {/* Navbar (FigCraft Maroon Style) */}
+      <header className="border-b-2 border-siqap-orange bg-siqap-maroon text-white sticky top-0 z-50 shadow-md">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           <NextLink href="/" className="flex items-center space-x-2">
-            <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center font-black text-xl text-white">
+            <div className="w-9 h-9 rounded-xl bg-siqap-orange flex items-center justify-center font-black text-xl text-white">
               S
             </div>
-            <span className="text-2xl font-black tracking-tight text-white">SIQAP</span>
+            <span className="text-xl font-black tracking-tight text-white">
+              SIQAP<span className="text-siqap-orange">.</span>
+            </span>
           </NextLink>
 
-          <NextLink
-            href="/quizzes/create"
-            className="text-sm font-semibold bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl flex items-center space-x-1.5 shadow-md shadow-indigo-600/30 transition"
-          >
-            <PlusCircle className="w-4 h-4" />
-            <span>Buat Kuis Baru</span>
-          </NextLink>
+          <div className="flex items-center space-x-3">
+            <NextLink
+              href="/"
+              className="text-xs font-bold text-siqap-peach hover:text-white px-3 py-2 rounded-xl transition"
+            >
+              Halaman Utama
+            </NextLink>
+            <NextLink
+              href="/quizzes/create"
+              className="px-4 py-2 bg-siqap-orange hover:bg-orange-600 text-white font-black text-xs rounded-xl flex items-center space-x-1.5 shadow-md transition cursor-pointer"
+            >
+              <PlusCircle className="w-4 h-4" />
+              <span>Buat Kuis Baru (AI)</span>
+            </NextLink>
+          </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 max-w-7xl mx-auto px-4 py-10 w-full">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
+      <main className="max-w-7xl mx-auto px-4 py-8 flex-1 w-full">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-siqap-border gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-black text-white">Koleksi Kuis Anda</h1>
-            <p className="text-sm text-slate-400 mt-1">
-              Pilih kuis untuk mulai di-host di depan kelas atau buat kuis baru dengan bantuan AI
+            <h1 className="text-3xl font-black text-siqap-maroon tracking-tight">Koleksi Kuis Saya</h1>
+            <p className="text-xs font-semibold text-siqap-muted mt-1">
+              Pilih kuis untuk mulai ditayangkan di layar host proyektor
             </p>
           </div>
+
+          <NextLink
+            href="/quizzes/create"
+            className="self-start sm:self-auto px-5 py-2.5 bg-siqap-orange hover:bg-orange-600 text-white font-black text-xs rounded-xl flex items-center space-x-2 shadow-lg shadow-orange-500/25 transition cursor-pointer"
+          >
+            <Sparkles className="w-4 h-4" />
+            <span>Generate Otomatis AI</span>
+          </NextLink>
         </div>
 
         {loading ? (
-          <div className="h-64 flex flex-col items-center justify-center text-slate-400">
-            <Loader2 className="w-8 h-8 animate-spin text-indigo-500 mb-2" />
-            <span className="text-sm">Memuat daftar kuis...</span>
+          <div className="flex flex-col items-center justify-center py-20 text-siqap-muted">
+            <Loader2 className="w-8 h-8 animate-spin text-siqap-orange mb-3" />
+            <span className="text-xs font-bold">Memuat koleksi kuis...</span>
           </div>
         ) : quizzes.length === 0 ? (
-          <div className="border-2 border-dashed border-slate-800 rounded-3xl p-12 text-center flex flex-col items-center justify-center max-w-md mx-auto">
-            <HelpCircle className="w-12 h-12 text-slate-600 mb-3" />
-            <h3 className="text-lg font-bold text-white">Belum Ada Kuis</h3>
-            <p className="text-sm text-slate-400 mt-1 mb-6">
-              Buat kuis pertama Anda secara manual atau gunakan AI Quiz Generator otomatis.
+          <div className="border-3 border-dashed border-siqap-border bg-siqap-cream/50 rounded-3xl p-12 text-center max-w-lg mx-auto my-12">
+            <div className="w-14 h-14 rounded-2xl bg-siqap-maroon text-white flex items-center justify-center mx-auto mb-4 shadow-md">
+              <HelpCircle className="w-7 h-7 text-siqap-orange" />
+            </div>
+            <h3 className="text-lg font-black text-siqap-maroon">Belum Ada Kuis Tersimpan</h3>
+            <p className="text-xs text-siqap-muted mt-2 mb-6 leading-relaxed">
+              Buat kuis pertama secara instan menggunakan AI Quiz Generator atau masukkan soal secara manual.
             </p>
             <NextLink
               href="/quizzes/create"
-              className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-6 py-2.5 rounded-xl transition"
+              className="inline-flex items-center space-x-2 px-6 py-3 bg-siqap-orange hover:bg-orange-600 text-white font-black text-xs rounded-xl shadow-lg shadow-orange-500/25 transition"
             >
-              Buat Kuis Sekarang
+              <PlusCircle className="w-4 h-4" />
+              <span>Buat Kuis Sekarang</span>
             </NextLink>
           </div>
         ) : (
@@ -119,52 +141,44 @@ export default function QuizzesPage() {
             {quizzes.map((quiz) => (
               <div
                 key={quiz.id}
-                className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden flex flex-col hover:border-slate-700 transition shadow-xl"
+                className="bg-siqap-cream border-2 border-siqap-border hover:border-siqap-orange rounded-3xl p-6 shadow-md hover:shadow-xl transition flex flex-col justify-between group"
               >
-                {quiz.coverUrl ? (
-                  <div className="h-44 w-full overflow-hidden bg-slate-950">
-                    <img
-                      src={quiz.coverUrl}
-                      alt={quiz.title}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                ) : (
-                  <div className="h-36 w-full bg-gradient-to-tr from-indigo-950 via-slate-900 to-slate-900 flex items-center justify-center text-indigo-400 font-black text-4xl">
-                    SIQAP
-                  </div>
-                )}
-
-                <div className="p-6 flex-1 flex flex-col justify-between">
-                  <div>
-                    <h3 className="text-xl font-bold text-white line-clamp-1">{quiz.title}</h3>
-                    {quiz.description && (
-                      <p className="mt-2 text-xs text-slate-400 line-clamp-2 leading-relaxed">
-                        {quiz.description}
-                      </p>
-                    )}
-                    <div className="mt-4 flex items-center space-x-3 text-xs text-slate-400 font-semibold">
-                      <span className="flex items-center space-x-1">
-                        <HelpCircle className="w-3.5 h-3.5 text-indigo-400" />
-                        <span>{quiz.questions?.length || 0} Soal</span>
-                      </span>
-                    </div>
+                <div>
+                  <div className="flex items-center justify-between text-xs font-bold text-siqap-muted mb-3">
+                    <span className="bg-white border border-siqap-border px-3 py-1 rounded-full text-siqap-maroon">
+                      {quiz.questions?.length || 0} Soal
+                    </span>
+                    <span className="text-siqap-orange">Tersedia</span>
                   </div>
 
-                  <div className="mt-6 pt-4 border-t border-slate-800/80 flex items-center space-x-2">
-                    <button
-                      onClick={() => handleHostQuiz(quiz.id)}
-                      disabled={hostingQuizId === quiz.id}
-                      className="flex-1 h-11 bg-gradient-to-r from-indigo-600 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 disabled:opacity-50 text-white font-bold rounded-xl flex items-center justify-center space-x-2 shadow-lg shadow-indigo-600/20 transition cursor-pointer"
-                    >
-                      {hostingQuizId === quiz.id ? (
+                  <h3 className="text-lg font-black text-siqap-maroon group-hover:text-siqap-orange transition line-clamp-2">
+                    {quiz.title}
+                  </h3>
+                  {quiz.description && (
+                    <p className="text-xs text-siqap-muted mt-2 line-clamp-2 font-medium">
+                      {quiz.description}
+                    </p>
+                  )}
+                </div>
+
+                <div className="mt-6 pt-4 border-t border-siqap-border flex items-center justify-between">
+                  <button
+                    onClick={() => handleHostQuiz(quiz.id)}
+                    disabled={hostingQuizId === quiz.id}
+                    className="w-full py-2.5 bg-siqap-orange hover:bg-orange-600 disabled:opacity-50 text-white font-black text-xs rounded-xl flex items-center justify-center space-x-2 shadow-md shadow-orange-500/20 transition cursor-pointer"
+                  >
+                    {hostingQuizId === quiz.id ? (
+                      <>
                         <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Play className="w-4 h-4 fill-white" />
-                      )}
-                      <span>Host Game</span>
-                    </button>
-                  </div>
+                        <span>Membuka Ruangan...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Play className="w-4 h-4 fill-current" />
+                        <span>Mulai Host Kuis</span>
+                      </>
+                    )}
+                  </button>
                 </div>
               </div>
             ))}

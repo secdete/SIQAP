@@ -10,18 +10,25 @@ const config: Config = {
     extend: {
       colors: {
         siqap: {
-          primary: "#6366f1", // Indigo
-          secondary: "#06b6d4", // Cyan
-          accent: "#f59e0b", // Amber
-          dark: "#0f172a", // Slate 900
-          card: "#1e293b", // Slate 800
+          maroon: "#7B034D", // Deep Maroon / Plum Poster
+          orange: "#FC8235", // Vibrant Orange Poster
+          peach: "#FFA566",  // Warm Peach Accent
+          dark: "#560035",   // Dark Plum Shadow
+          sand: "#FBF2EB",   // Warm Sand Background
+          cream: "#FFF7F2",  // Light Warm Cream
+          border: "#F3E1D5", // Soft Cream Border
+          muted: "#7E5B6E",  // Muted Plum Text
+          beige: "#E5DAC6",  // Poster Team Card Beige
         },
         quiz: {
-          red: "#ef4444",
-          blue: "#3b82f6",
-          yellow: "#eab308",
-          green: "#10b981",
+          red: "#C93C42",    // Kahoot Option A (Red)
+          yellow: "#F5B031", // Kahoot Option B (Yellow)
+          green: "#2DB87A",  // Kahoot Option C (Green)
+          purple: "#6F52E0", // Kahoot Option D (Purple)
         },
+      },
+      fontFamily: {
+        sans: ["Montserrat", "Plus Jakarta Sans", "system-ui", "sans-serif"],
       },
     },
   },

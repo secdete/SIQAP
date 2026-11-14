@@ -106,6 +106,26 @@ class SoundFX {
       osc.stop(this.ctx.currentTime + 0.04);
     } catch {}
   }
+
+  join() {
+    this.tap();
+  }
+
+  countdown() {
+    this.tick();
+  }
+
+  reveal() {
+    this.correct();
+  }
+
+  leaderboard() {
+    this.tap();
+  }
+
+  podium() {
+    this.correct();
+  }
 }
 
 export const sounds = new SoundFX();
