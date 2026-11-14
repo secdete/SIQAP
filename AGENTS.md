@@ -1,24 +1,10 @@
-<!-- antislop:start -->
-## antislop
-For UI, copy, people, mobile layout, or code comments work, read these installed skill files directly (use these paths even if a same-named global skill exists):
-- Core filter, always on: `antislop`: `.agents/skills/antislop/SKILL.md`
-- Code comments: `antislop-code`: `.agents/skills/antislop-code/SKILL.md`
-- UI / visual: `antislop-ui`: `.agents/skills/antislop-ui/SKILL.md`
-- Mobile / responsive: `antislop-layoutmobile`: `.agents/skills/antislop-layoutmobile/SKILL.md`
-- People: `antislop-human`: `.agents/skills/antislop-human/SKILL.md`
-- Copy & text: `antislop-copywriting`: `.agents/skills/antislop-copywriting/SKILL.md`
-Before starting, follow the core's "Two Usage Modes" section in strict order: explicit session instruction first, then global preference, then ask. A session instruction always wins. For a resolved mode, say `antislop active: <mode> (session override).` or `antislop active: <mode> (global preference).` once before presenting findings or making edits, using the actual mode and source. Acknowledging the user's request without naming the source does not replace this notice.
-Only an explicit choice of antislop during or after selects a session mode. A request to review, audit, or avoid file edits does not select a mode; read the global preference in that case. Another skill's mode does not select antislop's mode.
-If the mode is unresolved, ask during/after and end the response; wait for the answer before any UI review, planning, or concept. For read-only tasks, put the active-mode notice only at the start of the final answer, never in progress messages. For editing tasks, announce before the first edit and omit it from the final answer.
-To update antislop later: `npx antislop-ai --update`, or run `npx antislop-ai` and pick Overwrite them.
-<!-- antislop:end -->
-
 # AGENTS.md: SIQAP
 
-Panduan untuk semua agen coding (Gemini, Antigravity, Codex, OpenCode) yang mengerjakan repo ini. Baca file ini dan dua dokumen di bawah **sebelum menulis kode**.
+Panduan untuk semua agen coding (Gemini, Antigravity, Codex, OpenCode) yang mengerjakan repo ini. Baca file ini dan tiga dokumen di bawah **sebelum menulis kode**.
 
 - `docs/PRD.md`: apa yang dibangun dan kenapa.
 - `docs/CONTRACT.md`: nama event, skema payload, state machine, dan rumus skor. **Ini kontrak yang mengikat.**
+- `docs/DESIGN.md`: palet warna, token, dan gaya UI. Wajib dipakai oleh area C (UI).
 
 ## 1. Ringkasan proyek
 
@@ -55,6 +41,7 @@ packages/
 docs/
   PRD.md
   CONTRACT.md
+  DESIGN.md
 AGENTS.md
 docker-compose.yml   # Postgres + Redis untuk development lokal
 ```
@@ -136,6 +123,7 @@ pnpm db:migrate             # Prisma migrate
 - Format `domain:aksi` untuk event socket; komponen React PascalCase, file lain kebab-case.
 - Logika game berupa fungsi murni di `packages/shared`, supaya bisa dites tanpa jaringan.
 - UI player harus ringan (JS awal di bawah 150 KB), responsif di HP Android RAM 2 GB, tombol jawaban punya warna **dan** bentuk/label, target sentuh minimal 44 px.
+- Warna dan gaya UI hanya lewat token di `docs/DESIGN.md`; jangan menulis kode hex di komponen.
 - Hindari dependensi baru kecuali perlu. Sebut alasannya di PR.
 
 ## 11. Git dan PR
