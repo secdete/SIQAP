@@ -14,7 +14,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="id">
-      <body className="bg-siqap-sand text-siqap-dark min-h-screen antialiased selection:bg-siqap-orange selection:text-white">
+      <body className="bg-siqap-sand text-siqap-navy-dark min-h-screen antialiased selection:bg-siqap-orange selection:text-white">
         {children}
       </body>
     </html>

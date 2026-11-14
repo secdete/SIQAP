@@ -6,13 +6,13 @@
 
 :root {
   --background: #FFF7F2;
-  --foreground: #560035;
+  --foreground: #100820;
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
-  --siqap-maroon: #7B034D;
+  --siqap-navy: #1E1240;
   --siqap-orange: #FC8235;
   --siqap-peach: #FFA566;
-  --siqap-dark: #560035;
+  --siqap-navy-dark: #100820;
   --siqap-sand: #FBF2EB;
   --siqap-cream: #FFF7F2;
   --siqap-border: #F3E1D5;
@@ -53,7 +53,7 @@ body {
   border-bottom: 5px solid #b45309;
   box-shadow: 0 10px 20px -5px rgba(245, 176, 49, 0.4);
   transition: all 0.1s ease;
-  color: #560035;
+  color: #100820;
 }
 .btn-game-yellow:active {
   transform: translateY(4px);
@@ -66,7 +66,7 @@ body {
   border-bottom: 5px solid #047857;
   box-shadow: 0 10px 20px -5px rgba(45, 184, 122, 0.4);
   transition: all 0.1s ease;
-  color: #560035;
+  color: #100820;
 }
 .btn-game-green:active {
   transform: translateY(4px);
@@ -124,7 +124,7 @@ body {
 
 /* Pattern Background inspired by SIQAP poster dot pattern */
 .bg-poster-dots {
-  background-image: radial-gradient(#7B034D 1.5px, transparent 1.5px);
+  background-image: radial-gradient(#1E1240 1.5px, transparent 1.5px);
   background-size: 24px 24px;
   opacity: 0.12;
 }

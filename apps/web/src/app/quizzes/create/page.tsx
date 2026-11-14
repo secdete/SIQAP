@@ -34,8 +34,8 @@ interface QuestionFormItem {
 
 const OPTION_BADGES = [
   { label: "▲ A", color: "bg-[#C93C42] text-white border-[#C93C42]" },
-  { label: "◆ B", color: "bg-[#F5B031] text-[#560035] border-[#F5B031]" },
-  { label: "● C", color: "bg-[#2DB87A] text-[#560035] border-[#2DB87A]" },
+  { label: "◆ B", color: "bg-[#F5B031] text-[#100820] border-[#F5B031]" },
+  { label: "● C", color: "bg-[#2DB87A] text-[#100820] border-[#2DB87A]" },
   { label: "■ D", color: "bg-[#6F52E0] text-white border-[#6F52E0]" },
 ];
 
@@ -229,9 +229,9 @@ export default function CreateQuizPage() {
   };
 
   return (
-    <div className="min-h-screen bg-siqap-sand text-siqap-dark flex flex-col">
+    <div className="min-h-screen bg-siqap-sand text-siqap-navy-dark flex flex-col">
       {/* Header */}
-      <header className="border-b-2 border-siqap-orange bg-siqap-maroon text-white sticky top-0 z-50 shadow-md">
+      <header className="border-b-2 border-siqap-orange bg-siqap-navy text-white sticky top-0 z-50 shadow-md">
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <NextLink
@@ -268,7 +268,7 @@ export default function CreateQuizPage() {
       <main className="max-w-4xl mx-auto px-4 py-8 flex-1 w-full space-y-6">
         {/* Title & Description Box */}
         <div className="bg-siqap-cream border-2 border-siqap-border rounded-3xl p-6 shadow-md">
-          <label className="block text-xs font-black text-siqap-maroon uppercase tracking-wider mb-2">
+          <label className="block text-xs font-black text-siqap-navy uppercase tracking-wider mb-2">
             Judul Kuis
           </label>
           <input
@@ -276,7 +276,7 @@ export default function CreateQuizPage() {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Contoh: Kuis Teknologi & Transformasi Digital"
-            className="w-full text-xl font-black px-4 py-3 rounded-2xl bg-white border-2 border-siqap-border text-siqap-maroon placeholder:text-gray-300 focus:outline-none focus:border-siqap-orange transition mb-4"
+            className="w-full text-xl font-black px-4 py-3 rounded-2xl bg-white border-2 border-siqap-border text-siqap-navy placeholder:text-gray-300 focus:outline-none focus:border-siqap-orange transition mb-4"
           />
 
           <label className="block text-xs font-bold text-siqap-muted uppercase tracking-wider mb-2">
@@ -287,7 +287,7 @@ export default function CreateQuizPage() {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Deskripsi singkat materi kuis..."
-            className="w-full text-xs font-semibold px-4 py-2.5 rounded-xl bg-white border border-siqap-border text-siqap-dark placeholder:text-gray-300 focus:outline-none focus:border-siqap-orange transition"
+            className="w-full text-xs font-semibold px-4 py-2.5 rounded-xl bg-white border border-siqap-border text-siqap-navy-dark placeholder:text-gray-300 focus:outline-none focus:border-siqap-orange transition"
           />
         </div>
 
@@ -299,7 +299,7 @@ export default function CreateQuizPage() {
               className="bg-siqap-cream border-2 border-siqap-border rounded-3xl p-6 shadow-md relative"
             >
               <div className="flex items-center justify-between pb-4 border-b border-siqap-border mb-4">
-                <span className="text-xs font-black uppercase tracking-wider bg-siqap-maroon text-white px-3 py-1 rounded-xl">
+                <span className="text-xs font-black uppercase tracking-wider bg-siqap-navy text-white px-3 py-1 rounded-xl">
                   Nomor #{qIdx + 1}
                 </span>
 
@@ -309,7 +309,7 @@ export default function CreateQuizPage() {
                     <select
                       value={q.timeLimitSec}
                       onChange={(e) => handleTimeLimitChange(qIdx, Number(e.target.value))}
-                      className="bg-white border border-siqap-border text-siqap-maroon rounded-lg px-2 py-1 text-xs font-bold focus:outline-none"
+                      className="bg-white border border-siqap-border text-siqap-navy rounded-lg px-2 py-1 text-xs font-bold focus:outline-none"
                     >
                       <option value={10}>10 Detik</option>
                       <option value={20}>20 Detik</option>
@@ -332,7 +332,7 @@ export default function CreateQuizPage() {
 
               {/* Question Text */}
               <div className="mb-4">
-                <label className="block text-xs font-bold text-siqap-maroon uppercase tracking-wider mb-1.5">
+                <label className="block text-xs font-bold text-siqap-navy uppercase tracking-wider mb-1.5">
                   Pertanyaan
                 </label>
                 <textarea
@@ -340,7 +340,7 @@ export default function CreateQuizPage() {
                   value={q.text}
                   onChange={(e) => handleQuestionTextChange(qIdx, e.target.value)}
                   placeholder="Ketik teks pertanyaan di sini..."
-                  className="w-full text-sm font-bold p-3.5 rounded-2xl bg-white border-2 border-siqap-border text-siqap-maroon placeholder:text-gray-300 focus:outline-none focus:border-siqap-orange transition"
+                  className="w-full text-sm font-bold p-3.5 rounded-2xl bg-white border-2 border-siqap-border text-siqap-navy placeholder:text-gray-300 focus:outline-none focus:border-siqap-orange transition"
                 />
               </div>
 
@@ -368,7 +368,7 @@ export default function CreateQuizPage() {
                         value={opt.text}
                         onChange={(e) => handleOptionTextChange(qIdx, oIdx, e.target.value)}
                         placeholder={`Teks jawaban ${badge.label}`}
-                        className="flex-1 text-xs font-bold text-siqap-dark bg-transparent focus:outline-none"
+                        className="flex-1 text-xs font-bold text-siqap-navy-dark bg-transparent focus:outline-none"
                       />
 
                       <button
@@ -398,7 +398,7 @@ export default function CreateQuizPage() {
                   value={q.explanation || ""}
                   onChange={(e) => handleExplanationChange(qIdx, e.target.value)}
                   placeholder="Ulasan edukatif kenapa jawaban tersebut yang benar..."
-                  className="w-full text-xs font-medium p-2.5 rounded-xl bg-white border border-siqap-border text-siqap-dark placeholder:text-gray-300 focus:outline-none focus:border-siqap-orange transition"
+                  className="w-full text-xs font-medium p-2.5 rounded-xl bg-white border border-siqap-border text-siqap-navy-dark placeholder:text-gray-300 focus:outline-none focus:border-siqap-orange transition"
                 />
               </div>
             </div>
@@ -407,7 +407,7 @@ export default function CreateQuizPage() {
           <button
             type="button"
             onClick={handleAddQuestion}
-            className="w-full py-4 border-2 border-dashed border-siqap-orange/50 hover:border-siqap-orange bg-siqap-cream/60 hover:bg-siqap-cream rounded-3xl font-black text-siqap-maroon flex items-center justify-center space-x-2 transition cursor-pointer text-sm shadow-sm"
+            className="w-full py-4 border-2 border-dashed border-siqap-orange/50 hover:border-siqap-orange bg-siqap-cream/60 hover:bg-siqap-cream rounded-3xl font-black text-siqap-navy flex items-center justify-center space-x-2 transition cursor-pointer text-sm shadow-sm"
           >
             <Plus className="w-5 h-5 text-siqap-orange" />
             <span>Tambah Pertanyaan Manual</span>
@@ -424,7 +424,7 @@ export default function CreateQuizPage() {
                 <div className="w-8 h-8 rounded-lg bg-siqap-orange text-white flex items-center justify-center">
                   <Sparkles className="w-4 h-4" />
                 </div>
-                <h3 className="text-lg font-black text-siqap-maroon">AI Quiz Generator</h3>
+                <h3 className="text-lg font-black text-siqap-navy">AI Quiz Generator</h3>
               </div>
               <button
                 onClick={() => setIsAiModalOpen(false)}
@@ -443,7 +443,7 @@ export default function CreateQuizPage() {
 
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-black text-siqap-maroon uppercase tracking-wider mb-1.5">
+                <label className="block text-xs font-black text-siqap-navy uppercase tracking-wider mb-1.5">
                   Topik Kuis
                 </label>
                 <input
@@ -451,12 +451,12 @@ export default function CreateQuizPage() {
                   value={aiTopic}
                   onChange={(e) => setAiTopic(e.target.value)}
                   placeholder="Contoh: Jaringan Komputer, Tata Surya, Kemerdekaan RI"
-                  className="w-full text-xs font-bold p-3 rounded-xl bg-white border-2 border-siqap-border text-siqap-maroon focus:outline-none focus:border-siqap-orange transition"
+                  className="w-full text-xs font-bold p-3 rounded-xl bg-white border-2 border-siqap-border text-siqap-navy focus:outline-none focus:border-siqap-orange transition"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-black text-siqap-maroon uppercase tracking-wider mb-1.5">
+                <label className="block text-xs font-black text-siqap-navy uppercase tracking-wider mb-1.5">
                   Atau Tempel Materi / Teks Referensi
                 </label>
                 <textarea
@@ -464,7 +464,7 @@ export default function CreateQuizPage() {
                   value={aiText}
                   onChange={(e) => setAiText(e.target.value)}
                   placeholder="Tempelkan paragraf materi kuliah, artikel, atau modul ajar..."
-                  className="w-full text-xs font-medium p-3 rounded-xl bg-white border-2 border-siqap-border text-siqap-dark focus:outline-none focus:border-siqap-orange transition"
+                  className="w-full text-xs font-medium p-3 rounded-xl bg-white border-2 border-siqap-border text-siqap-navy-dark focus:outline-none focus:border-siqap-orange transition"
                 />
               </div>
 
@@ -476,7 +476,7 @@ export default function CreateQuizPage() {
                   <select
                     value={aiCount}
                     onChange={(e) => setAiCount(Number(e.target.value))}
-                    className="w-full text-xs font-bold p-2.5 rounded-xl bg-white border border-siqap-border text-siqap-maroon focus:outline-none"
+                    className="w-full text-xs font-bold p-2.5 rounded-xl bg-white border border-siqap-border text-siqap-navy focus:outline-none"
                   >
                     <option value={3}>3 Butir Soal</option>
                     <option value={5}>5 Butir Soal</option>
@@ -491,7 +491,7 @@ export default function CreateQuizPage() {
                   <select
                     value={aiDifficulty}
                     onChange={(e) => setAiDifficulty(e.target.value as any)}
-                    className="w-full text-xs font-bold p-2.5 rounded-xl bg-white border border-siqap-border text-siqap-maroon focus:outline-none"
+                    className="w-full text-xs font-bold p-2.5 rounded-xl bg-white border border-siqap-border text-siqap-navy focus:outline-none"
                   >
                     <option value="easy">Mudah</option>
                     <option value="medium">Sedang</option>

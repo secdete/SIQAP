@@ -156,12 +156,12 @@ export default function PlayPage({ params }: { params: Promise<{ pin: string }> 
     return (
       <div className="min-h-screen bg-siqap-sand flex flex-col items-center justify-center p-6 text-center">
         <div className="w-full max-w-sm bg-siqap-cream border-3 border-siqap-orange rounded-3xl p-8 shadow-2xl">
-          <div className="w-16 h-16 rounded-2xl bg-siqap-maroon border-2 border-siqap-orange text-white flex items-center justify-center mx-auto mb-4 animate-bounce">
+          <div className="w-16 h-16 rounded-2xl bg-siqap-navy border-2 border-siqap-orange text-white flex items-center justify-center mx-auto mb-4 animate-bounce">
             <Loader2 className="w-8 h-8 text-siqap-orange animate-spin" />
           </div>
 
-          <h2 className="text-2xl font-black text-siqap-maroon">Anda Sudah Bergabung!</h2>
-          <div className="mt-4 px-5 py-3 rounded-2xl bg-siqap-maroon text-xl font-black text-white shadow-md">
+          <h2 className="text-2xl font-black text-siqap-navy">Anda Sudah Bergabung!</h2>
+          <div className="mt-4 px-5 py-3 rounded-2xl bg-siqap-navy text-xl font-black text-white shadow-md">
             {nickname || "Peserta"}
           </div>
 
@@ -182,7 +182,7 @@ export default function PlayPage({ params }: { params: Promise<{ pin: string }> 
   // ---------------------------------------------------------------------------
   if (phase === "QUESTION_INTRO") {
     return (
-      <div className="min-h-screen bg-siqap-maroon flex flex-col items-center justify-center p-6 text-center animate-fade-in text-white">
+      <div className="min-h-screen bg-siqap-navy flex flex-col items-center justify-center p-6 text-center animate-fade-in text-white">
         <div className="text-xs font-black text-siqap-orange tracking-widest uppercase mb-4">
           Bersiaplah...
         </div>
@@ -211,7 +211,7 @@ export default function PlayPage({ params }: { params: Promise<{ pin: string }> 
             <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mb-4">
               <CheckCircle2 className="w-10 h-10" />
             </div>
-            <h2 className="text-2xl font-black text-siqap-maroon">Jawaban Terkirim!</h2>
+            <h2 className="text-2xl font-black text-siqap-navy">Jawaban Terkirim!</h2>
             <p className="mt-2 text-xs font-semibold text-siqap-muted max-w-xs">
               Menunggu pemain lain dan waktu timer habis di layar proyektor host...
             </p>
@@ -288,7 +288,7 @@ export default function PlayPage({ params }: { params: Promise<{ pin: string }> 
   // ---------------------------------------------------------------------------
   if (phase === "LEADERBOARD") {
     return (
-      <div className="min-h-screen bg-siqap-maroon text-white flex flex-col items-center justify-center p-6 text-center">
+      <div className="min-h-screen bg-siqap-navy text-white flex flex-col items-center justify-center p-6 text-center">
         <Trophy className="w-16 h-16 text-siqap-orange mb-4 animate-bounce" />
         <h2 className="text-2xl font-black">Papan Peringkat Sedang Ditampilkan</h2>
         <p className="mt-2 text-xs text-siqap-peach font-bold max-w-xs">
@@ -302,14 +302,14 @@ export default function PlayPage({ params }: { params: Promise<{ pin: string }> 
   // Phase 6: ENDED
   // ---------------------------------------------------------------------------
   return (
-    <div className="min-h-screen bg-siqap-maroon text-white flex flex-col items-center justify-center p-6 text-center">
-      <div className="w-full max-w-sm bg-siqap-cream border-3 border-siqap-orange rounded-3xl p-8 shadow-2xl text-siqap-dark">
+    <div className="min-h-screen bg-siqap-navy text-white flex flex-col items-center justify-center p-6 text-center">
+      <div className="w-full max-w-sm bg-siqap-cream border-3 border-siqap-orange rounded-3xl p-8 shadow-2xl text-siqap-navy-dark">
         <Trophy className="w-16 h-16 text-siqap-orange mx-auto mb-3" />
-        <h1 className="text-2xl font-black text-siqap-maroon">Permainan Selesai!</h1>
+        <h1 className="text-2xl font-black text-siqap-navy">Permainan Selesai!</h1>
 
         {finalStats ? (
           <div className="mt-6 space-y-4">
-            <div className="p-4 bg-siqap-maroon text-white rounded-2xl shadow-md">
+            <div className="p-4 bg-siqap-navy text-white rounded-2xl shadow-md">
               <span className="text-xs uppercase font-bold text-siqap-peach block">Peringkat Akhir</span>
               <span className="text-4xl font-black text-white">#{finalStats.finalRank}</span>
             </div>
@@ -321,7 +321,7 @@ export default function PlayPage({ params }: { params: Promise<{ pin: string }> 
               </div>
               <div className="p-3 bg-white border border-siqap-border rounded-xl">
                 <span className="text-[10px] uppercase font-bold text-siqap-muted block">Akurasi</span>
-                <span className="text-lg font-black text-siqap-maroon">
+                <span className="text-lg font-black text-siqap-navy">
                   {Math.round((finalStats.correctCount / Math.max(1, finalStats.totalQuestions)) * 100)}%
                 </span>
               </div>

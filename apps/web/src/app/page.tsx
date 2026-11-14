@@ -33,12 +33,12 @@ export default function HomePage() {
   ];
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#FFF7F2] font-sans text-[#560035] selection:bg-[#FC8235] selection:text-white">
+    <div className="flex flex-col min-h-screen bg-[#FFF7F2] font-sans text-[#100820] selection:bg-[#FC8235] selection:text-white">
       {/* =====================================================================
           1. NAVIGASI UTAMA (FigCraft Node 984)
-          1440x96 px, bg #7B034D, border-b 2px #FC8235, pad [0, 80px]
+          1440x96 px, bg #1E1240, border-b 2px #FC8235, pad [0, 80px]
       ====================================================================== */}
-      <header className="w-full bg-[#7B034D] border-b-2 border-[#FC8235] sticky top-0 z-50">
+      <header className="w-full bg-[#1E1240] border-b-2 border-[#FC8235] sticky top-0 z-50">
         <div className="max-w-[1440px] mx-auto h-24 px-6 sm:px-12 lg:px-20 flex items-center justify-between">
           {/* Merek SIQAP [985] */}
           <Link href="/" className="flex items-center">
@@ -79,7 +79,7 @@ export default function HomePage() {
             </Link>
             <Link
               href="/quizzes/create"
-              className="h-[52px] px-6 bg-[#7B034D] border border-white/30 hover:border-[#FC8235] hover:bg-[#560035] text-white font-bold text-[16px] rounded-xl flex items-center justify-center transition shadow-sm cursor-pointer"
+              className="h-[52px] px-6 bg-[#1E1240] border border-white/30 hover:border-[#FC8235] hover:bg-[#100820] text-white font-bold text-[16px] rounded-xl flex items-center justify-center transition shadow-sm cursor-pointer"
             >
               Buat Kuis
             </Link>
@@ -89,9 +89,9 @@ export default function HomePage() {
 
       {/* =====================================================================
           2. HERO SECTION (FigCraft Node 994)
-          1440x648 px, bg #7B034D, pad [72px, 80px], border-b #F2E0D4
+          1440x648 px, bg #1E1240, pad [72px, 80px], border-b #F2E0D4
       ====================================================================== */}
-      <section className="w-full bg-[#7B034D] border-b border-[#F2E0D4] text-white py-[72px]">
+      <section className="w-full bg-[#1E1240] border-b border-[#F2E0D4] text-white py-[72px]">
         <div className="max-w-[1440px] mx-auto px-6 sm:px-12 lg:px-20 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
           {/* Pesan Utama [995] (540px) */}
           <div className="lg:col-span-6 space-y-6 text-left">
@@ -116,13 +116,13 @@ export default function HomePage() {
             <div className="flex flex-wrap items-center gap-3 pt-2">
               <Link
                 href="/quizzes"
-                className="h-[52px] px-6 bg-[#7B034D] border-2 border-[#FC8235] hover:bg-[#FC8235] text-white font-bold text-[16px] rounded-xl flex items-center justify-center transition shadow-md"
+                className="h-[52px] px-6 bg-[#1E1240] border-2 border-[#FC8235] hover:bg-[#FC8235] text-white font-bold text-[16px] rounded-xl flex items-center justify-center transition shadow-md"
               >
                 Coba Demo Kuis
               </Link>
               <Link
                 href="/quizzes/create"
-                className="h-[52px] px-6 bg-white hover:bg-[#FFF7F2] border border-[#F2E0D4] text-[#7B034D] font-bold text-[16px] rounded-xl flex items-center justify-center transition shadow-sm"
+                className="h-[52px] px-6 bg-white hover:bg-[#FFF7F2] border border-[#F2E0D4] text-[#1E1240] font-bold text-[16px] rounded-xl flex items-center justify-center transition shadow-sm"
               >
                 Buat Kuis
               </Link>
@@ -147,7 +147,7 @@ export default function HomePage() {
             </div>
 
             {/* Pratinjau permainan langsung [1009] */}
-            <div className="bg-[#7B034D] border-2 border-white/20 rounded-2xl p-5 sm:p-6 space-y-4 shadow-2xl">
+            <div className="bg-[#1E1240] border-2 border-white/20 rounded-2xl p-5 sm:p-6 space-y-4 shadow-2xl">
               {/* Status pertanyaan [1010] */}
               <div className="flex items-center justify-between">
                 <span className="text-[19px] font-black text-white tracking-tight">
@@ -163,7 +163,7 @@ export default function HomePage() {
                 <div className="text-[11px] font-bold uppercase tracking-wider text-[#FC8235]">
                   PILIHAN GANDA
                 </div>
-                <div className="text-xl sm:text-[25px] font-extrabold leading-[1.2] text-[#7B034D]">
+                <div className="text-xl sm:text-[25px] font-extrabold leading-[1.2] text-[#1E1240]">
                   Planet terbesar di tata surya adalah…
                 </div>
               </div>
@@ -180,8 +180,8 @@ export default function HomePage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 {/* Pilihan A [1021] */}
                 <div className="bg-[#FFF7F2] border border-[#F2E0D4] px-4 py-3.5 rounded-xl flex items-center space-x-3 text-left">
-                  <span className="text-[16px] font-extrabold text-[#7B034D]">A</span>
-                  <span className="text-[19px] font-bold text-[#7B034D]">Mars</span>
+                  <span className="text-[16px] font-extrabold text-[#1E1240]">A</span>
+                  <span className="text-[19px] font-bold text-[#1E1240]">Mars</span>
                 </div>
 
                 {/* Pilihan B [1024] (Highlighted orange in FigCraft) */}
@@ -192,14 +192,14 @@ export default function HomePage() {
 
                 {/* Pilihan C [1028] */}
                 <div className="bg-[#FFF7F2] border border-[#F2E0D4] px-4 py-3.5 rounded-xl flex items-center space-x-3 text-left">
-                  <span className="text-[16px] font-extrabold text-[#7B034D]">C</span>
-                  <span className="text-[19px] font-bold text-[#7B034D]">Venus</span>
+                  <span className="text-[16px] font-extrabold text-[#1E1240]">C</span>
+                  <span className="text-[19px] font-bold text-[#1E1240]">Venus</span>
                 </div>
 
                 {/* Pilihan D [1031] */}
                 <div className="bg-[#FFF7F2] border border-[#F2E0D4] px-4 py-3.5 rounded-xl flex items-center space-x-3 text-left">
-                  <span className="text-[16px] font-extrabold text-[#7B034D]">D</span>
-                  <span className="text-[19px] font-bold text-[#7B034D]">Saturnus</span>
+                  <span className="text-[16px] font-extrabold text-[#1E1240]">D</span>
+                  <span className="text-[19px] font-bold text-[#1E1240]">Saturnus</span>
                 </div>
               </div>
 
@@ -220,7 +220,7 @@ export default function HomePage() {
         <div className="max-w-[1440px] mx-auto px-6 sm:px-12 lg:px-20 grid grid-cols-1 md:grid-cols-12 gap-8 items-center text-left">
           {/* Pernyataan produk [1036] */}
           <div className="md:col-span-4 pr-4">
-            <p className="text-lg sm:text-[22px] font-normal leading-[1.35] text-[#7B034D]">
+            <p className="text-lg sm:text-[22px] font-normal leading-[1.35] text-[#1E1240]">
               Dua alur, satu pengalaman. Host fokus memandu, peserta fokus menjawab.
             </p>
           </div>
@@ -258,7 +258,7 @@ export default function HomePage() {
             <span className="text-[12px] font-extrabold tracking-[1.6px] uppercase text-[#FC8235] block">
               CARA BERMAIN
             </span>
-            <h2 className="text-3xl sm:text-[42px] font-extrabold tracking-[-1.2px] text-[#7B034D] leading-tight">
+            <h2 className="text-3xl sm:text-[42px] font-extrabold tracking-[-1.2px] text-[#1E1240] leading-tight">
               Dari PIN ke peringkat, dalam tiga langkah.
             </h2>
           </div>
@@ -270,7 +270,7 @@ export default function HomePage() {
               <span className="text-[36px] font-normal text-[#FC8235] block leading-none">
                 01
               </span>
-              <h3 className="text-[21px] font-bold text-[#7B034D] leading-snug">
+              <h3 className="text-[21px] font-bold text-[#1E1240] leading-snug">
                 Host buat kuis manual atau gunakan generator AI
               </h3>
               <p className="text-[16px] font-normal leading-[1.6] text-[#7E5B6E]">
@@ -284,7 +284,7 @@ export default function HomePage() {
               <span className="text-[36px] font-normal text-[#FC8235] block leading-none">
                 02
               </span>
-              <h3 className="text-[21px] font-bold text-[#7B034D] leading-snug">
+              <h3 className="text-[21px] font-bold text-[#1E1240] leading-snug">
                 Peserta join dengan PIN 6 digit atau QR
               </h3>
               <p className="text-[16px] font-normal leading-[1.6] text-[#7E5B6E]">
@@ -298,7 +298,7 @@ export default function HomePage() {
               <span className="text-[36px] font-normal text-[#FC8235] block leading-none">
                 03
               </span>
-              <h3 className="text-[21px] font-bold text-[#7B034D] leading-snug">
+              <h3 className="text-[21px] font-bold text-[#1E1240] leading-snug">
                 Jawab, lihat peringkat, dan ulas kesalahan
               </h3>
               <p className="text-[16px] font-normal leading-[1.6] text-[#7E5B6E]">
@@ -322,13 +322,13 @@ export default function HomePage() {
               <span className="text-[12px] font-extrabold tracking-[1.6px] uppercase text-[#FC8235] block">
                 DEMO KUIS
               </span>
-              <h2 className="text-3xl sm:text-[42px] font-extrabold tracking-[-1.2px] text-[#7B034D] leading-tight">
+              <h2 className="text-3xl sm:text-[42px] font-extrabold tracking-[-1.2px] text-[#1E1240] leading-tight">
                 Coba kuis demo untuk host dan peserta.
               </h2>
             </div>
             <Link
               href="/quizzes"
-              className="h-[52px] px-6 bg-white hover:bg-[#FBF2EB] border border-[#F2E0D4] text-[#7B034D] font-bold text-[16px] rounded-xl flex items-center justify-center transition shadow-sm self-start sm:self-auto"
+              className="h-[52px] px-6 bg-white hover:bg-[#FBF2EB] border border-[#F2E0D4] text-[#1E1240] font-bold text-[16px] rounded-xl flex items-center justify-center transition shadow-sm self-start sm:self-auto"
             >
               Lihat contoh kuis
             </Link>
@@ -336,10 +336,10 @@ export default function HomePage() {
 
           {/* Koleksi kuis [1068] (3 cards 410px each) */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Kartu kuis 1 [1069] (Demo Host - Maroon #7B034D) */}
+            {/* Kartu kuis 1 [1069] (Demo Host - Maroon #1E1240) */}
             <div className="bg-white border border-[#F2E0D4] rounded-2xl overflow-hidden shadow-sm flex flex-col justify-between hover:shadow-md transition">
               {/* Top preview [1070] (202px) */}
-              <div className="h-[202px] p-6 bg-[#7B034D] text-white flex flex-col justify-between text-left">
+              <div className="h-[202px] p-6 bg-[#1E1240] text-white flex flex-col justify-between text-left">
                 <span className="text-[11px] font-extrabold tracking-[1.2px] uppercase text-white/90">
                   DEMO HOST
                 </span>
@@ -353,7 +353,7 @@ export default function HomePage() {
               {/* Bottom info [1074] (138px) */}
               <div className="h-[138px] p-6 flex flex-col justify-between text-left">
                 <div>
-                  <h3 className="text-[22px] font-bold text-[#7B034D]">
+                  <h3 className="text-[22px] font-bold text-[#1E1240]">
                     Pengetahuan Umum
                   </h3>
                   <p className="text-[14px] font-normal text-[#7E5B6E] mt-0.5">
@@ -391,7 +391,7 @@ export default function HomePage() {
               {/* Bottom info [1085] (138px) */}
               <div className="h-[138px] p-6 flex flex-col justify-between text-left">
                 <div>
-                  <h3 className="text-[22px] font-bold text-[#7B034D]">
+                  <h3 className="text-[22px] font-bold text-[#1E1240]">
                     Jelajah Nusantara
                   </h3>
                   <p className="text-[14px] font-normal text-[#7E5B6E] mt-0.5">
@@ -412,10 +412,10 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Kartu kuis 3 [1091] (Demo Review - Dark Plum #560035) */}
+            {/* Kartu kuis 3 [1091] (Demo Review - Dark Plum #100820) */}
             <div className="bg-white border border-[#F2E0D4] rounded-2xl overflow-hidden shadow-sm flex flex-col justify-between hover:shadow-md transition">
               {/* Top preview [1092] (202px) */}
-              <div className="h-[202px] p-6 bg-[#560035] text-white flex flex-col justify-between text-left">
+              <div className="h-[202px] p-6 bg-[#100820] text-white flex flex-col justify-between text-left">
                 <span className="text-[11px] font-extrabold tracking-[1.2px] uppercase text-white/90">
                   DEMO REVIEW
                 </span>
@@ -429,7 +429,7 @@ export default function HomePage() {
               {/* Bottom info [1096] (138px) */}
               <div className="h-[138px] p-6 flex flex-col justify-between text-left">
                 <div>
-                  <h3 className="text-[22px] font-bold text-[#7B034D]">
+                  <h3 className="text-[22px] font-bold text-[#1E1240]">
                     Sains di Sekitar Kita
                   </h3>
                   <p className="text-[14px] font-normal text-[#7E5B6E] mt-0.5">
@@ -464,7 +464,7 @@ export default function HomePage() {
             <span className="text-[12px] font-extrabold tracking-[1.6px] uppercase text-[#FC8235] block">
               BERBEDA PERAN, SAMA SERUNYA
             </span>
-            <h2 className="text-3xl sm:text-[42px] font-extrabold tracking-[-1.2px] text-[#7B034D] leading-tight">
+            <h2 className="text-3xl sm:text-[42px] font-extrabold tracking-[-1.2px] text-[#1E1240] leading-tight">
               Host pegang kendali. Peserta unjuk gigi.
             </h2>
           </div>
@@ -477,7 +477,7 @@ export default function HomePage() {
                 <span className="text-[13px] font-extrabold text-[#FC8235] uppercase tracking-wide block">
                   UNTUK HOST
                 </span>
-                <h3 className="text-[28px] font-extrabold text-[#7B034D]">
+                <h3 className="text-[28px] font-extrabold text-[#1E1240]">
                   Atur sesi tanpa ribet.
                 </h3>
               </div>
@@ -485,7 +485,7 @@ export default function HomePage() {
               {/* Contoh kontrol host [1111] */}
               <div className="bg-white p-5 rounded-xl space-y-4 shadow-sm">
                 <div className="flex items-center justify-between">
-                  <span className="text-[14px] font-normal text-[#7B034D]">
+                  <span className="text-[14px] font-normal text-[#1E1240]">
                     Waktu per pertanyaan
                   </span>
                   <span className="text-[14px] font-extrabold text-[#FC8235]">
@@ -493,7 +493,7 @@ export default function HomePage() {
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[14px] font-normal text-[#7B034D]">
+                  <span className="text-[14px] font-normal text-[#1E1240]">
                     Poin jawaban benar
                   </span>
                   <span className="text-[14px] font-extrabold text-[#FC8235]">
@@ -515,7 +515,7 @@ export default function HomePage() {
                 <span className="text-[13px] font-extrabold text-[#FC8235] uppercase tracking-wide block">
                   UNTUK PESERTA
                 </span>
-                <h3 className="text-[28px] font-extrabold text-[#7B034D]">
+                <h3 className="text-[28px] font-extrabold text-[#1E1240]">
                   Fokus jawab, nikmati persaingan.
                 </h3>
               </div>
@@ -526,7 +526,7 @@ export default function HomePage() {
                   1
                 </span>
                 <div className="flex-1">
-                  <div className="text-[17px] font-bold text-[#7B034D]">
+                  <div className="text-[17px] font-bold text-[#1E1240]">
                     Nadia
                   </div>
                   <div className="text-[12px] font-normal text-[#7E5B6E]">
@@ -550,9 +550,9 @@ export default function HomePage() {
 
       {/* =====================================================================
           7. KEGUNAAN UNTUK KELAS DAN PAMERAN (FigCraft Node 1129)
-          1440x336 px, bg #7B034D, pad [72px, 80px], gap 64px, text white
+          1440x336 px, bg #1E1240, pad [72px, 80px], gap 64px, text white
       ====================================================================== */}
-      <section className="w-full bg-[#7B034D] text-white py-[72px]">
+      <section className="w-full bg-[#1E1240] text-white py-[72px]">
         <div className="max-w-[1440px] mx-auto px-6 sm:px-12 lg:px-20 grid grid-cols-1 md:grid-cols-12 gap-8 items-start text-left">
           {/* Pengantar [1130] */}
           <div className="md:col-span-4 space-y-4">
@@ -605,7 +605,7 @@ export default function HomePage() {
             <span className="text-[12px] font-extrabold tracking-[1.6px] uppercase text-[#FC8235] block">
               SEBELUM MULAI
             </span>
-            <h2 className="text-3xl sm:text-[42px] font-extrabold leading-[1.15] tracking-[-1.0px] text-[#7B034D]">
+            <h2 className="text-3xl sm:text-[42px] font-extrabold leading-[1.15] tracking-[-1.0px] text-[#1E1240]">
               Masih ada pertanyaan?
             </h2>
             <p className="text-[16px] font-normal leading-[1.6] text-[#7E5B6E]">
@@ -623,10 +623,10 @@ export default function HomePage() {
                     onClick={() => toggleFaq(idx)}
                     className="w-full flex items-center justify-between text-left group py-1"
                   >
-                    <span className="text-[18px] font-bold text-[#7B034D] group-hover:text-[#FC8235] transition-colors pr-4">
+                    <span className="text-[18px] font-bold text-[#1E1240] group-hover:text-[#FC8235] transition-colors pr-4">
                       {faq.q}
                     </span>
-                    <span className="text-[#7B034D] shrink-0">
+                    <span className="text-[#1E1240] shrink-0">
                       {isOpen ? (
                         <ChevronUp className="w-5 h-5 text-[#FC8235]" />
                       ) : (
@@ -652,7 +652,7 @@ export default function HomePage() {
       ====================================================================== */}
       <section className="w-full bg-[#FFF7F2] py-16 text-center">
         <div className="max-w-[1440px] mx-auto px-6 sm:px-12 lg:px-20 space-y-6">
-          <h2 className="text-3xl sm:text-[46px] font-extrabold tracking-[-1.4px] text-[#7B034D]">
+          <h2 className="text-3xl sm:text-[46px] font-extrabold tracking-[-1.4px] text-[#1E1240]">
             Siap jadi yang paling SIQAP?
           </h2>
           <p className="text-[18px] font-normal text-[#7E5B6E] max-w-2xl mx-auto">
@@ -661,13 +661,13 @@ export default function HomePage() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
             <Link
               href="/quizzes"
-              className="h-[52px] px-8 bg-[#7B034D] hover:bg-[#560035] border border-[#FC8235]/40 text-white font-bold text-[16px] rounded-xl flex items-center justify-center shadow-lg transition"
+              className="h-[52px] px-8 bg-[#1E1240] hover:bg-[#100820] border border-[#FC8235]/40 text-white font-bold text-[16px] rounded-xl flex items-center justify-center shadow-lg transition"
             >
               Coba Demo Kuis
             </Link>
             <Link
               href="/quizzes/create"
-              className="h-[52px] px-8 bg-white hover:bg-[#FFF7F2] border border-[#F2E0D4] text-[#7B034D] font-bold text-[16px] rounded-xl flex items-center justify-center shadow-sm transition"
+              className="h-[52px] px-8 bg-white hover:bg-[#FFF7F2] border border-[#F2E0D4] text-[#1E1240] font-bold text-[16px] rounded-xl flex items-center justify-center shadow-sm transition"
             >
               Buat Kuis
             </Link>
@@ -684,7 +684,7 @@ export default function HomePage() {
           {/* Identitas dan tautan [1169] */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 text-left">
             <div className="space-y-2">
-              <span className="text-[28px] font-black tracking-[-1.2px] text-[#7B034D] select-none block">
+              <span className="text-[28px] font-black tracking-[-1.2px] text-[#1E1240] select-none block">
                 SIQAP
               </span>
               <p className="text-[14px] font-normal text-[#7E5B6E]">
@@ -692,7 +692,7 @@ export default function HomePage() {
               </p>
             </div>
 
-            <nav className="flex items-center space-x-8 text-[14px] font-semibold text-[#7B034D]">
+            <nav className="flex items-center space-x-8 text-[14px] font-semibold text-[#1E1240]">
               <a
                 href="#cara-bermain"
                 className="hover:text-[#FC8235] transition-colors"

@@ -34,14 +34,14 @@ const OPTION_THEMES = [
   {
     bg: "bg-[#F5B031] border-[#d9941a]",
     dimBg: "bg-[#F5B031]/20 border-[#F5B031]/40 opacity-40",
-    textColor: "text-[#560035]",
+    textColor: "text-[#100820]",
     badge: "◆ B",
     icon: <div className="shape-diamond shrink-0 mr-3" />,
   },
   {
     bg: "bg-[#2DB87A] border-[#1f935f]",
     dimBg: "bg-[#2DB87A]/20 border-[#2DB87A]/40 opacity-40",
-    textColor: "text-[#560035]",
+    textColor: "text-[#100820]",
     badge: "● C",
     icon: <div className="shape-circle shrink-0 mr-3" />,
   },
@@ -200,7 +200,7 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
   // ---------------------------------------------------------------------------
   if (phase === "LOBBY") {
     return (
-      <div className="min-h-screen bg-siqap-maroon text-white flex flex-col p-6 sm:p-10 justify-between">
+      <div className="min-h-screen bg-siqap-navy text-white flex flex-col p-6 sm:p-10 justify-between">
         {/* Top Header Bar */}
         <div className="flex items-center justify-between pb-4 border-b-2 border-siqap-orange/50">
           <div className="flex items-center space-x-3">
@@ -221,7 +221,7 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
             <button
               onClick={() => setSoundEnabled(!soundEnabled)}
               className={`p-2.5 rounded-xl border-2 transition ${
-                soundEnabled ? "bg-siqap-orange border-siqap-orange text-white" : "bg-siqap-dark border-white/20 text-white/50"
+                soundEnabled ? "bg-siqap-orange border-siqap-orange text-white" : "bg-siqap-navy-dark border-white/20 text-white/50"
               }`}
             >
               <Volume2 className="w-5 h-5" />
@@ -241,11 +241,11 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
         {/* PIN & QR Card (FigCraft Node 886 Style: Warm Cream with Thick Orange Border) */}
         <div className="my-8 max-w-4xl mx-auto w-full bg-siqap-cream border-4 border-siqap-orange rounded-3xl p-8 sm:p-10 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-8">
           <div className="text-center md:text-left flex-1">
-            <div className="inline-block px-4 py-1.5 rounded-full bg-siqap-maroon text-white font-bold text-xs uppercase tracking-wider mb-3">
+            <div className="inline-block px-4 py-1.5 rounded-full bg-siqap-navy text-white font-bold text-xs uppercase tracking-wider mb-3">
               Bergabung via Smartphone
             </div>
             <h2 className="text-lg font-bold text-siqap-muted">Buka browser di HP dan masukkan PIN:</h2>
-            <div className="text-6xl sm:text-7xl font-black text-siqap-maroon tracking-widest my-3">
+            <div className="text-6xl sm:text-7xl font-black text-siqap-navy tracking-widest my-3">
               {pin}
             </div>
             <p className="text-sm font-bold text-siqap-orange">
@@ -255,7 +255,7 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
 
           <div className="p-4 bg-white border-2 border-siqap-border rounded-2xl shadow-md flex flex-col items-center">
             {joinUrl && <QRCodeSVG value={joinUrl} size={170} />}
-            <span className="mt-2 text-[11px] font-black text-siqap-maroon uppercase tracking-wider">
+            <span className="mt-2 text-[11px] font-black text-siqap-navy uppercase tracking-wider">
               Scan untuk Join Instan
             </span>
           </div>
@@ -280,7 +280,7 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
               {players.map((p) => (
                 <div
                   key={p.playerId}
-                  className="group px-4 py-2 bg-siqap-dark border-2 border-siqap-orange/50 rounded-xl flex items-center space-x-2 font-bold text-white shadow-md hover:border-red-500 transition"
+                  className="group px-4 py-2 bg-siqap-navy-dark border-2 border-siqap-orange/50 rounded-xl flex items-center space-x-2 font-bold text-white shadow-md hover:border-red-500 transition"
                 >
                   <span>{p.nickname}</span>
                   <button
@@ -304,7 +304,7 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
   // ---------------------------------------------------------------------------
   if (phase === "QUESTION_INTRO") {
     return (
-      <div className="min-h-screen bg-siqap-maroon flex flex-col items-center justify-center p-6 text-center animate-fade-in">
+      <div className="min-h-screen bg-siqap-navy flex flex-col items-center justify-center p-6 text-center animate-fade-in">
         <div className="text-xl font-black text-siqap-orange tracking-widest uppercase mb-4">
           SOAL #{Number(question?.questionIndex ?? 0) + 1}
         </div>
@@ -328,11 +328,11 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
     const totalVotes = distribution.reduce((a, b) => a + b, 0);
 
     return (
-      <div className="min-h-screen bg-siqap-maroon flex flex-col p-6 sm:p-10 justify-between max-w-7xl mx-auto">
+      <div className="min-h-screen bg-siqap-navy flex flex-col p-6 sm:p-10 justify-between max-w-7xl mx-auto">
         {/* Top Control Bar */}
         <div className="flex items-center justify-between pb-4 border-b-2 border-siqap-orange/40 mb-6">
           <div className="flex items-center space-x-3">
-            <span className="text-xs font-black uppercase tracking-wider bg-siqap-dark text-siqap-peach px-3 py-1.5 rounded-xl border border-siqap-orange/30">
+            <span className="text-xs font-black uppercase tracking-wider bg-siqap-navy-dark text-siqap-peach px-3 py-1.5 rounded-xl border border-siqap-orange/30">
               Soal {Number(question?.questionIndex ?? 0) + 1} / {question?.total ?? 1}
             </span>
             {question?.pointsMode === "double" && (
@@ -348,14 +348,14 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
               <>
                 <button
                   onClick={handleTogglePause}
-                  className="px-4 py-2 bg-siqap-dark hover:bg-black/40 text-white rounded-xl font-bold text-sm flex items-center space-x-1.5 border border-white/20 transition"
+                  className="px-4 py-2 bg-siqap-navy-dark hover:bg-black/40 text-white rounded-xl font-bold text-sm flex items-center space-x-1.5 border border-white/20 transition"
                 >
                   <Pause className="w-4 h-4" />
                   <span>{isPaused ? "Lanjutkan" : "Jeda"}</span>
                 </button>
                 <button
                   onClick={handleSkipQuestion}
-                  className="px-4 py-2 bg-siqap-dark hover:bg-black/40 text-white rounded-xl font-bold text-sm flex items-center space-x-1.5 border border-white/20 transition"
+                  className="px-4 py-2 bg-siqap-navy-dark hover:bg-black/40 text-white rounded-xl font-bold text-sm flex items-center space-x-1.5 border border-white/20 transition"
                 >
                   <SkipForward className="w-4 h-4" />
                   <span>Lewati</span>
@@ -375,7 +375,7 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
 
         {/* Question Panel Box (FigCraft Node 847 Style: Warm Cream with Thick Orange Border) */}
         <div className="bg-siqap-cream border-4 border-siqap-orange rounded-3xl p-8 mb-6 shadow-2xl flex items-center justify-between min-h-36">
-          <h2 className="text-2xl sm:text-4xl font-black text-siqap-maroon leading-snug max-w-4xl">
+          <h2 className="text-2xl sm:text-4xl font-black text-siqap-navy leading-snug max-w-4xl">
             {question?.text}
           </h2>
 
@@ -383,14 +383,14 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
           {!isReveal ? (
             <div className="flex items-center space-x-6 shrink-0 pl-6 border-l-2 border-siqap-border">
               <div className="flex flex-col items-center">
-                <div className="w-18 h-18 rounded-full border-4 border-siqap-orange bg-white flex items-center justify-center font-black text-2xl text-siqap-maroon shadow-md">
+                <div className="w-18 h-18 rounded-full border-4 border-siqap-orange bg-white flex items-center justify-center font-black text-2xl text-siqap-navy shadow-md">
                   {Math.ceil(remainingMs / 1000)}
                 </div>
                 <span className="text-[10px] text-siqap-muted uppercase tracking-widest font-bold mt-1">Detik</span>
               </div>
 
               <div className="flex flex-col items-center">
-                <div className="text-3xl font-black text-siqap-maroon">{answeredCount}</div>
+                <div className="text-3xl font-black text-siqap-navy">{answeredCount}</div>
                 <span className="text-[10px] text-siqap-muted uppercase tracking-widest font-bold">Jawaban</span>
               </div>
             </div>
@@ -400,7 +400,7 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
                 <span className="text-xs font-bold text-siqap-orange uppercase tracking-wider block mb-1">
                   💡 Pembahasan Materi:
                 </span>
-                <p className="text-xs text-siqap-maroon font-semibold leading-relaxed">{reveal.explanation}</p>
+                <p className="text-xs text-siqap-navy font-semibold leading-relaxed">{reveal.explanation}</p>
               </div>
             )
           )}
@@ -471,7 +471,7 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
   // ---------------------------------------------------------------------------
   if (phase === "LEADERBOARD") {
     return (
-      <div className="min-h-screen bg-siqap-maroon text-white flex flex-col p-6 sm:p-10 max-w-4xl mx-auto justify-between">
+      <div className="min-h-screen bg-siqap-navy text-white flex flex-col p-6 sm:p-10 max-w-4xl mx-auto justify-between">
         <div className="flex items-center justify-between pb-6 border-b-2 border-siqap-orange mb-8">
           <div className="flex items-center space-x-3">
             <Trophy className="w-8 h-8 text-siqap-orange" />
@@ -491,7 +491,7 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
           {leaderboard.map((entry, idx) => (
             <div
               key={entry.playerId}
-              className="p-4 bg-siqap-dark border-2 border-siqap-orange/40 rounded-2xl flex items-center justify-between shadow-lg"
+              className="p-4 bg-siqap-navy-dark border-2 border-siqap-orange/40 rounded-2xl flex items-center justify-between shadow-lg"
             >
               <div className="flex items-center space-x-4">
                 <div
@@ -499,7 +499,7 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
                     idx === 0
                       ? "bg-siqap-orange text-white shadow-md shadow-orange-500/40"
                       : idx === 1
-                      ? "bg-siqap-beige text-siqap-maroon"
+                      ? "bg-siqap-beige text-siqap-navy"
                       : idx === 2
                       ? "bg-[#8C4E6E] text-white"
                       : "bg-white/10 text-white"
@@ -521,7 +521,7 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
   // Phase 6: PODIUM / ENDED (FigCraft Node 692 Style)
   // ---------------------------------------------------------------------------
   return (
-    <div className="min-h-screen bg-siqap-maroon text-white flex flex-col p-6 sm:p-10 max-w-5xl mx-auto text-center justify-between">
+    <div className="min-h-screen bg-siqap-navy text-white flex flex-col p-6 sm:p-10 max-w-5xl mx-auto text-center justify-between">
       <div>
         <div className="inline-flex items-center space-x-2 px-5 py-2 rounded-full bg-siqap-orange text-white font-black text-sm mb-4 shadow-md">
           <Medal className="w-5 h-5" />
@@ -541,9 +541,9 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
             <div className="text-sm font-extrabold text-white/80 mb-2">
               {podium[1].score} pts
             </div>
-            <div className="w-full h-44 bg-siqap-beige rounded-t-3xl flex flex-col items-center justify-center text-siqap-maroon shadow-2xl border-2 border-white/40">
-              <span className="text-siqap-maroon text-xs uppercase font-black mb-2">Juara 2</span>
-              <div className="w-12 h-12 rounded-full bg-siqap-maroon text-white flex items-center justify-center font-black text-xl shadow-md">
+            <div className="w-full h-44 bg-siqap-beige rounded-t-3xl flex flex-col items-center justify-center text-siqap-navy shadow-2xl border-2 border-white/40">
+              <span className="text-siqap-navy text-xs uppercase font-black mb-2">Juara 2</span>
+              <div className="w-12 h-12 rounded-full bg-siqap-navy text-white flex items-center justify-center font-black text-xl shadow-md">
                 2
               </div>
             </div>
@@ -591,7 +591,7 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
       <div className="flex items-center justify-center space-x-4">
         <button
           onClick={() => router.push("/quizzes")}
-          className="px-6 py-3 rounded-2xl bg-white text-siqap-maroon font-black text-sm hover:bg-siqap-cream transition shadow-md"
+          className="px-6 py-3 rounded-2xl bg-white text-siqap-navy font-black text-sm hover:bg-siqap-cream transition shadow-md"
         >
           Kembali ke Koleksi
         </button>

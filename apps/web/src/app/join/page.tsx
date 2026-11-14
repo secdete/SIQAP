@@ -86,7 +86,7 @@ function JoinContent() {
   return (
     <div className="min-h-screen bg-siqap-sand flex flex-col justify-between">
       {/* Top Bar */}
-      <header className="border-b-2 border-siqap-orange bg-siqap-maroon text-white p-4">
+      <header className="border-b-2 border-siqap-orange bg-siqap-navy text-white p-4">
         <div className="max-w-md mx-auto flex items-center justify-between">
           <Link href="/" className="inline-flex items-center space-x-1.5 text-xs font-bold text-siqap-peach hover:text-white transition">
             <ArrowLeft className="w-4 h-4" />
@@ -109,10 +109,10 @@ function JoinContent() {
           {/* Card Form Gabung (FigCraft Node 962 Style) */}
           <div className="bg-siqap-cream border-3 border-siqap-orange rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
             <div className="text-center mb-6">
-              <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-siqap-maroon font-black text-2xl text-white shadow-lg border-2 border-siqap-orange mb-3">
+              <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-siqap-navy font-black text-2xl text-white shadow-lg border-2 border-siqap-orange mb-3">
                 S
               </div>
-              <h1 className="text-2xl font-black text-siqap-maroon tracking-tight">Gabung Kuis</h1>
+              <h1 className="text-2xl font-black text-siqap-navy tracking-tight">Gabung Kuis</h1>
               <p className="text-xs font-semibold text-siqap-muted mt-1">Masukkan PIN dari layar host dan namamu</p>
             </div>
 
@@ -125,7 +125,7 @@ function JoinContent() {
               )}
 
               <div>
-                <label className="block text-xs font-black text-siqap-maroon uppercase tracking-wider mb-1.5 text-left">
+                <label className="block text-xs font-black text-siqap-navy uppercase tracking-wider mb-1.5 text-left">
                   Game PIN
                 </label>
                 <input
@@ -134,13 +134,13 @@ function JoinContent() {
                   value={pin}
                   onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
                   placeholder="6 digit angka"
-                  className="w-full text-center text-2xl font-black tracking-widest px-4 py-3 rounded-2xl bg-white border-2 border-siqap-border text-siqap-maroon placeholder:text-gray-300 focus:outline-none focus:border-siqap-orange focus:ring-4 focus:ring-siqap-orange/20 transition"
+                  className="w-full text-center text-2xl font-black tracking-widest px-4 py-3 rounded-2xl bg-white border-2 border-siqap-border text-siqap-navy placeholder:text-gray-300 focus:outline-none focus:border-siqap-orange focus:ring-4 focus:ring-siqap-orange/20 transition"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-black text-siqap-maroon uppercase tracking-wider mb-1.5 text-left">
+                <label className="block text-xs font-black text-siqap-navy uppercase tracking-wider mb-1.5 text-left">
                   Nama Panggilan
                 </label>
                 <input
@@ -149,7 +149,7 @@ function JoinContent() {
                   value={nickname}
                   onChange={(e) => setNickname(e.target.value)}
                   placeholder="Ketik nama atau panggilan"
-                  className="w-full text-center text-lg font-bold px-4 py-3 rounded-2xl bg-white border-2 border-siqap-border text-siqap-maroon placeholder:text-gray-300 focus:outline-none focus:border-siqap-orange focus:ring-4 focus:ring-siqap-orange/20 transition"
+                  className="w-full text-center text-lg font-bold px-4 py-3 rounded-2xl bg-white border-2 border-siqap-border text-siqap-navy placeholder:text-gray-300 focus:outline-none focus:border-siqap-orange focus:ring-4 focus:ring-siqap-orange/20 transition"
                   required
                 />
               </div>
@@ -186,7 +186,7 @@ function JoinContent() {
 
 export default function JoinPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-siqap-sand flex items-center justify-center font-bold text-siqap-maroon">Memuat...</div>}>
+    <Suspense fallback={<div className="min-h-screen bg-siqap-sand flex items-center justify-center font-bold text-siqap-navy">Memuat...</div>}>
       <JoinContent />
     </Suspense>
   );

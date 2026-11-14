@@ -10,15 +10,17 @@ const config: Config = {
     extend: {
       colors: {
         siqap: {
-          maroon: "#7B034D", // Deep Maroon / Plum Poster
-          orange: "#FC8235", // Vibrant Orange Poster
-          peach: "#FFA566",  // Warm Peach Accent
-          dark: "#560035",   // Dark Plum Shadow
-          sand: "#FBF2EB",   // Warm Sand Background
-          cream: "#FFF7F2",  // Light Warm Cream
+          maroon: "#1E1240", // Poster navy-purple (replaces burgundy)
+          navy:   "#1E1240", // alias - primary dark background
+          "navy-dark": "#100820", // deeper navy for shadows/dark accents
+          orange: "#FC8235", // Vibrant Orange Poster accent
+          peach:  "#FFA566", // Warm Peach lighter accent
+          dark:   "#100820", // Dark navy shadow
+          sand:   "#FBF2EB", // Warm Sand (light pages)
+          cream:  "#FFF7F2", // Light Warm Cream
           border: "#F3E1D5", // Soft Cream Border
-          muted: "#7E5B6E",  // Muted Plum Text
-          beige: "#E5DAC6",  // Poster Team Card Beige
+          muted:  "#7E5B6E", // Muted text
+          beige:  "#E5DAC6", // Team Card Beige
         },
         quiz: {
           red: "#C93C42",    // Kahoot Option A (Red)
