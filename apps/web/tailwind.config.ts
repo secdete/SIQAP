@@ -19,7 +19,7 @@ const config: Config = {
           sand:   "#FBF2EB", // Warm Sand (light pages)
           cream:  "#FFF7F2", // Light Warm Cream
           border: "#F3E1D5", // Soft Cream Border
-          muted:  "#7E5B6E", // Muted text
+          muted:  "#6B6188", // Muted text
           beige:  "#E5DAC6", // Team Card Beige
         },
         quiz: {

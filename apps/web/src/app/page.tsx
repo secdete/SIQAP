@@ -230,7 +230,7 @@ export default function HomePage() {
             <h3 className="text-[16px] font-bold text-[#FC8235]">
               Host memandu di layar utama
             </h3>
-            <p className="text-[14px] font-normal leading-[1.5] text-[#7E5B6E]">
+            <p className="text-[14px] font-normal leading-[1.5] text-[#6B6188]">
               Tampilkan soal, atur tempo, pantau respons, dan tampilkan peringkat setiap ronde.
             </p>
           </div>
@@ -240,7 +240,7 @@ export default function HomePage() {
             <h3 className="text-[16px] font-bold text-[#FC8235]">
               Peserta menjawab di perangkatnya
             </h3>
-            <p className="text-[14px] font-normal leading-[1.5] text-[#7E5B6E]">
+            <p className="text-[14px] font-normal leading-[1.5] text-[#6B6188]">
               Masukkan PIN 6 digit atau scan QR, pilih nama, lalu jawab soal sesuai waktu yang ditentukan.
             </p>
           </div>
@@ -273,7 +273,7 @@ export default function HomePage() {
               <h3 className="text-[21px] font-bold text-[#1E1240] leading-snug">
                 Host buat kuis manual atau gunakan generator AI
               </h3>
-              <p className="text-[16px] font-normal leading-[1.6] text-[#7E5B6E]">
+              <p className="text-[16px] font-normal leading-[1.6] text-[#6B6188]">
                 Host menyiapkan topik, jumlah soal, tingkat kesulitan, dan bahasa.
                 Hasil generator AI wajib direview sebelum dipublikasikan.
               </p>
@@ -287,7 +287,7 @@ export default function HomePage() {
               <h3 className="text-[21px] font-bold text-[#1E1240] leading-snug">
                 Peserta join dengan PIN 6 digit atau QR
               </h3>
-              <p className="text-[16px] font-normal leading-[1.6] text-[#7E5B6E]">
+              <p className="text-[16px] font-normal leading-[1.6] text-[#6B6188]">
                 Tampilkan PIN di layar atau bagikan QR. Peserta masuk tanpa akun,
                 memilih nama, lalu siap menjawab.
               </p>
@@ -301,7 +301,7 @@ export default function HomePage() {
               <h3 className="text-[21px] font-bold text-[#1E1240] leading-snug">
                 Jawab, lihat peringkat, dan ulas kesalahan
               </h3>
-              <p className="text-[16px] font-normal leading-[1.6] text-[#7E5B6E]">
+              <p className="text-[16px] font-normal leading-[1.6] text-[#6B6188]">
                 Poin dihitung dari ketepatan dan kecepatan. Setelah soal selesai,
                 host bisa membahas jawaban benar dan meninjau kesalahan bersama.
               </p>
@@ -356,12 +356,12 @@ export default function HomePage() {
                   <h3 className="text-[22px] font-bold text-[#1E1240]">
                     Pengetahuan Umum
                   </h3>
-                  <p className="text-[14px] font-normal text-[#7E5B6E] mt-0.5">
+                  <p className="text-[14px] font-normal text-[#6B6188] mt-0.5">
                     10 pertanyaan · ± 5 menit · Campuran
                   </p>
                 </div>
                 <div className="flex items-center justify-between text-xs sm:text-sm pt-2">
-                  <span className="text-[12px] font-normal text-[#7E5B6E]">
+                  <span className="text-[12px] font-normal text-[#6B6188]">
                     Siap dimainkan
                   </span>
                   <Link
@@ -394,12 +394,12 @@ export default function HomePage() {
                   <h3 className="text-[22px] font-bold text-[#1E1240]">
                     Jelajah Nusantara
                   </h3>
-                  <p className="text-[14px] font-normal text-[#7E5B6E] mt-0.5">
+                  <p className="text-[14px] font-normal text-[#6B6188] mt-0.5">
                     10 pertanyaan · ± 5 menit · Pemula
                   </p>
                 </div>
                 <div className="flex items-center justify-between text-xs sm:text-sm pt-2">
-                  <span className="text-[12px] font-normal text-[#7E5B6E]">
+                  <span className="text-[12px] font-normal text-[#6B6188]">
                     Siap dimainkan
                   </span>
                   <Link
@@ -432,12 +432,12 @@ export default function HomePage() {
                   <h3 className="text-[22px] font-bold text-[#1E1240]">
                     Sains di Sekitar Kita
                   </h3>
-                  <p className="text-[14px] font-normal text-[#7E5B6E] mt-0.5">
+                  <p className="text-[14px] font-normal text-[#6B6188] mt-0.5">
                     12 pertanyaan · ± 6 menit · Menengah
                   </p>
                 </div>
                 <div className="flex items-center justify-between text-xs sm:text-sm pt-2">
-                  <span className="text-[12px] font-normal text-[#7E5B6E]">
+                  <span className="text-[12px] font-normal text-[#6B6188]">
                     Siap dimainkan
                   </span>
                   <Link
@@ -503,7 +503,7 @@ export default function HomePage() {
               </div>
 
               {/* Deskripsi [1118] */}
-              <p className="text-[16px] font-normal leading-[1.7] text-[#7E5B6E]">
+              <p className="text-[16px] font-normal leading-[1.7] text-[#6B6188]">
                 Susun pertanyaan, pantau peserta di lobi, dan tampilkan papan peringkat setiap ronde.
                 Kamu yang menentukan kapan lanjut.
               </p>
@@ -529,7 +529,7 @@ export default function HomePage() {
                   <div className="text-[17px] font-bold text-[#1E1240]">
                     Nadia
                   </div>
-                  <div className="text-[12px] font-normal text-[#7E5B6E]">
+                  <div className="text-[12px] font-normal text-[#6B6188]">
                     3 jawaban benar beruntun
                   </div>
                 </div>
@@ -539,7 +539,7 @@ export default function HomePage() {
               </div>
 
               {/* Deskripsi [1128] */}
-              <p className="text-[16px] font-normal leading-[1.7] text-[#7E5B6E]">
+              <p className="text-[16px] font-normal leading-[1.7] text-[#6B6188]">
                 Gabung tanpa akun. Pilihan jawaban berlabel jelas, hitung mundur terlihat,
                 dan skor diperbarui setelah setiap pertanyaan.
               </p>
@@ -608,7 +608,7 @@ export default function HomePage() {
             <h2 className="text-3xl sm:text-[42px] font-extrabold leading-[1.15] tracking-[-1.0px] text-[#1E1240]">
               Masih ada pertanyaan?
             </h2>
-            <p className="text-[16px] font-normal leading-[1.6] text-[#7E5B6E]">
+            <p className="text-[16px] font-normal leading-[1.6] text-[#6B6188]">
               Ini hal-hal yang perlu kamu tahu sebelum permainan dimulai.
             </p>
           </div>
@@ -635,7 +635,7 @@ export default function HomePage() {
                     </span>
                   </button>
                   {isOpen && (
-                    <p className="mt-2.5 text-[15px] font-normal leading-[1.6] text-[#7E5B6E] pr-8">
+                    <p className="mt-2.5 text-[15px] font-normal leading-[1.6] text-[#6B6188] pr-8">
                       {faq.a}
                     </p>
                   )}
@@ -655,7 +655,7 @@ export default function HomePage() {
           <h2 className="text-3xl sm:text-[46px] font-extrabold tracking-[-1.4px] text-[#1E1240]">
             Siap jadi yang paling SIQAP?
           </h2>
-          <p className="text-[18px] font-normal text-[#7E5B6E] max-w-2xl mx-auto">
+          <p className="text-[18px] font-normal text-[#6B6188] max-w-2xl mx-auto">
             Siapkan kuismu atau masuk ke permainan. Keseruannya dimulai dari sini.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
@@ -687,7 +687,7 @@ export default function HomePage() {
               <span className="text-[28px] font-black tracking-[-1.2px] text-[#1E1240] select-none block">
                 SIQAP
               </span>
-              <p className="text-[14px] font-normal text-[#7E5B6E]">
+              <p className="text-[14px] font-normal text-[#6B6188]">
                 Platform kuis interaktif untuk kelas dan pameran.
               </p>
             </div>
@@ -715,7 +715,7 @@ export default function HomePage() {
           </div>
 
           {/* Keterangan situs [1177] */}
-          <div className="border-t border-[#F2E0D4] pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-[12px] font-normal text-[#7E5B6E]">
+          <div className="border-t border-[#F2E0D4] pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-[12px] font-normal text-[#6B6188]">
             <span>© 2026 SIQAP. Platform kuis interaktif.</span>
             <span>Dibuat untuk belajar dan bermain bersama.</span>
           </div>
