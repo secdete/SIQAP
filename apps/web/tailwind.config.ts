@@ -28,7 +28,8 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: ["Montserrat", "Plus Jakarta Sans", "system-ui", "sans-serif"],
+        sans: ["Inter", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "sans-serif"],
+        display: ["Inter", "Montserrat", "sans-serif"],
       },
     },
   },
