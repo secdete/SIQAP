@@ -84,101 +84,123 @@ function JoinContent() {
   };
 
   return (
-    <div className="min-h-screen bg-siqap-sand flex flex-col justify-between">
-      {/* Top Bar */}
-      <header className="border-b-2 border-siqap-orange bg-siqap-navy text-white p-4">
+    <div className="min-h-screen bg-[#FBF2EB] flex flex-col justify-between font-sans">
+      {/* Top Bar [Frame 956] */}
+      <header className="border-b-2 border-[#FC8235] bg-[#1E1240] text-white px-5 py-3.5 shadow-md">
         <div className="max-w-md mx-auto flex items-center justify-between">
-          <Link href="/" className="inline-flex items-center space-x-1.5 text-xs font-bold text-siqap-peach hover:text-white transition">
-            <ArrowLeft className="w-4 h-4" />
-            <span>Kembali</span>
-          </Link>
-          <div className="flex items-center space-x-2">
-            <span className="font-black text-xl tracking-tight text-white">
-              SIQAP<span className="text-siqap-orange">.</span>
+          <div className="flex items-center space-x-3">
+            <span className="font-black text-2xl tracking-tight text-[#FC8235]">
+              SIQAP
             </span>
-            <span className="text-[10px] bg-siqap-orange text-white px-2 py-0.5 rounded-full font-bold">
-              PLAY
+            <span className="text-xs uppercase tracking-wider font-semibold text-white/90 border-l border-white/20 pl-3">
+              GABUNG PERMAINAN
             </span>
           </div>
+          <Link
+            href="/"
+            className="inline-flex items-center space-x-1 text-xs font-semibold text-white border border-[#F2E0D4]/40 hover:border-white px-3 py-1.5 rounded-lg transition"
+          >
+            <ArrowLeft className="w-3.5 h-3.5 mr-1" />
+            <span>Beranda</span>
+          </Link>
         </div>
       </header>
 
-      {/* Main Form Container */}
+      {/* Main Form Container [Frame 961] */}
       <main className="flex-1 flex items-center justify-center p-4">
-        <div className="w-full max-w-sm">
+        <div className="w-full max-w-[390px]">
           {/* Card Form Gabung (FigCraft Node 962 Style) */}
-          <div className="bg-siqap-cream border-3 border-siqap-orange rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
-            <div className="text-center mb-6">
-              <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-siqap-navy font-black text-2xl text-white shadow-lg border-2 border-siqap-orange mb-3">
-                S
-              </div>
-              <h1 className="text-2xl font-black text-siqap-navy tracking-tight">Gabung Kuis</h1>
-              <p className="text-xs font-semibold text-siqap-muted mt-1">Masukkan PIN dari layar host dan namamu</p>
+          <div className="bg-[#FBF2EB] border-2 border-[#FC8235] rounded-3xl p-6 sm:p-7 shadow-lg relative space-y-6">
+            {/* Judul Formulir [963] */}
+            <div className="text-left space-y-1">
+              <h1 className="text-[28px] font-extrabold text-[#1E1240] tracking-tight leading-tight">
+                Gabung Kuis
+              </h1>
+              <p className="text-[14px] font-normal text-[#6B6188]">
+                Masuk pakai PIN dan nama. Tidak perlu akun.
+              </p>
             </div>
 
-            <form onSubmit={handleJoin} className="flex flex-col space-y-4">
+            <form onSubmit={handleJoin} className="flex flex-col space-y-5">
               {errorMessage && (
-                <div className="flex items-start space-x-2 p-3 bg-red-100 border border-red-300 text-red-800 rounded-xl text-xs font-medium">
+                <div className="flex items-start space-x-2 p-3 bg-red-50 border border-red-300 text-red-800 rounded-xl text-xs font-medium">
                   <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
                   <span>{errorMessage}</span>
                 </div>
               )}
 
-              <div>
-                <label className="block text-xs font-black text-siqap-navy uppercase tracking-wider mb-1.5 text-left">
-                  Game PIN
+              {/* Input PIN [966] */}
+              <div className="space-y-2 text-left">
+                <label className="block text-[14px] font-bold text-[#1E1240]">
+                  PIN permainan
                 </label>
                 <input
                   type="text"
                   maxLength={6}
                   value={pin}
                   onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
-                  placeholder="6 digit angka"
-                  className="w-full text-center text-2xl font-black tracking-widest px-4 py-3 rounded-2xl bg-white border-2 border-siqap-border text-siqap-navy placeholder:text-gray-300 focus:outline-none focus:border-siqap-orange focus:ring-4 focus:ring-siqap-orange/20 transition"
+                  placeholder="482 916"
+                  className="w-full text-center text-[28px] font-extrabold tracking-[0.2em] px-4 h-[64px] rounded-xl bg-white border border-[#F2E0D4] text-[#1E1240] placeholder:text-[#6B6188]/40 focus:outline-none focus:border-[#FC8235] focus:ring-2 focus:ring-[#FC8235]/20 transition"
                   required
                 />
+                {pin.length === 6 && (
+                  <p className="text-[13px] font-semibold text-[#FC8235]">
+                    PIN siap dikirim
+                  </p>
+                )}
               </div>
 
-              <div>
-                <label className="block text-xs font-black text-siqap-navy uppercase tracking-wider mb-1.5 text-left">
-                  Nama Panggilan
+              {/* Input Nama [971] */}
+              <div className="space-y-2 text-left">
+                <label className="block text-[14px] font-bold text-[#1E1240]">
+                  Nama peserta
                 </label>
                 <input
                   type="text"
                   maxLength={20}
                   value={nickname}
                   onChange={(e) => setNickname(e.target.value)}
-                  placeholder="Ketik nama atau panggilan"
-                  className="w-full text-center text-lg font-bold px-4 py-3 rounded-2xl bg-white border-2 border-siqap-border text-siqap-navy placeholder:text-gray-300 focus:outline-none focus:border-siqap-orange focus:ring-4 focus:ring-siqap-orange/20 transition"
+                  placeholder="Contoh: Putra"
+                  className="w-full text-left text-[16px] font-medium px-4 h-[52px] rounded-xl bg-white border border-[#F2E0D4] text-[#1E1240] placeholder:text-[#6B6188]/40 focus:outline-none focus:border-[#FC8235] focus:ring-2 focus:ring-[#FC8235]/20 transition"
                   required
                 />
+                <p className="text-[12px] font-normal text-[#6B6188]">
+                  Gunakan nama unik. Nama ini terlihat di layar host.
+                </p>
               </div>
 
-              <button
-                type="submit"
-                disabled={isLoading || pin.trim().length !== 6 || nickname.trim().length < 2}
-                className="w-full mt-2 py-3.5 rounded-2xl bg-siqap-orange hover:bg-orange-600 disabled:opacity-40 text-white font-black text-base flex items-center justify-center space-x-2 shadow-lg shadow-orange-500/25 transition cursor-pointer"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    <span>Menghubungkan...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>Masuk Permainan</span>
-                    <ArrowRight className="w-5 h-5" />
-                  </>
-                )}
-              </button>
+              {/* Tombol Masuk [976] */}
+              <div className="space-y-2 pt-1">
+                <button
+                  type="submit"
+                  disabled={isLoading || pin.trim().length !== 6 || nickname.trim().length < 2}
+                  className="w-full h-[52px] rounded-xl bg-[#1E1240] hover:bg-[#100820] disabled:opacity-40 text-white font-bold text-[16px] flex items-center justify-center space-x-2 shadow-md transition cursor-pointer"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <span>Menghubungkan...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Masuk ke Lobi</span>
+                      <ArrowRight className="w-4 h-4 ml-1" />
+                    </>
+                  )}
+                </button>
+                <p className="text-center text-[12px] font-normal text-[#6B6188]">
+                  Pastikan koneksi internet tetap aktif.
+                </p>
+              </div>
             </form>
           </div>
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="text-center py-4 text-xs font-bold text-siqap-muted">
-        SIQAP • Bebas ribet tanpa download aplikasi
+      {/* Informasi Sesi / Footer Bar [Frame 979] */}
+      <footer className="bg-[#FC8235] text-white px-5 py-3 border-t border-[#F2E0D4] text-center shadow-lg">
+        <div className="text-[12px] font-semibold">SIQAP · Belajar sambil bermain</div>
+        <div className="text-[12px] opacity-90">Butuh bantuan? Tanyakan kepada host.</div>
       </footer>
     </div>
   );

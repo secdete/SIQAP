@@ -518,84 +518,172 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
   }
 
   // ---------------------------------------------------------------------------
-  // Phase 6: PODIUM / ENDED (FigCraft Node 692 Style)
+  // Phase 6: PODIUM / ENDED (FigCraft Node 692 & Poster Laptop Mockup Style)
   // ---------------------------------------------------------------------------
+  const first = podium[0];
+  const second = podium[1];
+  const third = podium[2];
+  const others = leaderboard.slice(3, 7);
+
   return (
-    <div className="min-h-screen bg-siqap-navy text-white flex flex-col p-6 sm:p-10 max-w-5xl mx-auto text-center justify-between">
-      <div>
-        <div className="inline-flex items-center space-x-2 px-5 py-2 rounded-full bg-siqap-orange text-white font-black text-sm mb-4 shadow-md">
-          <Medal className="w-5 h-5" />
-          <span>HASIL AKHIR KUIS SIQAP</span>
+    <div className="min-h-screen bg-[#FFF7F2] text-[#1E1240] flex flex-col justify-between font-sans">
+      {/* Top Header Bar [Frame 693] */}
+      <header className="border-b-2 border-[#FC8235] bg-[#1E1240] text-white px-8 py-4 shadow-md">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <span className="font-black text-2xl tracking-tight text-[#FC8235]">
+              SIQAP
+            </span>
+            <span className="text-xs uppercase tracking-wider font-semibold text-white/90 border-l border-white/20 pl-3">
+              PERMAINAN SELESAI
+            </span>
+          </div>
+          <button
+            onClick={() => router.push("/quizzes")}
+            className="inline-flex items-center space-x-1.5 text-xs font-semibold text-white border border-[#F2E0D4]/40 hover:border-white px-4 py-2 rounded-lg transition cursor-pointer"
+          >
+            <span>Kembali ke dashboard</span>
+          </button>
         </div>
-        <h1 className="text-4xl sm:text-5xl font-black text-white">Podium Para Juara!</h1>
-      </div>
+      </header>
 
-      {/* Olympic Podium Display (Poster Colors) */}
-      <div className="flex items-end justify-center space-x-4 my-10 h-80">
-        {/* 2nd Place */}
-        {podium[1] && (
-          <div className="flex flex-col items-center w-48">
-            <div className="text-lg font-bold text-siqap-beige mb-2 truncate max-w-full">
-              {podium[1].nickname}
-            </div>
-            <div className="text-sm font-extrabold text-white/80 mb-2">
-              {podium[1].score} pts
-            </div>
-            <div className="w-full h-44 bg-siqap-beige rounded-t-3xl flex flex-col items-center justify-center text-siqap-navy shadow-2xl border-2 border-white/40">
-              <span className="text-siqap-navy text-xs uppercase font-black mb-2">Juara 2</span>
-              <div className="w-12 h-12 rounded-full bg-siqap-navy text-white flex items-center justify-center font-black text-xl shadow-md">
-                2
+      {/* Main Results Container [Frame 698] */}
+      <main className="max-w-5xl mx-auto w-full px-6 py-8 flex-1 flex flex-col justify-center space-y-8">
+        {/* Judul Hasil [699] */}
+        <div className="text-center space-y-2">
+          <span className="text-xs font-bold uppercase tracking-widest text-[#FC8235] block">
+            PENGETAHUAN UMUM
+          </span>
+          <h1 className="text-4xl sm:text-5xl font-extrabold text-[#1E1240] tracking-tight">
+            Inilah para juara kita!
+          </h1>
+          <p className="text-sm font-normal text-[#6B6188]">
+            {question?.total || 10} pertanyaan tuntas · {players.length || leaderboard.length} peserta · Terima kasih sudah bermain.
+          </p>
+        </div>
+
+        {/* Podium Tiga Besar [Frame 703] */}
+        <div className="flex items-end justify-center space-x-4 sm:space-x-6 my-4">
+          {/* Juara 2 (Kiri) [Frame 704] */}
+          {second ? (
+            <div className="flex flex-col items-center w-40 sm:w-56">
+              <div className="text-center mb-3">
+                <div className="text-lg sm:text-xl font-extrabold text-[#1E1240] truncate max-w-full">
+                  {second.nickname}
+                </div>
+                <div className="text-xs text-[#6B6188] font-normal">
+                  Juara 2
+                </div>
               </div>
+              <div className="w-full h-44 sm:h-52 bg-white border border-[#F2E0D4] rounded-2xl flex flex-col items-center justify-between py-5 shadow-md">
+                <div className="text-4xl sm:text-5xl font-black text-[#1E1240]">
+                  2
+                </div>
+                <div className="text-center">
+                  <div className="text-base sm:text-lg font-extrabold text-[#1E1240]">
+                    {second.score.toLocaleString("id-ID")}
+                  </div>
+                  <div className="text-[11px] text-[#6B6188]">poin</div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="w-40 sm:w-56 h-44 sm:h-52 bg-white/40 border border-dashed border-[#F2E0D4] rounded-2xl" />
+          )}
+
+          {/* Juara 1 (Tengah & Tertinggi) [Frame 713] */}
+          {first ? (
+            <div className="flex flex-col items-center w-44 sm:w-64 z-10">
+              <div className="text-center mb-3">
+                <div className="text-xl sm:text-2xl font-extrabold text-[#1E1240] truncate max-w-full">
+                  {first.nickname}
+                </div>
+                <div className="text-xs text-[#FC8235] font-bold">
+                  Juara 1
+                </div>
+              </div>
+              <div className="w-full h-56 sm:h-64 bg-[#1E1240] text-white border-2 border-[#FC8235] rounded-2xl flex flex-col items-center justify-between py-6 shadow-xl">
+                <div className="text-5xl sm:text-6xl font-black text-white">
+                  1
+                </div>
+                <div className="text-center">
+                  <div className="text-lg sm:text-2xl font-extrabold text-white">
+                    {first.score.toLocaleString("id-ID")}
+                  </div>
+                  <div className="text-xs text-[#F2E0D4]">poin</div>
+                </div>
+              </div>
+            </div>
+          ) : null}
+
+          {/* Juara 3 (Kanan) [Frame 722] */}
+          {third ? (
+            <div className="flex flex-col items-center w-40 sm:w-56">
+              <div className="text-center mb-3">
+                <div className="text-lg sm:text-xl font-extrabold text-[#1E1240] truncate max-w-full">
+                  {third.nickname}
+                </div>
+                <div className="text-xs text-[#6B6188] font-normal">
+                  Juara 3
+                </div>
+              </div>
+              <div className="w-full h-36 sm:h-44 bg-white border border-[#F2E0D4] rounded-2xl flex flex-col items-center justify-between py-4 shadow-md">
+                <div className="text-4xl sm:text-5xl font-black text-[#1E1240]">
+                  3
+                </div>
+                <div className="text-center">
+                  <div className="text-base sm:text-lg font-extrabold text-[#1E1240]">
+                    {third.score.toLocaleString("id-ID")}
+                  </div>
+                  <div className="text-[11px] text-[#6B6188]">poin</div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="w-40 sm:w-56 h-36 sm:h-44 bg-white/40 border border-dashed border-[#F2E0D4] rounded-2xl" />
+          )}
+        </div>
+
+        {/* Baris Peserta Lainnya (Ranks 4-7) [Frame 731] */}
+        {others.length > 0 && (
+          <div className="bg-white border border-[#F2E0D4] rounded-2xl p-4 sm:p-5 shadow-sm">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {others.map((p, idx) => (
+                <div key={p.playerId} className="flex items-center space-x-3 p-2 border-r last:border-r-0 border-[#F2E0D4]">
+                  <div className="text-sm font-bold text-[#6B6188] w-5">
+                    {idx + 4}
+                  </div>
+                  <div className="truncate">
+                    <div className="text-sm font-bold text-[#1E1240] truncate">{p.nickname}</div>
+                    <div className="text-xs text-[#6B6188]">{p.score.toLocaleString("id-ID")} poin</div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         )}
 
-        {/* 1st Place (Center & Tallest) */}
-        {podium[0] && (
-          <div className="flex flex-col items-center w-56">
-            <div className="text-2xl font-black text-siqap-orange mb-2 truncate max-w-full drop-shadow">
-              {podium[0].nickname}
-            </div>
-            <div className="text-base font-black text-white mb-2">
-              {podium[0].score} pts
-            </div>
-            <div className="w-full h-64 bg-siqap-orange rounded-t-3xl flex flex-col items-center justify-center text-white shadow-2xl shadow-orange-500/50 border-3 border-white">
-              <span className="text-white text-xs uppercase font-black tracking-widest mb-2">Juara 1</span>
-              <div className="w-16 h-16 rounded-full bg-white text-siqap-orange flex items-center justify-center font-black text-3xl shadow-lg border-2 border-siqap-orange">
-                1
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Action Footer [Buttons from Poster Laptop Mockup] */}
+        <div className="flex items-center justify-center space-x-4 pt-2">
+          <button
+            onClick={() => router.push("/quizzes")}
+            className="px-6 py-3 rounded-xl bg-white hover:bg-[#FFF7F2] border border-[#F2E0D4] text-[#1E1240] font-bold text-sm transition shadow-sm cursor-pointer"
+          >
+            Main Lagi
+          </button>
+          <button
+            onClick={() => router.push("/quizzes")}
+            className="px-6 py-3 rounded-xl bg-[#1E1240] hover:bg-[#100820] text-white font-bold text-sm transition shadow-md cursor-pointer"
+          >
+            Lihat Laporan
+          </button>
+        </div>
+      </main>
 
-        {/* 3rd Place */}
-        {podium[2] && (
-          <div className="flex flex-col items-center w-48">
-            <div className="text-lg font-bold text-siqap-peach mb-2 truncate max-w-full">
-              {podium[2].nickname}
-            </div>
-            <div className="text-sm font-extrabold text-white/80 mb-2">
-              {podium[2].score} pts
-            </div>
-            <div className="w-full h-32 bg-[#8C4E6E] rounded-t-3xl flex flex-col items-center justify-center text-white shadow-xl border-2 border-white/20">
-              <span className="text-white/80 text-xs uppercase font-black mb-2">Juara 3</span>
-              <div className="w-12 h-12 rounded-full bg-white text-[#8C4E6E] flex items-center justify-center font-black text-xl shadow-md">
-                3
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Action Footer */}
-      <div className="flex items-center justify-center space-x-4">
-        <button
-          onClick={() => router.push("/quizzes")}
-          className="px-6 py-3 rounded-2xl bg-white text-siqap-navy font-black text-sm hover:bg-siqap-cream transition shadow-md"
-        >
-          Kembali ke Koleksi
-        </button>
-      </div>
+      {/* Footer info bar */}
+      <footer className="text-center py-3 text-xs text-[#6B6188] border-t border-[#F2E0D4]">
+        SIQAP · Platform Kuis Interaktif
+      </footer>
     </div>
   );
 }

@@ -19,8 +19,10 @@ interface PlayerState {
   remainingMs: number;
   selectedOption: number | null;
   hasAnswered: boolean;
+  reveal: QuestionReveal | null;
   result: PlayerResult | null;
   finalStats: PlayerFinal | null;
+  playerCount: number;
 
   setJoinInfo: (pin: string, nickname: string, playerId: string, rejoinToken: string) => void;
   setPhase: (phase: GamePhase) => void;
@@ -28,8 +30,10 @@ interface PlayerState {
   setRemainingMs: (ms: number) => void;
   setSelectedOption: (opt: number | null) => void;
   setHasAnswered: (val: boolean) => void;
+  setReveal: (reveal: QuestionReveal | null) => void;
   setResult: (res: PlayerResult | null) => void;
   setFinalStats: (stats: PlayerFinal | null) => void;
+  setPlayerCount: (count: number) => void;
   reset: () => void;
 }
 
@@ -43,8 +47,10 @@ export const usePlayerStore = create<PlayerState>((set) => ({
   remainingMs: 0,
   selectedOption: null,
   hasAnswered: false,
+  reveal: null,
   result: null,
   finalStats: null,
+  playerCount: 1,
 
   setJoinInfo: (pin, nickname, playerId, rejoinToken) => {
     if (typeof window !== "undefined") {
@@ -57,15 +63,17 @@ export const usePlayerStore = create<PlayerState>((set) => ({
     set((state) => ({
       phase,
       // reset answers when moving to new active question
-      ...(phase === "QUESTION_ACTIVE" ? { selectedOption: null, hasAnswered: false, result: null } : {}),
+      ...(phase === "QUESTION_ACTIVE" ? { selectedOption: null, hasAnswered: false, result: null, reveal: null } : {}),
     })),
 
   setQuestion: (question) => set({ question }),
   setRemainingMs: (remainingMs) => set({ remainingMs }),
   setSelectedOption: (selectedOption) => set({ selectedOption, hasAnswered: true }),
   setHasAnswered: (hasAnswered) => set({ hasAnswered }),
+  setReveal: (reveal) => set({ reveal }),
   setResult: (result) => set({ result }),
   setFinalStats: (finalStats) => set({ finalStats }),
+  setPlayerCount: (playerCount) => set({ playerCount }),
 
   reset: () =>
     set({
@@ -78,8 +86,10 @@ export const usePlayerStore = create<PlayerState>((set) => ({
       remainingMs: 0,
       selectedOption: null,
       hasAnswered: false,
+      reveal: null,
       result: null,
       finalStats: null,
+      playerCount: 1,
     }),
 }));
 
