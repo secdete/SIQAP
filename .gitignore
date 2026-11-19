@@ -29,3 +29,6 @@ Thumbs.db
 *.njsproj
 *.sln
 *.sw?
+
+# Secret files - never commit
+api key*.txt
