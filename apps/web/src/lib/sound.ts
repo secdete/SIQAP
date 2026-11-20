@@ -5,7 +5,11 @@ class SoundFX {
 
   private init() {
     if (!this.ctx && typeof window !== "undefined") {
-      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      // Safari still ships the prefixed constructor behind a non-standard name.
+      const AudioCtx =
+        window.AudioContext ??
+        (window as typeof window & { webkitAudioContext?: typeof AudioContext })
+          .webkitAudioContext;
       if (AudioCtx) {
         this.ctx = new AudioCtx();
       }

@@ -60,7 +60,7 @@ export const usePlayerStore = create<PlayerState>((set) => ({
   },
 
   setPhase: (phase) =>
-    set((state) => ({
+    set(() => ({
       phase,
       // reset answers when moving to new active question
       ...(phase === "QUESTION_ACTIVE" ? { selectedOption: null, hasAnswered: false, result: null, reveal: null } : {}),

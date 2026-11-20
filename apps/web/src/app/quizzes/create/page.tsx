@@ -1,17 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import NextLink from "next/link";
+import { GenerateQuizOutput } from "@siqap/shared";
 import {
   Sparkles,
   Plus,
   Trash2,
   Save,
   Clock,
-  CheckCircle2,
   AlertCircle,
-  HelpCircle,
   Loader2,
   ArrowLeft,
   X,
@@ -33,10 +32,10 @@ interface QuestionFormItem {
 }
 
 const OPTION_BADGES = [
-  { label: "▲ A", color: "bg-[#C93C42] text-white border-[#C93C42]" },
-  { label: "◆ B", color: "bg-[#F5B031] text-[#100820] border-[#F5B031]" },
-  { label: "● C", color: "bg-[#2DB87A] text-[#100820] border-[#2DB87A]" },
-  { label: "■ D", color: "bg-[#6F52E0] text-white border-[#6F52E0]" },
+  { label: "▲ A", color: "bg-quiz-red text-white border-quiz-red" },
+  { label: "◆ B", color: "bg-quiz-yellow text-siqap-navy-dark border-quiz-yellow" },
+  { label: "● C", color: "bg-quiz-green text-siqap-navy-dark border-quiz-green" },
+  { label: "■ D", color: "bg-quiz-purple text-white border-quiz-purple" },
 ];
 
 export default function CreateQuizPage() {
@@ -66,6 +65,17 @@ export default function CreateQuizPage() {
   const [aiError, setAiError] = useState<string | null>(null);
 
   const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  // Close the AI modal on Escape while it is open (R-26: dialogs must be closable).
+  useEffect(() => {
+    if (!isAiModalOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setIsAiModalOpen(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [isAiModalOpen]);
 
   // Add Question
   const handleAddQuestion = () => {
@@ -133,8 +143,8 @@ export default function CreateQuizPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          topic: aiTopic.trim(),
-          sourceText: aiText.trim(),
+          topic: aiTopic.trim() || undefined,
+          text: aiText.trim() || undefined,
           count: aiCount,
           difficulty: aiDifficulty,
           language: "id",
@@ -151,22 +161,30 @@ export default function CreateQuizPage() {
           setTitle(`Kuis ${aiTopic}`);
         }
 
-        const generated: QuestionFormItem[] = data.questions.map((q: any) => ({
-          type: "multiple_choice",
-          text: q.text,
-          options: q.options.map((opt: string) => ({ text: opt })),
-          correctIndexes: [q.correctIndex ?? 0],
-          timeLimitSec: q.timeLimitSec || 20,
-          pointsMode: "standard",
-          explanation: q.explanation || "",
-          isAiGenerated: true,
-        }));
+        // GenerateQuizOutput already matches the QuestionInput shape minus `id`,
+        // so pass the validated payload through instead of re-wrapping it.
+        const generated: QuestionFormItem[] = data.questions.map(
+          (q: GenerateQuizOutput["questions"][number]) => ({
+            type: q.type,
+            text: q.text,
+            options: q.options,
+            correctIndexes: q.correctIndexes,
+            timeLimitSec: q.timeLimitSec,
+            pointsMode: q.pointsMode,
+            explanation: q.explanation ?? "",
+            isAiGenerated: true,
+          })
+        );
 
         setQuestions(generated);
         setIsAiModalOpen(false);
       }
-    } catch (err: any) {
-      setAiError(err.message || "Terjadi kesalahan saat memanggil AI generator.");
+    } catch (err: unknown) {
+      setAiError(
+        err instanceof Error && err.message
+          ? err.message
+          : "Terjadi kesalahan saat memanggil AI generator."
+      );
     } finally {
       setIsGenerating(false);
     }
@@ -174,20 +192,22 @@ export default function CreateQuizPage() {
 
   // Save Quiz
   const handleSaveQuiz = async () => {
+    setSaveError(null);
+
     if (!title.trim()) {
-      alert("Judul kuis tidak boleh kosong.");
+      setSaveError("Judul kuis tidak boleh kosong.");
       return;
     }
 
     for (let i = 0; i < questions.length; i++) {
       const q = questions[i];
       if (!q.text.trim()) {
-        alert(`Teks pertanyaan nomor ${i + 1} tidak boleh kosong.`);
+        setSaveError(`Teks pertanyaan nomor ${i + 1} tidak boleh kosong.`);
         return;
       }
       for (let j = 0; j < q.options.length; j++) {
         if (!q.options[j].text.trim()) {
-          alert(`Pilihan opsi ${j + 1} pada nomor ${i + 1} tidak boleh kosong.`);
+          setSaveError(`Pilihan opsi ${j + 1} pada nomor ${i + 1} tidak boleh kosong.`);
           return;
         }
       }
@@ -201,7 +221,8 @@ export default function CreateQuizPage() {
         questions: questions.map((q) => ({
           type: q.type,
           text: q.text.trim(),
-          options: q.options.map((o) => o.text.trim()),
+          // Contract shape is [{ text }], not string[] — the game engine reads `o.text`.
+          options: q.options.map((o) => ({ text: o.text.trim() })),
           correctIndexes: q.correctIndexes,
           timeLimitSec: q.timeLimitSec,
           pointsMode: q.pointsMode,
@@ -221,8 +242,8 @@ export default function CreateQuizPage() {
       }
 
       router.push("/quizzes");
-    } catch (err: any) {
-      alert(err.message || "Gagal menyimpan kuis.");
+    } catch (err: unknown) {
+      setSaveError(err instanceof Error ? err.message : "Gagal menyimpan kuis.");
     } finally {
       setIsSaving(false);
     }
@@ -246,7 +267,7 @@ export default function CreateQuizPage() {
           <div className="flex items-center space-x-3">
             <button
               onClick={() => setIsAiModalOpen(true)}
-              className="px-4 py-2 bg-siqap-orange/20 border border-siqap-orange text-siqap-peach hover:text-white hover:bg-siqap-orange font-bold text-xs rounded-xl flex items-center space-x-1.5 transition cursor-pointer"
+              className="px-4 py-2 bg-siqap-orange/20 border border-siqap-orange text-siqap-peach hover:text-siqap-navy hover:bg-siqap-orange font-bold text-xs rounded-xl flex items-center space-x-1.5 transition cursor-pointer"
             >
               <Sparkles className="w-4 h-4 text-siqap-orange" />
               <span>AI Quiz Generator</span>
@@ -255,7 +276,7 @@ export default function CreateQuizPage() {
             <button
               onClick={handleSaveQuiz}
               disabled={isSaving}
-              className="px-5 py-2 bg-siqap-orange hover:bg-orange-600 disabled:opacity-50 text-white font-black text-xs rounded-xl flex items-center space-x-1.5 shadow-md shadow-orange-500/30 transition cursor-pointer"
+              className="px-5 py-2 bg-siqap-orange hover:bg-siqap-orange-hover disabled:opacity-50 text-siqap-navy font-black text-xs rounded-xl flex items-center space-x-1.5 shadow-md shadow-siqap-orange/30 transition cursor-pointer"
             >
               {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
               <span>Simpan Kuis</span>
@@ -266,6 +287,19 @@ export default function CreateQuizPage() {
 
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-4 py-8 flex-1 w-full space-y-6">
+        {saveError && (
+          <div
+            role="alert"
+            className="p-4 bg-quiz-red/10 border-2 border-quiz-red/40 rounded-2xl flex items-start space-x-3"
+          >
+            <AlertCircle className="w-5 h-5 text-quiz-red shrink-0 mt-0.5" />
+            <div>
+              <p className="text-xs font-black text-quiz-red-dark">Kuis belum bisa disimpan</p>
+              <p className="text-xs text-quiz-red-dark mt-1 leading-relaxed">{saveError}</p>
+            </div>
+          </div>
+        )}
+
         {/* Title & Description Box */}
         <div className="bg-siqap-cream border-2 border-siqap-border rounded-3xl p-6 shadow-md">
           <label className="block text-xs font-black text-siqap-navy uppercase tracking-wider mb-2">
@@ -276,7 +310,7 @@ export default function CreateQuizPage() {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Contoh: Kuis Teknologi & Transformasi Digital"
-            className="w-full text-xl font-black px-4 py-3 rounded-2xl bg-white border-2 border-siqap-border text-siqap-navy placeholder:text-gray-300 focus:outline-none focus:border-siqap-orange transition mb-4"
+            className="w-full text-xl font-black px-4 py-3 rounded-2xl bg-white border-2 border-siqap-border text-siqap-navy placeholder:text-siqap-muted focus:outline-none focus:border-siqap-orange transition mb-4"
           />
 
           <label className="block text-xs font-bold text-siqap-muted uppercase tracking-wider mb-2">
@@ -287,7 +321,7 @@ export default function CreateQuizPage() {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Deskripsi singkat materi kuis..."
-            className="w-full text-xs font-semibold px-4 py-2.5 rounded-xl bg-white border border-siqap-border text-siqap-navy-dark placeholder:text-gray-300 focus:outline-none focus:border-siqap-orange transition"
+            className="w-full text-xs font-semibold px-4 py-2.5 rounded-xl bg-white border border-siqap-border text-siqap-navy-dark placeholder:text-siqap-muted focus:outline-none focus:border-siqap-orange transition"
           />
         </div>
 
@@ -321,7 +355,7 @@ export default function CreateQuizPage() {
                   {questions.length > 1 && (
                     <button
                       onClick={() => handleRemoveQuestion(qIdx)}
-                      className="p-1.5 text-red-500 hover:text-red-700 transition"
+                      className="p-1.5 text-quiz-red hover:text-quiz-red-dark transition"
                       title="Hapus soal ini"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -340,7 +374,7 @@ export default function CreateQuizPage() {
                   value={q.text}
                   onChange={(e) => handleQuestionTextChange(qIdx, e.target.value)}
                   placeholder="Ketik teks pertanyaan di sini..."
-                  className="w-full text-sm font-bold p-3.5 rounded-2xl bg-white border-2 border-siqap-border text-siqap-navy placeholder:text-gray-300 focus:outline-none focus:border-siqap-orange transition"
+                  className="w-full text-sm font-bold p-3.5 rounded-2xl bg-white border-2 border-siqap-border text-siqap-navy placeholder:text-siqap-muted focus:outline-none focus:border-siqap-orange transition"
                 />
               </div>
 
@@ -355,7 +389,7 @@ export default function CreateQuizPage() {
                       key={oIdx}
                       className={`p-3 rounded-2xl border-2 flex items-center space-x-3 transition ${
                         isCorrect
-                          ? "bg-emerald-50 border-emerald-500 ring-2 ring-emerald-500/20"
+                          ? "bg-quiz-green/10 border-quiz-green ring-2 ring-quiz-green/20"
                           : "bg-white border-siqap-border"
                       }`}
                     >
@@ -374,14 +408,15 @@ export default function CreateQuizPage() {
                       <button
                         type="button"
                         onClick={() => handleCorrectIndexToggle(qIdx, oIdx)}
+                        aria-pressed={isCorrect}
                         className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-black transition ${
                           isCorrect
-                            ? "bg-emerald-600 text-white shadow-sm"
-                            : "border-2 border-gray-300 text-transparent hover:border-emerald-500"
+                            ? "bg-quiz-green text-siqap-navy shadow-sm"
+                            : "border-2 border-siqap-muted/70 hover:border-quiz-green"
                         }`}
                         title={isCorrect ? "Kunci jawaban benar" : "Jadikan kunci jawaban"}
                       >
-                        ✓
+                        {isCorrect ? "✓" : ""}
                       </button>
                     </div>
                   );
@@ -390,7 +425,7 @@ export default function CreateQuizPage() {
 
               {/* Explanation Field */}
               <div>
-                <label className="block text-xs font-bold text-siqap-orange uppercase tracking-wider mb-1">
+                <label className="block text-xs font-bold text-siqap-orange-dark uppercase tracking-wider mb-1">
                   💡 Pembahasan Materi (Muncul otomatis setelah soal dijawab)
                 </label>
                 <input
@@ -398,7 +433,7 @@ export default function CreateQuizPage() {
                   value={q.explanation || ""}
                   onChange={(e) => handleExplanationChange(qIdx, e.target.value)}
                   placeholder="Ulasan edukatif kenapa jawaban tersebut yang benar..."
-                  className="w-full text-xs font-medium p-2.5 rounded-xl bg-white border border-siqap-border text-siqap-navy-dark placeholder:text-gray-300 focus:outline-none focus:border-siqap-orange transition"
+                  className="w-full text-xs font-medium p-2.5 rounded-xl bg-white border border-siqap-border text-siqap-navy-dark placeholder:text-siqap-muted focus:outline-none focus:border-siqap-orange transition"
                 />
               </div>
             </div>
@@ -417,26 +452,39 @@ export default function CreateQuizPage() {
 
       {/* AI Quiz Generator Modal */}
       {isAiModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-lg bg-siqap-cream border-3 border-siqap-orange rounded-3xl p-6 sm:p-8 shadow-2xl relative">
+        <div
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setIsAiModalOpen(false)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="ai-generator-title"
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-lg bg-siqap-cream border-3 border-siqap-orange rounded-3xl p-6 sm:p-8 shadow-2xl relative"
+          >
             <div className="flex items-center justify-between pb-4 border-b border-siqap-border mb-4">
               <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 rounded-lg bg-siqap-orange text-white flex items-center justify-center">
+                <div className="w-8 h-8 rounded-lg bg-siqap-orange text-siqap-navy flex items-center justify-center">
                   <Sparkles className="w-4 h-4" />
                 </div>
-                <h3 className="text-lg font-black text-siqap-navy">AI Quiz Generator</h3>
+                <h3 id="ai-generator-title" className="text-lg font-black text-siqap-navy">
+                  AI Quiz Generator
+                </h3>
               </div>
               <button
+                type="button"
                 onClick={() => setIsAiModalOpen(false)}
-                className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg"
+                aria-label="Tutup generator AI"
+                className="p-1.5 text-siqap-muted hover:text-siqap-navy rounded-lg"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {aiError && (
-              <div className="mb-4 p-3 bg-red-100 border border-red-300 text-red-800 rounded-xl text-xs font-semibold flex items-center space-x-2">
-                <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
+              <div className="mb-4 p-3 bg-quiz-red/15 border border-quiz-red/40 text-quiz-red-dark rounded-xl text-xs font-semibold flex items-center space-x-2">
+                <AlertCircle className="w-4 h-4 shrink-0 text-quiz-red-dark" />
                 <span>{aiError}</span>
               </div>
             )}
@@ -490,7 +538,9 @@ export default function CreateQuizPage() {
                   </label>
                   <select
                     value={aiDifficulty}
-                    onChange={(e) => setAiDifficulty(e.target.value as any)}
+                    onChange={(e) =>
+                      setAiDifficulty(e.target.value as "easy" | "medium" | "hard")
+                    }
                     className="w-full text-xs font-bold p-2.5 rounded-xl bg-white border border-siqap-border text-siqap-navy focus:outline-none"
                   >
                     <option value="easy">Mudah</option>
@@ -505,7 +555,7 @@ export default function CreateQuizPage() {
                   type="button"
                   onClick={handleGenerateAi}
                   disabled={isGenerating}
-                  className="w-full py-3 rounded-2xl bg-siqap-orange hover:bg-orange-600 disabled:opacity-50 text-white font-black text-xs flex items-center justify-center space-x-2 shadow-lg shadow-orange-500/25 transition cursor-pointer"
+                  className="w-full py-3 rounded-2xl bg-siqap-orange hover:bg-siqap-orange-hover disabled:opacity-50 text-siqap-navy font-black text-xs flex items-center justify-center space-x-2 shadow-lg shadow-siqap-orange/25 transition cursor-pointer"
                 >
                   {isGenerating ? (
                     <>

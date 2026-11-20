@@ -1,12 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GenerateQuizInput, GenerateQuizOutput } from "@siqap/shared";
 
-const AI_BASE = process.env.AI_API_BASE || process.env.OPENAI_API_BASE || "http://localhost:20128/v1";
-const AI_KEY = process.env.AI_API_KEY || "sk-b9b9cf5b43d6c3e8-ha4tfh-107b5040";
-const MODEL_NAME = process.env.AI_MODEL || "gemini/gemini-3.8-flash";
+// Gemini via Google AI Studio's OpenAI-compatible endpoint.
+// Key must come from env; never hardcode secrets in source.
+const AI_BASE =
+  process.env.AI_API_BASE || "https://generativelanguage.googleapis.com/v1beta/openai";
+const AI_KEY = process.env.GEMINI_API_KEY || process.env.AI_API_KEY || "";
+const MODEL_NAME = process.env.AI_MODEL || "gemini-2.5-flash";
 
 export async function POST(req: NextRequest) {
   try {
+    if (!AI_KEY) {
+      return NextResponse.json(
+        { error: "AI_NOT_CONFIGURED", message: "GEMINI_API_KEY belum diisi di file .env" },
+        { status: 503 }
+      );
+    }
+
     const rawBody = await req.json();
     const parseResult = GenerateQuizInput.safeParse(rawBody);
 
@@ -78,7 +88,7 @@ Aturan penting:
 
         if (!response.ok) {
           const errText = await response.text();
-          throw new Error(`9router HTTP error ${response.status}: ${errText}`);
+          throw new Error(`AI HTTP error ${response.status}: ${errText}`);
         }
 
         const data = await response.json();
@@ -95,7 +105,7 @@ Aturan penting:
         if (validated.success) {
           return NextResponse.json({
             ok: true,
-            source: "9router",
+            source: "gemini",
             model: MODEL_NAME,
             questions: validated.data.questions,
           });
@@ -103,9 +113,10 @@ Aturan penting:
           console.warn(`[AI Quiz Generator] Validation attempt ${attempt + 1} failed:`, validated.error.message);
           lastError = `Validation failed: ${validated.error.message}`;
         }
-      } catch (err: any) {
-        console.warn(`[AI Quiz Generator] Request attempt ${attempt + 1} failed:`, err.message);
-        lastError = err.message;
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        console.warn(`[AI Quiz Generator] Request attempt ${attempt + 1} failed:`, message);
+        lastError = message;
       }
     }
 
@@ -113,9 +124,11 @@ Aturan penting:
       { error: "AI_GENERATION_FAILED", message: lastError },
       { status: 500 }
     );
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const message =
+      err instanceof Error ? err.message : "Terjadi kesalahan tidak terduga.";
     return NextResponse.json(
-      { error: "INTERNAL_ERROR", message: err.message },
+      { error: "INTERNAL_ERROR", message },
       { status: 500 }
     );
   }

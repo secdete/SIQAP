@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { getSocket } from "@/lib/socket";
 import { usePlayerStore } from "@/lib/store";
-import { AlertCircle, ArrowRight, Loader2, Sparkles, ArrowLeft } from "lucide-react";
+import { AlertCircle, ArrowRight, Loader2, ArrowLeft } from "lucide-react";
 
 function JoinContent() {
   const router = useRouter();
@@ -77,19 +77,23 @@ function JoinContent() {
           }
         }
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       setIsLoading(false);
-      setErrorMessage(err.message || "Terjadi kesalahan saat menghubungkan ke server.");
+      setErrorMessage(
+        err instanceof Error && err.message
+          ? err.message
+          : "Terjadi kesalahan saat menghubungkan ke server."
+      );
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#FBF2EB] flex flex-col justify-between font-sans">
+    <div className="min-h-screen bg-siqap-sand flex flex-col justify-between font-sans">
       {/* Top Bar [Frame 956] */}
-      <header className="border-b-2 border-[#FC8235] bg-[#1E1240] text-white px-5 py-3.5 shadow-md">
+      <header className="border-b-2 border-siqap-orange bg-siqap-navy text-white px-5 py-3.5 shadow-md">
         <div className="max-w-md mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <span className="font-black text-2xl tracking-tight text-[#FC8235]">
+            <span className="font-black text-2xl tracking-tight text-siqap-orange">
               SIQAP
             </span>
             <span className="text-xs uppercase tracking-wider font-semibold text-white/90 border-l border-white/20 pl-3">
@@ -98,7 +102,7 @@ function JoinContent() {
           </div>
           <Link
             href="/"
-            className="inline-flex items-center space-x-1 text-xs font-semibold text-white border border-[#F2E0D4]/40 hover:border-white px-3 py-1.5 rounded-lg transition"
+            className="inline-flex items-center space-x-1 text-xs font-semibold text-white border border-siqap-border/40 hover:border-white px-3 py-1.5 rounded-lg transition"
           >
             <ArrowLeft className="w-3.5 h-3.5 mr-1" />
             <span>Beranda</span>
@@ -110,28 +114,28 @@ function JoinContent() {
       <main className="flex-1 flex items-center justify-center p-4">
         <div className="w-full max-w-[390px]">
           {/* Card Form Gabung (FigCraft Node 962 Style) */}
-          <div className="bg-[#FBF2EB] border-2 border-[#FC8235] rounded-3xl p-6 sm:p-7 shadow-lg relative space-y-6">
+          <div className="bg-siqap-sand border-2 border-siqap-orange rounded-3xl p-6 sm:p-7 shadow-lg relative space-y-6">
             {/* Judul Formulir [963] */}
             <div className="text-left space-y-1">
-              <h1 className="text-[28px] font-extrabold text-[#1E1240] tracking-tight leading-tight">
+              <h1 className="text-[28px] font-extrabold text-siqap-navy tracking-tight leading-tight">
                 Gabung Kuis
               </h1>
-              <p className="text-[14px] font-normal text-[#6B6188]">
+              <p className="text-[14px] font-normal text-siqap-muted">
                 Masuk pakai PIN dan nama. Tidak perlu akun.
               </p>
             </div>
 
             <form onSubmit={handleJoin} className="flex flex-col space-y-5">
               {errorMessage && (
-                <div className="flex items-start space-x-2 p-3 bg-red-50 border border-red-300 text-red-800 rounded-xl text-xs font-medium">
-                  <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+                <div className="flex items-start space-x-2 p-3 bg-quiz-red/10 border border-quiz-red/40 text-quiz-red-dark rounded-xl text-xs font-medium">
+                  <AlertCircle className="w-4 h-4 text-quiz-red-dark shrink-0 mt-0.5" />
                   <span>{errorMessage}</span>
                 </div>
               )}
 
               {/* Input PIN [966] */}
               <div className="space-y-2 text-left">
-                <label className="block text-[14px] font-bold text-[#1E1240]">
+                <label className="block text-[14px] font-bold text-siqap-navy">
                   PIN permainan
                 </label>
                 <input
@@ -140,11 +144,11 @@ function JoinContent() {
                   value={pin}
                   onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
                   placeholder="482 916"
-                  className="w-full text-center text-[28px] font-extrabold tracking-[0.2em] px-4 h-[64px] rounded-xl bg-white border border-[#F2E0D4] text-[#1E1240] placeholder:text-[#6B6188]/40 focus:outline-none focus:border-[#FC8235] focus:ring-2 focus:ring-[#FC8235]/20 transition"
+                  className="w-full text-center text-[28px] font-extrabold tracking-[0.2em] px-4 h-[64px] rounded-xl bg-white border border-siqap-border text-siqap-navy placeholder:text-siqap-muted/70 focus:outline-none focus:border-siqap-orange focus:ring-2 focus:ring-siqap-orange/20 transition"
                   required
                 />
                 {pin.length === 6 && (
-                  <p className="text-[13px] font-semibold text-[#FC8235]">
+                  <p className="text-[13px] font-semibold text-siqap-orange">
                     PIN siap dikirim
                   </p>
                 )}
@@ -152,7 +156,7 @@ function JoinContent() {
 
               {/* Input Nama [971] */}
               <div className="space-y-2 text-left">
-                <label className="block text-[14px] font-bold text-[#1E1240]">
+                <label className="block text-[14px] font-bold text-siqap-navy">
                   Nama peserta
                 </label>
                 <input
@@ -161,10 +165,10 @@ function JoinContent() {
                   value={nickname}
                   onChange={(e) => setNickname(e.target.value)}
                   placeholder="Contoh: Putra"
-                  className="w-full text-left text-[16px] font-medium px-4 h-[52px] rounded-xl bg-white border border-[#F2E0D4] text-[#1E1240] placeholder:text-[#6B6188]/40 focus:outline-none focus:border-[#FC8235] focus:ring-2 focus:ring-[#FC8235]/20 transition"
+                  className="w-full text-left text-[16px] font-medium px-4 h-[52px] rounded-xl bg-white border border-siqap-border text-siqap-navy placeholder:text-siqap-muted/70 focus:outline-none focus:border-siqap-orange focus:ring-2 focus:ring-siqap-orange/20 transition"
                   required
                 />
-                <p className="text-[12px] font-normal text-[#6B6188]">
+                <p className="text-[12px] font-normal text-siqap-muted">
                   Gunakan nama unik. Nama ini terlihat di layar host.
                 </p>
               </div>
@@ -174,7 +178,7 @@ function JoinContent() {
                 <button
                   type="submit"
                   disabled={isLoading || pin.trim().length !== 6 || nickname.trim().length < 2}
-                  className="w-full h-[52px] rounded-xl bg-[#1E1240] hover:bg-[#100820] disabled:opacity-40 text-white font-bold text-[16px] flex items-center justify-center space-x-2 shadow-md transition cursor-pointer"
+                  className="w-full h-[52px] rounded-xl bg-siqap-navy hover:bg-siqap-navy-dark disabled:bg-siqap-border disabled:text-siqap-navy/70 disabled:shadow-none text-white font-bold text-[16px] flex items-center justify-center space-x-2 shadow-md transition cursor-pointer disabled:cursor-not-allowed"
                 >
                   {isLoading ? (
                     <>
@@ -188,7 +192,7 @@ function JoinContent() {
                     </>
                   )}
                 </button>
-                <p className="text-center text-[12px] font-normal text-[#6B6188]">
+                <p className="text-center text-[12px] font-normal text-siqap-muted">
                   Pastikan koneksi internet tetap aktif.
                 </p>
               </div>
@@ -198,7 +202,7 @@ function JoinContent() {
       </main>
 
       {/* Informasi Sesi / Footer Bar [Frame 979] */}
-      <footer className="bg-[#FC8235] text-white px-5 py-3 border-t border-[#F2E0D4] text-center shadow-lg">
+      <footer className="bg-siqap-orange text-siqap-navy px-5 py-3 border-t border-siqap-border text-center shadow-lg">
         <div className="text-[12px] font-semibold">SIQAP · Belajar sambil bermain</div>
         <div className="text-[12px] opacity-90">Butuh bantuan? Tanyakan kepada host.</div>
       </footer>
