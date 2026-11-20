@@ -17,6 +17,22 @@ import { sanitizeNickname, isNicknameAllowed } from "../socket/profanity.js";
 
 export type TypedServer = Server<ClientToServerEvents, ServerToClientEvents>;
 
+/**
+ * Stored quizzes may contain either the contract shape `[{ text }]` or a plain
+ * `string[]` left behind by older saves. The game engine always reads `.text`,
+ * so normalise everything to the contract shape before it enters a session.
+ */
+function toOptionObjects(options: unknown): { text: string }[] {
+  if (!Array.isArray(options)) return [];
+  return options.map((option) => {
+    if (typeof option === "string") return { text: option };
+    if (option && typeof option === "object" && "text" in option) {
+      return { text: String((option as { text: unknown }).text) };
+    }
+    return { text: String(option) };
+  });
+}
+
 export class GameManager {
   private activeTimers = new Map<string, NodeJS.Timeout>();
   private tickIntervals = new Map<string, NodeJS.Timeout>();
@@ -44,13 +60,14 @@ export class GameManager {
         if (dbQuiz && dbQuiz.questions.length > 0) {
           questions = dbQuiz.questions.map((q) => ({
             id: q.id,
-            type: q.type as any,
+            type: q.type as QuestionInput["type"],
             text: q.text,
             imageUrl: q.imageUrl || undefined,
-            options: q.options as any,
-            correctIndexes: q.correctIndexes as any,
+            // Stored quizzes may hold either [{ text }] or plain string[] (older saves).
+            options: toOptionObjects(q.options),
+            correctIndexes: q.correctIndexes as number[],
             timeLimitSec: q.timeLimitSec,
-            pointsMode: q.pointsMode as any,
+            pointsMode: q.pointsMode as QuestionInput["pointsMode"],
             explanation: q.explanation || undefined,
           }));
         }
