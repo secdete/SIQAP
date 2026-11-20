@@ -11,7 +11,7 @@ import {
   ClientToServerEvents,
   ServerToClientEvents,
 } from "@siqap/shared";
-import { GameManager, TypedServer } from "../engine/game-manager.js";
+import { GameManager, HostSnapshotEvent, TypedServer } from "../engine/game-manager.js";
 
 type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
 
@@ -51,6 +51,17 @@ export function registerSocketHandlers(_io: TypedServer, socket: TypedSocket, ga
     socket.join(`game:${pin}`);
     socket.join(`host:${pin}`);
     ack({ ok: true });
+
+    // The host page keeps no state across a reload, so replay the events that
+    // describe the current phase. Without this the screen snaps back to LOBBY
+    // while the session carries on (and rejoined players get GAME_ALREADY_STARTED).
+    try {
+      for (const item of await gameManager.buildHostSnapshot(pin)) {
+        emitSnapshotEvent(socket, item);
+      }
+    } catch (err) {
+      console.warn(`host:rejoin: failed to replay state for ${pin}:`, err);
+    }
   });
 
   socket.on("host:start", async (rawPayload, ack) => {
@@ -214,6 +225,37 @@ export function registerSocketHandlers(_io: TypedServer, socket: TypedSocket, ga
 
     ack({ ok: true });
   });
+}
+
+/**
+ * Narrow a snapshot item down to one typed emit. The switch is what lets
+ * TypeScript pair each event name with its own payload, so a mismatch between
+ * the two cannot compile.
+ */
+function emitSnapshotEvent(socket: TypedSocket, item: HostSnapshotEvent): void {
+  switch (item.event) {
+    case "question:show":
+      socket.emit("question:show", item.payload);
+      break;
+    case "game:phase":
+      socket.emit("game:phase", item.payload);
+      break;
+    case "question:tick":
+      socket.emit("question:tick", item.payload);
+      break;
+    case "question:reveal":
+      socket.emit("question:reveal", item.payload);
+      break;
+    case "leaderboard:update":
+      socket.emit("leaderboard:update", item.payload);
+      break;
+    case "game:end":
+      socket.emit("game:end", item.payload);
+      break;
+    case "lobby:update":
+      socket.emit("lobby:update", item.payload);
+      break;
+  }
 }
 
 async function getHostTokenFromRoom(_socket: TypedSocket, pin: string, gameManager: GameManager): Promise<string> {

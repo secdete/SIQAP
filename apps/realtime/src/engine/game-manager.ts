@@ -10,6 +10,13 @@ import {
   ClientToServerEvents,
   QUESTION_TIME_DEFAULT_SEC,
   MAX_POINTS_DEFAULT,
+  LobbyUpdate,
+  GamePhaseEvent,
+  QuestionShow,
+  QuestionTick,
+  QuestionReveal,
+  LeaderboardUpdate,
+  GameEnd,
 } from "@siqap/shared";
 import { prisma } from "@siqap/db";
 import { SessionStore, StoredPlayer, StoredSession, StoredAnswer } from "../store/index.js";
@@ -32,6 +39,42 @@ function toOptionObjects(options: unknown): { text: string }[] {
     return { text: String(option) };
   });
 }
+
+/**
+ * Standings order: highest score first, then fastest cumulative response time,
+ * then whoever joined first. Used by reveal ranks, leaderboard and podium.
+ */
+function sortPlayersForStandings(players: StoredPlayer[]): StoredPlayer[] {
+  return [...players].sort((a, b) => {
+    if (b.score !== a.score) return b.score - a.score;
+    if (a.totalResponseMs !== b.totalResponseMs) return a.totalResponseMs - b.totalResponseMs;
+    return a.joinedAt - b.joinedAt;
+  });
+}
+
+function toLeaderboardEntry(player: StoredPlayer, rank: number): LeaderboardEntry {
+  return {
+    playerId: player.playerId,
+    nickname: player.nickname,
+    score: player.score,
+    rank,
+  };
+}
+
+/**
+ * A rejoining host has no local state (its store resets to LOBBY on reload), so
+ * the server replays the exact contract events that describe the current phase.
+ * Ordered by how the host client applies them: `question:show` first because its
+ * handler forces QUESTION_ACTIVE, then `game:phase` which restores the real phase.
+ */
+export type HostSnapshotEvent =
+  | { event: "question:show"; payload: QuestionShow }
+  | { event: "game:phase"; payload: GamePhaseEvent }
+  | { event: "question:tick"; payload: QuestionTick }
+  | { event: "question:reveal"; payload: QuestionReveal }
+  | { event: "leaderboard:update"; payload: LeaderboardUpdate }
+  | { event: "game:end"; payload: GameEnd }
+  | { event: "lobby:update"; payload: LobbyUpdate };
 
 export class GameManager {
   private activeTimers = new Map<string, NodeJS.Timeout>();
@@ -161,6 +204,123 @@ export class GameManager {
   async verifyHost(pin: string, hostToken: string): Promise<boolean> {
     const session = await this.store.getSession(pin);
     return Boolean(session && session.hostToken === hostToken);
+  }
+
+  /**
+   * Contract events describing the session's current phase, replayed to a host
+   * that just rejoined (page reload, socket drop, second tab). The host page keeps
+   * no persistent state, so without this a reload shows LOBBY while the game runs.
+   *
+   * Payload building is separate from emitting so it can be unit-tested directly.
+   */
+  async buildHostSnapshot(pin: string): Promise<HostSnapshotEvent[]> {
+    const session = await this.store.getSession(pin);
+    if (!session) return [];
+
+    const players = await this.store.getPlayers(pin);
+    const showsQuestion =
+      session.phase === "QUESTION_INTRO" ||
+      session.phase === "QUESTION_ACTIVE" ||
+      session.phase === "QUESTION_REVEAL";
+    const currentQuestion = showsQuestion ? session.questions[session.questionIndex] : undefined;
+
+    const events: HostSnapshotEvent[] = [];
+
+    // 1. The question first: its client handler forces QUESTION_ACTIVE, so it has
+    //    to land before game:phase restores the phase the session is really in.
+    if (currentQuestion) {
+      events.push({
+        event: "question:show",
+        payload: {
+          questionIndex: session.questionIndex,
+          total: session.questions.length,
+          type: currentQuestion.type,
+          text: currentQuestion.text,
+          imageUrl: currentQuestion.imageUrl,
+          options: currentQuestion.options.map((o) => o.text),
+          timeLimitSec: currentQuestion.timeLimitSec || QUESTION_TIME_DEFAULT_SEC,
+          startedAt: session.startedAt,
+          endsAt: session.endsAt,
+          pointsMode: currentQuestion.pointsMode,
+        },
+      });
+    }
+
+    // 2. The phase the server is actually in.
+    events.push({
+      event: "game:phase",
+      payload: { phase: session.phase, at: Date.now(), paused: session.paused },
+    });
+
+    // 3. Whatever that phase renders.
+    if (session.phase === "QUESTION_ACTIVE") {
+      const answers = await this.store.getAnswers(pin, session.questionIndex);
+      const remainingMs = session.paused
+        ? session.remainingMsWhenPaused
+        : Math.max(session.endsAt - Date.now(), 0);
+
+      events.push({
+        event: "question:tick",
+        payload: {
+          questionIndex: session.questionIndex,
+          remainingMs,
+          answeredCount: answers.length,
+        },
+      });
+    }
+
+    if (session.phase === "QUESTION_REVEAL" && currentQuestion) {
+      const answers = await this.store.getAnswers(pin, session.questionIndex);
+      const distribution = Array.from({ length: currentQuestion.options.length }, () => 0);
+      for (const answer of answers) {
+        for (const idx of answer.optionIndexes) {
+          if (idx >= 0 && idx < distribution.length) distribution[idx]++;
+        }
+      }
+
+      events.push({
+        event: "question:reveal",
+        payload: {
+          questionIndex: session.questionIndex,
+          correctIndexes: currentQuestion.correctIndexes,
+          explanation: currentQuestion.explanation,
+          distribution,
+        },
+      });
+    }
+
+    const needsStandings =
+      session.phase === "LEADERBOARD" || session.phase === "PODIUM" || session.phase === "ENDED";
+    if (needsStandings) {
+      const sorted = sortPlayersForStandings(players);
+      events.push({
+        event: "leaderboard:update",
+        payload: {
+          top: sorted.slice(0, 5).map((p, idx) => toLeaderboardEntry(p, idx + 1)),
+          totalPlayers: players.length,
+        },
+      });
+
+      // The podium view also renders the standings table, so both are replayed.
+      if (session.phase === "PODIUM" || session.phase === "ENDED") {
+        events.push({
+          event: "game:end",
+          payload: { podium: sorted.slice(0, 3).map((p, idx) => toLeaderboardEntry(p, idx + 1)) },
+        });
+      }
+    }
+
+    // 4. Lobby last: the host view always wants the live roster.
+    events.push({
+      event: "lobby:update",
+      payload: {
+        pin: session.pin,
+        players: players.map((p) => ({ playerId: p.playerId, nickname: p.nickname })),
+        count: players.length,
+      },
+    });
+
+    return events;
   }
 
   async startGame(pin: string, hostToken: string): Promise<{ ok: boolean; error?: string }> {
@@ -616,11 +776,7 @@ export class GameManager {
 
     // Calculate updated ranks
     const updatedPlayers = await this.store.getPlayers(pin);
-    const sorted = [...updatedPlayers].sort((a, b) => {
-      if (b.score !== a.score) return b.score - a.score;
-      if (a.totalResponseMs !== b.totalResponseMs) return a.totalResponseMs - b.totalResponseMs;
-      return a.joinedAt - b.joinedAt;
-    });
+    const sorted = sortPlayersForStandings(updatedPlayers);
 
     // Send private player:result to each player
     for (let i = 0; i < sorted.length; i++) {
@@ -657,18 +813,9 @@ export class GameManager {
     });
 
     const players = await this.store.getPlayers(pin);
-    const sorted = [...players].sort((a, b) => {
-      if (b.score !== a.score) return b.score - a.score;
-      if (a.totalResponseMs !== b.totalResponseMs) return a.totalResponseMs - b.totalResponseMs;
-      return a.joinedAt - b.joinedAt;
-    });
+    const sorted = sortPlayersForStandings(players);
 
-    const top: LeaderboardEntry[] = sorted.slice(0, 5).map((p, idx) => ({
-      playerId: p.playerId,
-      nickname: p.nickname,
-      score: p.score,
-      rank: idx + 1,
-    }));
+    const top: LeaderboardEntry[] = sorted.slice(0, 5).map((p, idx) => toLeaderboardEntry(p, idx + 1));
 
     this.io.to(`game:${pin}`).emit("leaderboard:update", {
       top,
@@ -703,18 +850,9 @@ export class GameManager {
     });
 
     const players = await this.store.getPlayers(pin);
-    const sorted = [...players].sort((a, b) => {
-      if (b.score !== a.score) return b.score - a.score;
-      if (a.totalResponseMs !== b.totalResponseMs) return a.totalResponseMs - b.totalResponseMs;
-      return a.joinedAt - b.joinedAt;
-    });
+    const sorted = sortPlayersForStandings(players);
 
-    const podium: LeaderboardEntry[] = sorted.slice(0, 3).map((p, idx) => ({
-      playerId: p.playerId,
-      nickname: p.nickname,
-      score: p.score,
-      rank: idx + 1,
-    }));
+    const podium: LeaderboardEntry[] = sorted.slice(0, 3).map((p, idx) => toLeaderboardEntry(p, idx + 1));
 
     this.io.to(`game:${pin}`).emit("game:end", { podium });
 
