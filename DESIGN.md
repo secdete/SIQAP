@@ -1,134 +1,163 @@
-# SIQAP Design Guide (v0.1)
+# SIQAP Design Guide (v0.2)
 
-Panduan visual untuk `apps/web`. Palet diambil dari gambar referensi (UI biru dengan kartu putih dan sudut membulat). Pemilik area UI (agen C) wajib memakai token di sini, bukan warna hardcode.
+Panduan visual untuk `apps/web`. Palet resmi proyek adalah **navy-oranye** (diubah dari palet biru v0.1 mengikuti keputusan pemilik proyek).
+
+**Sumber kebenaran warna adalah `apps/web/tailwind.config.ts`.** Kode di komponen hanya memakai class token (`bg-siqap-navy`, `text-siqap-orange-dark`); **jangan pernah menulis kode hex atau memakai palet bawaan Tailwind** (`red-500`, `gray-400`, `emerald-600`) di komponen.
 
 ## 1. Palet inti
 
-Nilai diambil langsung dari gambar referensi.
-
-| Token | Hex | Dipakai untuk |
+| Token Tailwind | Hex | Dipakai untuk |
 |---|---|---|
-| `navy` | `#10266F` | Sidebar/host chrome, teks utama, tombol aksi gelap, ikon aktif |
-| `blue` | `#1F75BA` | Warna merek utama, tombol primer, header halaman |
-| `sky` | `#56AEE5` | Aksen, kartu sekunder, latar highlight |
-| `sky-bright` | `#5ABDF6` | Latar halaman detail/hero, hover aksen |
-| `mist` | `#EDF7FF` | Latar halaman |
-| `mist-border` | `#D8E8F7` | Garis tipis, bayangan lembut, divider |
-| `white` | `#FFFFFF` | Kartu, input, panel soal |
+| `siqap-navy` | `#1E1240` | Latar chrome host/player, header, teks utama, tombol aksi gelap |
+| `siqap-navy-dark` | `#100820` | Hover/tekan tombol gelap, bayangan pekat, latar berlapis |
+| `siqap-orange` | `#FC8235` | Isi/padatan oranye: tombol, footer, progress, aksen. **Teks hanya di atas navy** |
+| `siqap-orange-dark` | `#B45309` | Teks & border oranye di atas latar terang |
+| `siqap-orange-hover` | `#EA580C` | State hover semua tombol oranye |
+| `siqap-peach` | `#FFA566` | Aksen lembut, teks sekunder **hanya** di atas navy |
+| `siqap-sand` | `#FBF2EB` | Latar halaman |
+| `siqap-cream` | `#FFF7F2` | Latar kartu |
+| `siqap-border` | `#F3E1D5` | Garis tipis, kartu, input |
+| `siqap-muted` | `#6B6188` | Teks sekunder, placeholder, label non-esensial |
+| `siqap-beige` | `#E5DAC6` | Isi netral |
 
-## 2. Warna semantik dan jawaban
+## 2. Tiga bobot oranye (aturan terpenting)
 
-Palet biru saja tidak cukup membedakan empat opsi jawaban, jadi opsi jawaban memakai empat warna tambahan. Warna dan ikon sengaja dibuat berbeda dari pasangan warna dan bentuk milik Kahoot.
+Oranye adalah warna merek, tetapi `#FC8235` **hanya 2,27–2,37:1** di atas latar terang — tidak boleh dipakai untuk teks di sana. Karena itu ada tiga bobot:
 
-| Opsi | Warna | Teks di atasnya | Ikon (lucide) |
+| Bobot | Aturan pakai |
+|---|---|
+| `siqap-orange` | Isi/padatan (tombol, footer, bar, border di atas navy). Sebagai **teks hanya di atas navy** (6,90:1). |
+| `siqap-orange-dark` | **Semua** teks dan border oranye di atas `cream` / `sand` / `putih` (4,54–5,02:1). |
+| `siqap-orange-hover` | Hover tombol oranye, agar label `siqap-navy` tetap 4,85:1. |
+
+Kunci pasangan yang dipakai:
+
+- Tombol oranye **berlabel `text-siqap-navy`** (6,90:1). **Jangan `text-white`** — hanya 2,50:1.
+- Teks oranye di latar terang → selalu `text-siqap-orange-dark`.
+- `siqap-peach` hanya di atas navy (8,90:1); di latar terang ia nyaris tak terbaca.
+
+## 3. Warna jawaban
+
+Empat warna jawaban dibedakan dari palet merek Kahoot. Setiap opsi selalu menampilkan **huruf (A–D) dan ikon**, bukan warna saja, supaya terbaca pengguna buta warna.
+
+| Opsi | Token | Teks di atasnya | Ikon (lucide) |
 |---|---|---|---|
-| A | `#C93C42` | putih | `Zap` |
-| B | `#F5B031` | `navy` | `Star` |
-| C | `#2DB87A` | `navy` | `Leaf` |
-| D | `#6F52E0` | putih | `Moon` |
+| A | `quiz-red` `#C93C42` | `text-white` (4,99:1) | `Zap` |
+| B | `quiz-yellow` `#F5B031` | `text-siqap-navy-dark` (10,33:1) | `Star` |
+| C | `quiz-green` `#2DB87A` | `text-siqap-navy-dark` (7,65:1) | `Leaf` |
+| D | `quiz-purple` `#6F52E0` | `text-white` (5,30:1) | `Moon` |
 
-Semua opsi tetap menampilkan **huruf (A–D) dan ikon**, bukan hanya warna, supaya terbaca oleh pengguna buta warna.
+Varian `-dark` (`quiz-red-dark`, `quiz-yellow-dark`, `quiz-green-dark`, `quiz-purple-dark`) dipakai untuk hover, border, dan teks status di atas latar terang.
 
-| Token | Hex | Dipakai untuk |
-|---|---|---|
-| `success` | `#2DB87A` | Jawaban benar |
-| `danger` | `#C93C42` | Jawaban salah |
-| `warning` | `#F5B031` | Peringatan, sisa waktu menipis |
+**Jangan pernah `text-white` di atas `quiz-green`** — hanya 2,55:1. Kartu "jawaban benar" di layar host memakai `bg-quiz-green text-siqap-navy` (6,78:1).
 
-## 3. CSS variables
+Status memakai keluarga `quiz-red`:
+- Panel error / label salah: `bg-quiz-red/10` + `text-quiz-red-dark` (4,99:1).
+- Ikon peringatan: `text-quiz-red` (≥3:1, syarat untuk grafis).
 
-```css
-:root {
-  --navy: #10266f;
-  --blue: #1f75ba;
-  --sky: #56aee5;
-  --sky-bright: #5abdf6;
-  --mist: #edf7ff;
-  --mist-border: #d8e8f7;
-  --white: #ffffff;
+## 4. Token di Tailwind
 
-  --answer-a: #c93c42;
-  --answer-b: #f5b031;
-  --answer-c: #2db87a;
-  --answer-d: #6f52e0;
-
-  --success: #2db87a;
-  --danger: #c93c42;
-  --warning: #f5b031;
-
-  --bg: var(--mist);
-  --surface: var(--white);
-  --text: var(--navy);
-  --text-muted: #4a5a8f;
-  --primary: var(--blue);
-  --primary-contrast: #ffffff;
-
-  --radius-card: 24px;
-  --radius-pill: 999px;
-  --shadow-card: 0 8px 24px rgba(16, 38, 111, 0.12);
-}
-
-/* Dark mode: nilai turunan (bukan dari gambar), cek ulang kontras sebelum dipakai */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0a1a52;
-    --surface: var(--navy);
-    --text: var(--mist);
-    --text-muted: #9fb4e6;
-    --primary: var(--sky);
-    --primary-contrast: var(--navy);
-    --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.35);
-  }
+```ts
+// apps/web/tailwind.config.ts — satu-satunya sumber kebenaran warna
+colors: {
+  siqap: {
+    navy: "#1E1240", "navy-dark": "#100820",
+    orange: "#FC8235", "orange-dark": "#B45309", "orange-hover": "#EA580C",
+    peach: "#FFA566",
+    sand: "#FBF2EB", cream: "#FFF7F2", border: "#F3E1D5",
+    muted: "#6B6188", beige: "#E5DAC6",
+  },
+  quiz: {
+    red: "#C93C42", "red-dark": "#B03035",
+    yellow: "#F5B031", "yellow-dark": "#DF9F26",
+    green: "#2DB87A", "green-dark": "#259F69",
+    purple: "#6F52E0", "purple-dark": "#5F44C6",
+  },
 }
 ```
 
-Petakan variabel ini ke konfigurasi Tailwind (`theme.extend.colors`) dan tema shadcn/ui; jangan menulis kode hex di komponen.
+Tidak ada lagi variabel warna `:root` di `globals.css` — duplikasi itu perlu dihapus supaya tidak ada dua daftar hex yang bisa berbeda.
 
-## 4. Gaya UI (dari gambar referensi)
+## 5. Tipografi
 
-- Sudut sangat membulat: kartu 24 px, tombol dan chip berbentuk pil, ikon di dalam kotak membulat.
-- Latar halaman `mist`, kartu `white` dengan bayangan lembut `--shadow-card`.
-- Chrome gelap (sidebar, layar host saat soal) memakai `navy`; area aksi memakai `blue`; highlight memakai `sky`.
-- Satu tombol aksi utama per layar, berbentuk pil, warna `navy` atau `blue`.
-- Banyak ruang kosong, tipografi tebal untuk judul dan harga/skor, teks sekunder kecil.
-- Font: sans geometris seperti **Montserrat** (mirip referensi), dimuat lewat `next/font` dengan fallback `system-ui, sans-serif`.
-- Dekorasi latar boleh berupa lingkaran dan pola titik halus dalam `sky` dengan opasitas rendah.
+Dua muka, dimuat lewat `next/font` (self-host, tidak memblokir render ke fonts.googleapis.com):
 
-## 5. Penerapan per layar
+| Muka | Font | Variabel | Dipakai untuk |
+|---|---|---|---|
+| Display | **Montserrat** | `--font-montserrat` → `font-display` | `h1`–`h4`, angka besar, judul layar |
+| Body | **Inter** | `--font-inter` → `font-sans` | Paragraf, label, tombol, seluruh sisanya |
+
+Aturan di `globals.css`: `h1, h2, h3, h4 { font-family: var(--font-display) }`. Skala tebal: label dan tombol memakai `font-bold`/`font-black` dengan `tracking-wider` uppercase; teks sekunder `text-xs`–`text-sm` berwarna `siqap-muted`.
+
+## 6. Gaya UI
+
+- Sudut membulat konsisten: kartu `rounded-2xl`–`rounded-3xl`, tombol `rounded-xl`–`rounded-2xl`, chip `rounded-full`.
+- Latar halaman `siqap-sand`, kartu `siqap-cream`/`putih` dengan garis `siqap-border`.
+- Chrome gelap (header host/player, layar intro/reveal) `siqap-navy`; area aksi terang `siqap-orange`.
+- Satu tombol aksi utama per layar.
+- Ikon selalu di dalam kotak membulat berlatar navy atau orange.
+- Bayangan memakai turunan token (`shadow-siqap-orange/25`), bukan palet default Tailwind.
+
+## 7. Penerapan per layar
 
 | Layar | Latar | Elemen utama |
 |---|---|---|
-| Join (player) | `blue` penuh, kartu `white` di tengah | Input PIN dan nickname, tombol pil `navy` |
-| Lobby (host) | `navy` | PIN besar dan QR di kartu `white`, counter pemain live, daftar nickname sebagai chip |
-| Soal (host) | `navy` | Teks soal di kartu `white`, timer melingkar `sky`, jumlah yang sudah menjawab |
-| Soal (player) | `mist` | Empat tombol jawaban besar A–D warna sesuai bagian 2 |
-| Reveal | `navy` | Opsi benar `success`, salah diredupkan, grafik distribusi pemilih |
-| Leaderboard | `blue` | Baris kartu `white`, peringkat 1–5, skor tebal |
-| Podium | `navy` ke `blue` | Tiga kolom podium, nama dan skor |
+| Join (player) | `siqap-navy`, kartu `siqap-sand` ber-border `siqap-orange-dark` | PIN + nickname, tombol `bg-siqap-navy text-white`, footer `bg-siqap-orange text-siqap-navy` |
+| Lobby (host) | `siqap-navy` | PIN di kartu `siqap-cream` border `siqap-orange-dark`, counter pemain, chip nickname |
+| Intro (host) | `siqap-navy` | Judul `text-siqap-orange` (6,90:1) |
+| Soal (host) | `siqap-navy` | Teks soal di kartu `siqap-cream`, timer melingkar oranye |
+| Soal (player) | `siqap-sand` | Empat tombol jawaban A–D sesuai bagian 3, target sentuh ≥44 px |
+| Reveal (host) | `siqap-navy` | Opsi benar `bg-quiz-green text-siqap-navy`, sisanya diredupkan, batang distribusi |
+| Reveal (player) | `siqap-sand` | Kartu feedback `bg-siqap-cream` + label `text-siqap-orange-dark`, skor `text-siqap-orange-dark` |
+| Leaderboard | `siqap-sand`, header `siqap-navy` | Baris kartu putih, peringkat dan skor tebal |
+| Podium | `siqap-cream` | Tiga kolom, juara 1 di kotak `siqap-navy` border `siqap-orange-dark` |
+| Kuis builder | `siqap-sand` | Kartu soal putih, tombol AI `bg-siqap-orange/20 text-siqap-peach` (di header navy) |
 
-## 6. Aksesibilitas dan kontras
+## 8. Kontras (terhitung dari token)
 
-| Pasangan | Rasio | Catatan |
-|---|---|---|
-| putih di `navy` | 13,74 | Aman |
-| `navy` di `mist` | 12,66 | Aman, dipakai untuk teks utama |
-| putih di `blue` | 4,87 | Aman untuk tombol dan judul |
-| `navy` di `sky` | 5,61 | Aman |
-| putih di `sky` | 2,45 | **Jangan dipakai.** Teks di atas `sky` memakai `navy` |
-| `blue` di `mist` | 4,49 | Sedikit di bawah 4,5; jangan untuk teks kecil, pakai `navy` |
-| putih di `#C93C42` (A) | 4,99 | Aman |
-| `navy` di `#F5B031` (B) | 7,28 | Aman |
-| `navy` di `#2DB87A` (C) | 5,40 | Aman |
-| putih di `#6F52E0` (D) | 5,30 | Aman |
+Ambang WCAG AA: **4,5:1** untuk teks normal, **3,0:1** untuk teks besar (≥24 px, atau ≥18,66 px tebal) dan elemen grafis.
 
-Aturan tambahan:
+| Pasangan | Rasio | Status | Catatan |
+|---|---|---|---|
+| putih di `navy` | 17,27:1 | AA | Chrome host/player |
+| `navy` di `cream` | 16,32:1 | AA | Teks kartu |
+| `navy` di `sand` | 15,63:1 | AA | Teks halaman |
+| `orange` di `navy` | 6,90:1 | AA | Logo, label, judul di layar gelap |
+| `orange` di `navy-dark` | 7,78:1 | AA | |
+| `peach` di `navy` | 8,90:1 | AA | Teks sekunder di layar gelap |
+| `orange-dark` di `cream` | 4,74:1 | AA | Semua teks oranye di kartu |
+| `orange-dark` di `sand` | 4,54:1 | AA | Semua teks oranye di halaman |
+| `orange-dark` di putih | 5,02:1 | AA | |
+| `navy` di `orange` | 6,90:1 | AA | **Label tombol & footer oranye** |
+| `navy` di `orange-hover` | 4,85:1 | AA | Hover tombol |
+| `muted` di `cream` / `sand` / putih | 5,38 / 5,15 / 5,69:1 | AA | Teks sekunder & placeholder |
+| putih di `quiz-red` (A) | 4,99:1 | AA | |
+| `navy-dark` di `quiz-yellow` (B) | 10,33:1 | AA | |
+| `navy-dark` di `quiz-green` (C) | 7,65:1 | AA | |
+| putih di `quiz-purple` (D) | 5,30:1 | AA | |
+| `quiz-red-dark` di `cream` | 5,98:1 | AA | Label "Salah"/error |
+| **putih di `orange`** | **2,50:1** | **GAGAL** | Dilarang untuk teks — pakai `text-siqap-navy` |
+| **`orange` di `cream`/`sand`** | **2,37 / 2,27:1** | **GAGAL** | Dilarang untuk teks — pakai `orange-dark` |
+| **putih di `quiz-green`** | **2,55:1** | **GAGAL** | Dilarang — pakai `text-siqap-navy` |
+| **putih di `orange-hover`** | **3,56:1** | **GAGAL** | Alasan tombol oranye wajib berlabel `siqap-navy`, bukan putih |
+
+Setiap perubahan warna wajib diverifikasi ulang dengan menghitung rasio, bukan menebak.
+
+## 9. Aksesibilitas
+
 - Target sentuh minimal 44 px; tombol jawaban player memenuhi lebar layar.
-- Jangan mengandalkan warna saja untuk benar/salah; sertakan ikon centang atau silang dan teks.
+- Tombol jawaban dan chip jawaban punya **warna dan bentuk/label**, bukan warna saja.
+- Jangan mengandalkan warna untuk benar/salah: selalu sertakan ikon centang/silang dan teks.
+- Fokus keyboard harus terlihat (jangan `outline-none` tanpa pengganti).
 - Hormati `prefers-reduced-motion`: matikan animasi besar (confetti, transisi podium) bila aktif.
 - Layar host dirancang untuk proyektor: teks soal minimal 32 px dan kontras tinggi.
+- Verifikasi: probe yang menghitung rasio kontras semua teks terlihat, atau audit Lighthouse/axe.
 
-## 7. Yang jangan dilakukan
+## 10. Yang jangan dilakukan
 
 - Jangan memakai pasangan warna dan bentuk jawaban milik Kahoot (merah segitiga, biru wajik, kuning lingkaran, hijau kotak) ataupun warna ungu khasnya sebagai warna merek.
-- Jangan memakai aset, ikon, atau ilustrasi dari gambar referensi. Gambar itu hanya dipakai sebagai acuan palet dan gaya.
-- Jangan menulis kode hex langsung di komponen; selalu lewat token.
+- Jangan memakai aset, ikon, atau ilustrasi dari Kahoot atau proyek "kahoot clone" lain.
+- Jangan menulis kode hex langsung di komponen, dan jangan memakai palet bawaan Tailwind (`red-*`, `gray-*`, `emerald-*`, `orange-*` di luar token `siqap`).
+- Jangan memakai `text-white` di atas `siqap-orange` atau `quiz-green`.
+- Jangan memakai `siqap-orange` sebagai warna teks di atas `cream`/`sand`/putih.
+- Jangan menggabungkan dua sumber kebenaran warna (mis. daftar hex di `globals.css` yang dihapus).
