@@ -426,7 +426,7 @@ export default function CreateQuizPage() {
               {/* Explanation Field */}
               <div>
                 <label className="block text-xs font-bold text-siqap-orange-dark uppercase tracking-wider mb-1">
-                  💡 Pembahasan Materi (Muncul otomatis setelah soal dijawab)
+                  Pembahasan Materi (Muncul otomatis setelah soal dijawab)
                 </label>
                 <input
                   type="text"

@@ -84,14 +84,64 @@ function messageOf(err: unknown, fallback: string): string {
   return err instanceof Error && err.message ? err.message : fallback;
 }
 
+/**
+ * Metadata for the dashboard. Answer keys and explanations are deliberately
+ * left out: this endpoint is public (auth has not landed yet), so a player
+ * could otherwise read every kunci jawaban mid-game (AGENTS.md §7).
+ */
+type QuizSummary = {
+  id: string;
+  title: string;
+  description?: string | null;
+  coverUrl?: string | null;
+  questionCount: number;
+};
+
+function toSummary(quiz: {
+  id: string;
+  title: string;
+  description?: string | null;
+  coverUrl?: string | null;
+  questions?: readonly unknown[];
+}): QuizSummary {
+  return {
+    id: quiz.id,
+    title: quiz.title,
+    description: quiz.description,
+    coverUrl: quiz.coverUrl,
+    questionCount: quiz.questions?.length ?? 0,
+  };
+}
+
+// A database that is down must not hang the dashboard: give the query 3 seconds,
+// then fall back to the bundled mock list below.
+function withTimeout<T>(work: Promise<T>, ms: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(`Query timeout after ${ms}ms`)), ms);
+    work.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (err: unknown) => {
+        clearTimeout(timer);
+        reject(err);
+      }
+    );
+  });
+}
+
 export async function GET() {
   if (process.env.DATABASE_URL) {
     try {
-      const quizzes = await prisma.quiz.findMany({
-        include: { questions: { orderBy: { order: "asc" } } },
-        orderBy: { createdAt: "desc" },
-      });
-      return NextResponse.json(quizzes);
+      const quizzes = await withTimeout(
+        prisma.quiz.findMany({
+          include: { questions: { orderBy: { order: "asc" } } },
+          orderBy: { createdAt: "desc" },
+        }),
+        3000
+      );
+      return NextResponse.json(quizzes.map(toSummary));
     } catch (err: unknown) {
       console.warn(
         "[Quizzes API] Database query failed, falling back to mock:",
@@ -100,7 +150,7 @@ export async function GET() {
     }
   }
 
-  return NextResponse.json(mockQuizzes);
+  return NextResponse.json(mockQuizzes.map(toSummary));
 }
 
 export async function POST(req: NextRequest) {

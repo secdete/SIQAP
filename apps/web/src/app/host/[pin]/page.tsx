@@ -430,7 +430,7 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
             reveal?.explanation && (
               <div className="shrink-0 max-w-sm pl-6 border-l-2 border-siqap-border text-left">
                 <span className="text-xs font-bold text-siqap-orange-dark uppercase tracking-wider block mb-1">
-                  💡 Pembahasan Materi:
+                  Pembahasan Materi:
                 </span>
                 <p className="text-xs text-siqap-navy font-semibold leading-relaxed">{reveal.explanation}</p>
               </div>
@@ -592,7 +592,7 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
             Inilah para juara kita!
           </h1>
           <p className="text-sm font-normal text-siqap-muted">
-            {question?.total || 10} pertanyaan tuntas · {players.length || leaderboard.length} peserta · Terima kasih sudah bermain.
+            {question?.total ? `${question.total} pertanyaan tuntas · ` : ""}{players.length || leaderboard.length} peserta · Terima kasih sudah bermain.
           </p>
         </div>
 

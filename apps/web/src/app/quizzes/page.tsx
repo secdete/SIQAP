@@ -5,7 +5,6 @@ import NextLink from "next/link";
 import { useRouter } from "next/navigation";
 import { getSocket } from "@/lib/socket";
 import { useHostStore } from "@/lib/store";
-import type { QuestionInput } from "@siqap/shared";
 import {
   PlusCircle,
   Play,
@@ -15,12 +14,14 @@ import {
   AlertCircle,
 } from "lucide-react";
 
+// GET /api/quizzes returns metadata only: answer keys and explanations never
+// leave the server (AGENTS.md §7).
 interface QuizSummary {
   id: string;
   title: string;
   description?: string;
   coverUrl?: string;
-  questions: QuestionInput[];
+  questionCount: number;
 }
 
 export default function QuizzesPage() {
@@ -172,7 +173,7 @@ export default function QuizzesPage() {
                 <div>
                   <div className="flex items-center justify-between text-xs font-bold text-siqap-muted mb-3">
                     <span className="bg-white border border-siqap-border px-3 py-1 rounded-full text-siqap-navy">
-                      {quiz.questions?.length || 0} Soal
+                      {quiz.questionCount} Soal
                     </span>
                     <span className="text-siqap-orange-dark">Tersedia</span>
                   </div>

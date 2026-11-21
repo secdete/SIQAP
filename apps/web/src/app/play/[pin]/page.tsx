@@ -367,9 +367,19 @@ export default function PlayPage({ params }: { params: Promise<{ pin: string }> 
   // Peserta BISA MELIHAT SOAL + 4 PILIHAN JAWABAN LENGKAP DENGAN TEKSNYA!
   // ===========================================================================
   if (phase === "QUESTION_ACTIVE") {
-    const qIndex = (question?.questionIndex ?? 0) + 1;
-    const qTotal = question?.total || 10;
-    const options = question?.options || ["Opsi A", "Opsi B", "Opsi C", "Opsi D"];
+    // Reaching this phase before question:show lands (a player rejoining
+    // mid-question) must wait for the real payload, not show invented options.
+    if (!question) {
+      return (
+        <div className="min-h-screen bg-siqap-sand flex flex-col items-center justify-center p-6 text-center">
+          <p className="text-lg font-bold text-siqap-navy">Menunggu soal dari server...</p>
+          <p className="text-sm text-siqap-muted mt-2">Halaman akan terisi sendiri.</p>
+        </div>
+      );
+    }
+    const qIndex = question.questionIndex + 1;
+    const qTotal = question.total;
+    const options = question.options;
 
     return (
       <div className="min-h-screen bg-siqap-sand flex flex-col justify-between selection:bg-siqap-orange selection:text-siqap-navy">
@@ -494,8 +504,18 @@ export default function PlayPage({ params }: { params: Promise<{ pin: string }> 
   // Menampilkan feedback benar/salah, skor ronde, posisi, dan pembahasan!
   // ===========================================================================
   if (phase === "QUESTION_REVEAL") {
-    const qIndex = (question?.questionIndex ?? 0) + 1;
-    const qTotal = question?.total || 10;
+    // Same as the active phase: no invented fallbacks while the payload is
+    // still missing, wait for question:show instead.
+    if (!question) {
+      return (
+        <div className="min-h-screen bg-siqap-sand flex flex-col items-center justify-center p-6 text-center">
+          <p className="text-lg font-bold text-siqap-navy">Menunggu hasil ronde...</p>
+          <p className="text-sm text-siqap-muted mt-2">Halaman akan terisi sendiri.</p>
+        </div>
+      );
+    }
+    const qIndex = question.questionIndex + 1;
+    const qTotal = question.total;
     const isCorrect = result?.isCorrect ?? false;
     // null/undefined means the timer ran out before the player picked anything.
     const answeredThisRound = selectedOption !== null && selectedOption !== undefined;
@@ -688,7 +708,10 @@ export default function PlayPage({ params }: { params: Promise<{ pin: string }> 
   // 5. ENDED / PODIUM (FigCraft Frame 2: 10 · Peserta · Hasil dan review Raka)
   // Menampilkan rekap skor final, peringkat, serta review kesalahan/jawaban!
   // ===========================================================================
-  const totalQuestions = finalStats?.totalQuestions || 10;
+  // Unknown totals must not be invented: a stale fallback used to render
+  // "10 soal tuntas" for a 2-question kuis. Fall back to the live question,
+  // then to zero, and let the render sites hide what they cannot know.
+  const totalQuestions = finalStats?.totalQuestions ?? question?.total ?? 0;
   const correctCount = finalStats?.correctCount || (result?.isCorrect ? 1 : 0);
   const finalRank = finalStats?.finalRank || result?.rank || 1;
   const finalScore = finalStats?.finalScore || result?.totalScore || 0;
@@ -717,7 +740,7 @@ export default function PlayPage({ params }: { params: Promise<{ pin: string }> 
             Ini hasilmu, {nickname}.
           </h1>
           <p className="text-[14px] font-normal text-siqap-muted">
-            {totalQuestions} soal tuntas. Lihat lagi yang terlewat.
+            {totalQuestions > 0 ? `${totalQuestions} soal tuntas. ` : ""}Lihat lagi yang terlewat.
           </p>
         </div>
 
@@ -746,7 +769,7 @@ export default function PlayPage({ params }: { params: Promise<{ pin: string }> 
           <div className="border-t border-white/10 pt-4 flex items-center justify-between text-sm">
             <span className="text-siqap-border">Jawaban benar</span>
             <span className="font-extrabold text-lg text-white">
-              {correctCount} / {totalQuestions}
+              {totalQuestions > 0 ? `${correctCount} / ${totalQuestions}` : correctCount}
             </span>
           </div>
         </div>
@@ -816,7 +839,7 @@ export default function PlayPage({ params }: { params: Promise<{ pin: string }> 
             </div>
           ) : (
             <div className="bg-white border border-siqap-border rounded-2xl p-6 text-center text-sm font-semibold text-siqap-muted">
-              🎉 Luar biasa! Tidak ada jawaban yang salah!
+              Luar biasa! Tidak ada jawaban yang salah!
             </div>
           )}
         </div>
