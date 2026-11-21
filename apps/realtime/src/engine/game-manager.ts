@@ -218,10 +218,15 @@ export class GameManager {
     if (!session) return [];
 
     const players = await this.store.getPlayers(pin);
+    // The closing screens also read the question (e.g. "N pertanyaan tuntas"),
+    // so it is replayed for them as well — otherwise the host would fall back
+    // to an invented total after a reload.
     const showsQuestion =
       session.phase === "QUESTION_INTRO" ||
       session.phase === "QUESTION_ACTIVE" ||
-      session.phase === "QUESTION_REVEAL";
+      session.phase === "QUESTION_REVEAL" ||
+      session.phase === "PODIUM" ||
+      session.phase === "ENDED";
     const currentQuestion = showsQuestion ? session.questions[session.questionIndex] : undefined;
 
     const events: HostSnapshotEvent[] = [];
