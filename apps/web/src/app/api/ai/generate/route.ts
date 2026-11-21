@@ -3,9 +3,10 @@ import { GenerateQuizInput, GenerateQuizOutput } from "@siqap/shared";
 
 // Gemini via Google AI Studio's OpenAI-compatible endpoint.
 // Key must come from env; never hardcode secrets in source.
-const AI_BASE =
-  process.env.AI_API_BASE || "https://generativelanguage.googleapis.com/v1beta/openai";
-const AI_KEY = process.env.GEMINI_API_KEY || process.env.AI_API_KEY || "";
+// Provider is fixed on purpose: quiz generation always goes straight to
+// AI Studio, so no proxy key (e.g. 9router) can be picked up by accident.
+const AI_BASE = "https://generativelanguage.googleapis.com/v1beta/openai";
+const AI_KEY = process.env.GEMINI_API_KEY || "";
 const MODEL_NAME = process.env.AI_MODEL || "gemini-2.5-flash";
 
 export async function POST(req: NextRequest) {
