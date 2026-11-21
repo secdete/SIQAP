@@ -12,15 +12,57 @@ import {
   ServerToClientEvents,
 } from "@siqap/shared";
 import { GameManager, HostSnapshotEvent, TypedServer } from "../engine/game-manager.js";
+import { SocketRateLimiter } from "./rate-limit.js";
 
 type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
 
+/** The answer a rate-limited event sends instead of running its handler. */
+type LimitedAck = (r: { ok: false; error: ErrorCode }) => void;
+
+// Shared by every connection: the CONTRACT §12 counters are per socket id and
+// per IP, so they must live outside the per-connection handler registration.
+const rateLimiter = new SocketRateLimiter();
+
 export function registerSocketHandlers(_io: TypedServer, socket: TypedSocket, gameManager: GameManager): void {
+  const clientIp = socket.handshake.address || "unknown";
+
+  /**
+   * Every event passes through the CONTRACT §12 rate limit before its handler:
+   * 20 events per second per socket, 10 player:join per minute per IP.
+   * A limited socket is answered RATE_LIMITED; one that keeps flooding
+   * ("disconnect jika berulang") is disconnected.
+   */
+  const wrap = <Ev extends keyof ClientToServerEvents>(
+    ev: Ev,
+    handler: ClientToServerEvents[Ev]
+  ): void => {
+    const invoke = handler as unknown as (payload: unknown, ...rest: unknown[]) => unknown;
+    // socket.io's `on` typing only resolves for literal event names; a generic
+    // key needs a non-generic door to the same runtime registration.
+    const rawOn = socket.on.bind(socket) as unknown as (
+      event: string,
+      listener: (payload: unknown, ...rest: unknown[]) => unknown
+    ) => void;
+    rawOn(String(ev), (payload, ...rest) => {
+      const ack = rest[rest.length - 1] as LimitedAck | undefined;
+      const verdict = rateLimiter.allow(socket.id, clientIp, String(ev));
+      if (verdict) {
+        ack?.({ ok: false, error: "RATE_LIMITED" });
+        if (verdict === "DISCONNECT") socket.disconnect(true);
+        return;
+      }
+      return invoke(payload, ...rest);
+    });
+  };
+
+  // Sessions hold socket ids; forget the counters once the socket is gone.
+  socket.on("disconnect", () => rateLimiter.clear(socket.id));
+
   // ---------------------------------------------------------------------------
   // Host Handlers
   // ---------------------------------------------------------------------------
 
-  socket.on("host:create", async (rawPayload, ack) => {
+  wrap("host:create", async (rawPayload, ack) => {
     const parse = HostCreate.safeParse(rawPayload);
     if (!parse.success) {
       return ack({ ok: false, error: "INVALID_PAYLOAD", message: parse.error.message });
@@ -36,7 +78,7 @@ export function registerSocketHandlers(_io: TypedServer, socket: TypedSocket, ga
     }
   });
 
-  socket.on("host:rejoin", async (rawPayload, ack) => {
+  wrap("host:rejoin", async (rawPayload, ack) => {
     const parse = HostRejoin.safeParse(rawPayload);
     if (!parse.success) {
       return ack({ ok: false, error: "INVALID_PAYLOAD" });
@@ -64,7 +106,7 @@ export function registerSocketHandlers(_io: TypedServer, socket: TypedSocket, ga
     }
   });
 
-  socket.on("host:start", async (rawPayload, ack) => {
+  wrap("host:start", async (rawPayload, ack) => {
     const parse = HostAction.safeParse(rawPayload);
     if (!parse.success) return ack({ ok: false, error: "INVALID_PAYLOAD" });
 
@@ -82,7 +124,7 @@ export function registerSocketHandlers(_io: TypedServer, socket: TypedSocket, ga
     ack({ ok: true });
   });
 
-  socket.on("host:skip", async (rawPayload, ack) => {
+  wrap("host:skip", async (rawPayload, ack) => {
     const parse = HostAction.safeParse(rawPayload);
     if (!parse.success) return ack({ ok: false, error: "INVALID_PAYLOAD" });
 
@@ -95,7 +137,7 @@ export function registerSocketHandlers(_io: TypedServer, socket: TypedSocket, ga
     ack({ ok: true });
   });
 
-  socket.on("host:pause", async (rawPayload, ack) => {
+  wrap("host:pause", async (rawPayload, ack) => {
     const parse = HostAction.safeParse(rawPayload);
     if (!parse.success) return ack({ ok: false, error: "INVALID_PAYLOAD" });
 
@@ -108,7 +150,7 @@ export function registerSocketHandlers(_io: TypedServer, socket: TypedSocket, ga
     ack({ ok: true });
   });
 
-  socket.on("host:resume", async (rawPayload, ack) => {
+  wrap("host:resume", async (rawPayload, ack) => {
     const parse = HostAction.safeParse(rawPayload);
     if (!parse.success) return ack({ ok: false, error: "INVALID_PAYLOAD" });
 
@@ -121,7 +163,7 @@ export function registerSocketHandlers(_io: TypedServer, socket: TypedSocket, ga
     ack({ ok: true });
   });
 
-  socket.on("host:next", async (rawPayload, ack) => {
+  wrap("host:next", async (rawPayload, ack) => {
     const parse = HostAction.safeParse(rawPayload);
     if (!parse.success) return ack({ ok: false, error: "INVALID_PAYLOAD" });
 
@@ -134,7 +176,7 @@ export function registerSocketHandlers(_io: TypedServer, socket: TypedSocket, ga
     ack({ ok: true });
   });
 
-  socket.on("host:end", async (rawPayload, ack) => {
+  wrap("host:end", async (rawPayload, ack) => {
     const parse = HostAction.safeParse(rawPayload);
     if (!parse.success) return ack({ ok: false, error: "INVALID_PAYLOAD" });
 
@@ -147,7 +189,7 @@ export function registerSocketHandlers(_io: TypedServer, socket: TypedSocket, ga
     ack({ ok: true });
   });
 
-  socket.on("host:kick", async (rawPayload, ack) => {
+  wrap("host:kick", async (rawPayload, ack) => {
     const parse = HostKick.safeParse(rawPayload);
     if (!parse.success) return ack({ ok: false, error: "INVALID_PAYLOAD" });
 
@@ -164,7 +206,7 @@ export function registerSocketHandlers(_io: TypedServer, socket: TypedSocket, ga
   // Player Handlers
   // ---------------------------------------------------------------------------
 
-  socket.on("player:join", async (rawPayload, ack) => {
+  wrap("player:join", async (rawPayload, ack) => {
     const parse = PlayerJoin.safeParse(rawPayload);
     if (!parse.success) {
       return ack({ ok: false, error: "INVALID_PAYLOAD", message: parse.error.message });
@@ -185,7 +227,7 @@ export function registerSocketHandlers(_io: TypedServer, socket: TypedSocket, ga
     ack({ ok: true, playerId: result.playerId, rejoinToken: result.rejoinToken });
   });
 
-  socket.on("player:rejoin", async (rawPayload, ack) => {
+  wrap("player:rejoin", async (rawPayload, ack) => {
     const parse = PlayerRejoin.safeParse(rawPayload);
     if (!parse.success) {
       return ack({ ok: false, error: "INVALID_PAYLOAD" });
@@ -206,7 +248,7 @@ export function registerSocketHandlers(_io: TypedServer, socket: TypedSocket, ga
     ack({ ok: true, playerId: result.playerId, phase: result.phase });
   });
 
-  socket.on("player:answer", async (rawPayload, ack) => {
+  wrap("player:answer", async (rawPayload, ack) => {
     const parse = PlayerAnswer.safeParse(rawPayload);
     if (!parse.success) {
       return ack({ ok: false, error: "INVALID_PAYLOAD", message: parse.error.message });
