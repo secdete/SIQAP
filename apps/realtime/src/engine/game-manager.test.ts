@@ -217,3 +217,67 @@ describe("GameManager host rejoin snapshot", () => {
     expect(namesOf(finale)).toContain("leaderboard:update");
   });
 });
+
+describe("GameManager player rejoin snapshot", () => {
+  let store: MemorySessionStore;
+  let gameManager: GameManager;
+
+  beforeEach(() => {
+    store = new MemorySessionStore();
+    const io = new Server(createServer()) as unknown as TypedServer;
+    gameManager = new GameManager(store, io);
+  });
+
+  it("returns no events for an unknown PIN", async () => {
+    const snapshot = await gameManager.buildPlayerSnapshot("000000", "nobody");
+    expect(snapshot.events).toEqual([]);
+    expect(snapshot.final).toBeUndefined();
+  });
+
+  it("replays the running question and timer without the final report", async () => {
+    const { pin } = await gameManager.createGame("quiz-123");
+    const siti = await gameManager.joinPlayer(pin, "Siti", "socket-1");
+
+    const endsAt = Date.now() + 12_000;
+    await store.updateSession(pin, {
+      phase: "QUESTION_ACTIVE",
+      startedAt: endsAt - 20_000,
+      endsAt,
+    });
+
+    const { events, final } = await gameManager.buildPlayerSnapshot(pin, siti.playerId!);
+    const names = events.map((e) => e.event);
+
+    // Same ordering rule as the host: question:show forces QUESTION_ACTIVE on
+    // the client, so game:phase has to arrive after it.
+    expect(names.indexOf("question:show")).toBeLessThan(names.indexOf("game:phase"));
+    expect(events.find((e) => e.event === "game:phase")?.payload).toMatchObject({
+      phase: "QUESTION_ACTIVE",
+    });
+    expect(names).toContain("question:tick");
+    expect(final).toBeUndefined();
+  });
+
+  it("hands the personal final report with the real standing", async () => {
+    const { pin } = await gameManager.createGame("quiz-123");
+    const siti = await gameManager.joinPlayer(pin, "Siti", "socket-1");
+    const budi = await gameManager.joinPlayer(pin, "Budi", "socket-2");
+
+    // Budi trails on points but leads on streak: the report must say rank 2 —
+    // the old emit used player.streak here and would have claimed rank 5.
+    await store.updatePlayer(pin, siti.playerId!, { score: 500, totalResponseMs: 900 });
+    await store.updatePlayer(pin, budi.playerId!, { score: 300, totalResponseMs: 2000, streak: 5 });
+    await store.updateSession(pin, { phase: "ENDED" });
+
+    const { events, final } = await gameManager.buildPlayerSnapshot(pin, budi.playerId!);
+    const names = events.map((e) => e.event);
+
+    expect(final).toMatchObject({ finalRank: 2, finalScore: 300 });
+    expect(final?.totalQuestions).toBe((await store.getSession(pin))!.questions.length);
+
+    // The closing screens are replayed too, and the roster stays live.
+    expect(names).toContain("question:show");
+    expect(names).toContain("game:end");
+    expect(names[names.length - 1]).toBe("lobby:update");
+  });
+});

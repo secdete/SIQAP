@@ -246,6 +246,21 @@ export function registerSocketHandlers(_io: TypedServer, socket: TypedSocket, ga
     (socket.data as any).pin = pin;
 
     ack({ ok: true, playerId: result.playerId, phase: result.phase });
+
+    // The client store resets on reload, so replay the phase events exactly
+    // like the host rejoin does. The personal final report travels beside the
+    // events and is emitted last — its handler is what sets phase ENDED.
+    try {
+      const snapshot = await gameManager.buildPlayerSnapshot(pin, result.playerId);
+      for (const item of snapshot.events) {
+        emitSnapshotEvent(socket, item);
+      }
+      if (snapshot.final) {
+        socket.emit("player:final", snapshot.final);
+      }
+    } catch (err) {
+      console.warn(`player:rejoin: failed to replay state for ${pin}:`, err);
+    }
   });
 
   wrap("player:answer", async (rawPayload, ack) => {

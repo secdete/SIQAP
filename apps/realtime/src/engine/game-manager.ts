@@ -17,6 +17,7 @@ import {
   QuestionReveal,
   LeaderboardUpdate,
   GameEnd,
+  PlayerFinal,
 } from "@siqap/shared";
 import { prisma } from "@siqap/db";
 import { SessionStore, StoredPlayer, StoredSession, StoredAnswer } from "../store/index.js";
@@ -326,6 +327,81 @@ export class GameManager {
     });
 
     return events;
+  }
+
+  /**
+   * A rejoining player starts from a blank store just like the host does and
+   * needs the same replay: question, phase, timer, reveal and standings. The
+   * host snapshot already contains exactly that, so it is reused as-is — only
+   * the personal end-of-game report differs, since the host never receives it.
+   * `final` travels beside the events rather than inside them so the handler
+   * can emit it last, which is what sets phase ENDED on the client.
+   */
+  async buildPlayerSnapshot(
+    pin: string,
+    playerId: string
+  ): Promise<{ events: HostSnapshotEvent[]; final?: PlayerFinal }> {
+    const events = await this.buildHostSnapshot(pin);
+
+    const session = await this.store.getSession(pin);
+    if (session?.phase !== "ENDED") return { events };
+
+    const players = await this.store.getPlayers(pin);
+    const player = players.find((p) => p.playerId === playerId);
+    if (!player) return { events };
+
+    const allAnswers = await this.store.getAllAnswers(pin);
+    return { events, final: this.buildPlayerFinal(session, players, player, allAnswers) };
+  }
+
+  /**
+   * Personal report for one player: their standing in the sorted roster plus
+   * every question they missed. Pure, so a player rejoining after the game can
+   * be handed the same payload the live emit carried.
+   */
+  private buildPlayerFinal(
+    session: StoredSession,
+    players: StoredPlayer[],
+    player: StoredPlayer,
+    allAnswers: Record<number, StoredAnswer[]>
+  ): PlayerFinal {
+    const sorted = sortPlayersForStandings(players);
+
+    let correctCount = 0;
+    const mistakes: PlayerFinal["mistakes"] = [];
+
+    for (let qIdx = 0; qIdx < session.questions.length; qIdx++) {
+      const question = session.questions[qIdx];
+      const playerChoices =
+        allAnswers[qIdx]?.find((a) => a.playerId === player.playerId)?.optionIndexes ?? [];
+
+      const correctSet = new Set(question.correctIndexes);
+      const playerSet = new Set(playerChoices);
+      const isCorrect =
+        playerSet.size === correctSet.size &&
+        [...playerSet].every((val) => correctSet.has(val));
+
+      if (isCorrect) {
+        correctCount++;
+      } else {
+        mistakes.push({
+          questionIndex: qIdx,
+          yourAnswer: playerChoices,
+          correctIndexes: question.correctIndexes,
+          explanation: question.explanation,
+        });
+      }
+    }
+
+    return {
+      // Standing in the roster — not the streak, which is what the old emit
+      // sent here and made the review screen claim "#0" or "#5".
+      finalRank: sorted.findIndex((p) => p.playerId === player.playerId) + 1,
+      finalScore: player.score,
+      correctCount,
+      totalQuestions: session.questions.length,
+      mistakes,
+    };
   }
 
   async startGame(pin: string, hostToken: string): Promise<{ ok: boolean; error?: string }> {
@@ -881,46 +957,12 @@ export class GameManager {
     const players = await this.store.getPlayers(pin);
     const allAnswers = await this.store.getAllAnswers(pin);
 
-    // Send player:final to each player with mistakes breakdown
+    // Send the personal report to each player; the rank comes from the sorted
+    // standings inside buildPlayerFinal, not from the player's streak.
     for (const player of players) {
-      let correctCount = 0;
-      const mistakes: Array<{
-        questionIndex: number;
-        yourAnswer: number[];
-        correctIndexes: number[];
-        explanation?: string;
-      }> = [];
-
-      for (let qIdx = 0; qIdx < session.questions.length; qIdx++) {
-        const question = session.questions[qIdx];
-        const playerAns = allAnswers[qIdx]?.find((a) => a.playerId === player.playerId);
-        const playerChoices = playerAns?.optionIndexes || [];
-
-        const correctSet = new Set(question.correctIndexes);
-        const playerSet = new Set(playerChoices);
-        const isCorrect =
-          playerSet.size === correctSet.size &&
-          [...playerSet].every((val) => correctSet.has(val));
-
-        if (isCorrect) {
-          correctCount++;
-        } else {
-          mistakes.push({
-            questionIndex: qIdx,
-            yourAnswer: playerChoices,
-            correctIndexes: question.correctIndexes,
-            explanation: question.explanation,
-          });
-        }
-      }
-
-      this.io.to(`player:${player.playerId}`).emit("player:final", {
-        finalRank: player.streak, // Placeholder or sorted rank
-        finalScore: player.score,
-        correctCount,
-        totalQuestions: session.questions.length,
-        mistakes,
-      });
+      this.io
+        .to(`player:${player.playerId}`)
+        .emit("player:final", this.buildPlayerFinal(session, players, player, allAnswers));
     }
   }
 
