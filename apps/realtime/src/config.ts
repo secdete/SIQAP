@@ -1,6 +1,12 @@
 import dotenv from "dotenv";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
-dotenv.config();
+// `pnpm dev` starts this package with cwd = apps/realtime, so a bare
+// dotenv.config() never finds the single .env kept at the repo root.
+dotenv.config({
+  path: resolve(dirname(fileURLToPath(import.meta.url)), "../../../.env"),
+});
 
 export const config = {
   port: Number(process.env.PORT || 3001),
