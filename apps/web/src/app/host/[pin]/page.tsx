@@ -123,7 +123,16 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
       socket.connect();
     }
 
-    const savedToken = hostToken || localStorage.getItem(`siqap_host_${pin}`);
+    // The store persists `siqap_{pin}_host` as JSON; read it back the same way
+    // so a projector refresh can rejoin instead of failing NOT_HOST.
+    let storedToken: string | null = null;
+    try {
+      const raw = localStorage.getItem(`siqap_${pin}_host`);
+      storedToken = raw ? (JSON.parse(raw).hostToken ?? null) : null;
+    } catch {
+      storedToken = null;
+    }
+    const savedToken = hostToken || storedToken;
     if (savedToken && !hostToken) {
       setHostInfo(pin, savedToken);
     }
@@ -182,7 +191,10 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
       socket.off("leaderboard:update");
       socket.off("game:end");
     };
-  }, [pin, hostToken, players, soundEnabled]);
+    // `players` is deliberately absent: every rejoin snapshot ends with
+    // lobby:update, so listing it here would re-run this effect (and rejoin)
+    // forever. The lobby handler updates the store on its own.
+  }, [pin, hostToken, soundEnabled]);
 
   const handleStartGame = () => {
     const socket = getSocket();
