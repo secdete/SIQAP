@@ -254,14 +254,14 @@ export interface ServerToClientEvents {
 ```
 
 Catatan:
-- `question:tick` dikirim tiap 1 detik, hanya cukup untuk sinkronisasi; countdown halus dihitung di client dari `endsAt`.
+- `question:tick` interval 1 detik dikirim ke seluruh ruang `game:{pin}` sebagai sumber waktu bersama: layar host dan pemain membaca detik yang sama, dan saat pause tick berhenti sehingga semua layar beku bersamaan. Tick jawaban (dengan `answeredCount`) tetap hanya ke `host:{pin}`.
 - `player:result` dikirim saat `QUESTION_REVEAL`, bukan saat menjawab. Saat menjawab player hanya menerima ack `{ ok: true }`.
 
 ## 7. Room Socket.IO
 
 | Room | Isi | Dipakai untuk |
 |---|---|---|
-| `game:{pin}` | host + semua player | broadcast fase, soal, reveal, leaderboard |
+| `game:{pin}` | host + semua player | broadcast fase, soal, `question:tick`, reveal, leaderboard |
 | `host:{pin}` | hanya host | `question:tick` (dengan `answeredCount`), event khusus host |
 | `player:{playerId}` | satu player | `player:result`, `player:final`, `player:kicked` |
 
@@ -281,12 +281,14 @@ LOBBY → QUESTION_INTRO → QUESTION_ACTIVE → QUESTION_REVEAL → LEADERBOARD
 | `LOBBY` | `host:start` | `QUESTION_INTRO` | minimal 1 player |
 | `QUESTION_INTRO` | timer 3 dtk | `QUESTION_ACTIVE` | kirim `question:show`, timer soal mulai |
 | `QUESTION_ACTIVE` | timer habis, semua sudah menjawab, atau `host:skip` | `QUESTION_REVEAL` | hitung skor, kirim `question:reveal` + `player:result` |
-| `QUESTION_REVEAL` | `host:next` | `LEADERBOARD` | kirim `leaderboard:update` |
-| `LEADERBOARD` | `host:next` | `QUESTION_INTRO` atau `PODIUM` | `PODIUM` jika soal terakhir |
+| `QUESTION_REVEAL` | timer 7 dtk atau `host:next` | `LEADERBOARD` | kirim `leaderboard:update` |
+| `LEADERBOARD` | timer 5 dtk atau `host:next` | `QUESTION_INTRO` atau `PODIUM` | `PODIUM` jika soal terakhir |
 | `PODIUM` | `host:next` atau `host:end` | `ENDED` | kirim `game:end` + `player:final` |
 | fase apa pun | `host:end` | `PODIUM` | |
 
 Jika `showLeaderboardEachQuestion = false`, fase `LEADERBOARD` dilewati kecuali setelah soal terakhir.
+
+Fase `QUESTION_REVEAL` dan `LEADERBOARD` maju otomatis lewat timer (7 dtk dan 5 dtk) supaya peserta tidak menunggu konfirmasi host antar soal; `host:next` tetap berlaku untuk maju lebih cepat. `PODIUM` tetap menunggu host.
 
 Aksi di luar tabel ini mengembalikan `INVALID_PHASE`.
 

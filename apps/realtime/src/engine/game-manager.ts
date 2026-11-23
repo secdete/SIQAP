@@ -23,6 +23,15 @@ import { prisma } from "@siqap/db";
 import { SessionStore, StoredPlayer, StoredSession, StoredAnswer } from "../store/index.js";
 import { sanitizeNickname, isNicknameAllowed } from "../socket/profanity.js";
 
+/**
+ * Once the timer runs out the game keeps moving on its own: players read the
+ * pembahasan for a moment, glance at the standings, then the next question
+ * starts — nobody waits for the host to press `host:next` (which still works
+ * to skip ahead earlier).
+ */
+export const REVEAL_AUTO_ADVANCE_MS = 7_000;
+export const LEADERBOARD_AUTO_ADVANCE_MS = 5_000;
+
 export type TypedServer = Server<ClientToServerEvents, ServerToClientEvents>;
 
 /**
@@ -80,6 +89,7 @@ export type HostSnapshotEvent =
 export class GameManager {
   private activeTimers = new Map<string, NodeJS.Timeout>();
   private tickIntervals = new Map<string, NodeJS.Timeout>();
+  private autoAdvanceTimers = new Map<string, NodeJS.Timeout>();
 
   constructor(
     private store: SessionStore,
@@ -484,12 +494,7 @@ export class GameManager {
     if (!session || session.hostToken !== hostToken) return { ok: false, error: "NOT_HOST" };
 
     if (session.phase === "QUESTION_REVEAL") {
-      const isLastQuestion = session.questionIndex >= session.questions.length - 1;
-      if (session.settings.showLeaderboardEachQuestion || isLastQuestion) {
-        await this.transitionToLeaderboard(pin);
-      } else {
-        await this.advanceToNextQuestionOrPodium(pin);
-      }
+      await this.advanceAfterReveal(pin);
       return { ok: true };
     }
 
@@ -504,6 +509,56 @@ export class GameManager {
     }
 
     return { ok: false, error: "INVALID_PHASE" };
+  }
+
+  /**
+   * Reveal → leaderboard, or straight to the next question when the per-question
+   * leaderboard is off. Shared by the host's `host:next` and the auto-advance
+   * timer so both paths move the game identically.
+   */
+  private async advanceAfterReveal(pin: string): Promise<void> {
+    const session = await this.store.getSession(pin);
+    if (!session) return;
+
+    const isLastQuestion = session.questionIndex >= session.questions.length - 1;
+    if (session.settings.showLeaderboardEachQuestion || isLastQuestion) {
+      await this.transitionToLeaderboard(pin);
+    } else {
+      await this.advanceToNextQuestionOrPodium(pin);
+    }
+  }
+
+  /**
+   * Arms the timer that advances reveal/leaderboard without the host. Each arm
+   * cancels the previous one and the callback re-checks the phase, so a manual
+   * `host:next` can never be double-advanced by a stale timer.
+   */
+  private scheduleAutoAdvance(pin: string, delayMs: number): void {
+    this.clearAutoAdvance(pin);
+    const timer = setTimeout(() => {
+      this.autoAdvanceTimers.delete(pin);
+      void this.autoAdvance(pin);
+    }, delayMs);
+    this.autoAdvanceTimers.set(pin, timer);
+  }
+
+  private async autoAdvance(pin: string): Promise<void> {
+    const session = await this.store.getSession(pin);
+    if (!session) return;
+
+    if (session.phase === "QUESTION_REVEAL") {
+      await this.advanceAfterReveal(pin);
+    } else if (session.phase === "LEADERBOARD") {
+      await this.advanceToNextQuestionOrPodium(pin);
+    }
+  }
+
+  private clearAutoAdvance(pin: string): void {
+    const timer = this.autoAdvanceTimers.get(pin);
+    if (timer) {
+      clearTimeout(timer);
+      this.autoAdvanceTimers.delete(pin);
+    }
   }
 
   async endGame(pin: string, hostToken: string): Promise<{ ok: boolean; error?: string }> {
@@ -738,7 +793,9 @@ export class GameManager {
   private scheduleQuestionTimer(pin: string, durationMs: number): void {
     this.clearTimers(pin);
 
-    // 1-second interval tick for host screen sync
+    // 1-second countdown tick for the whole game room — the host circle and
+    // every player timer read the same server time, and the tick stops while
+    // paused so every screen freezes together.
     const interval = setInterval(async () => {
       const s = await this.store.getSession(pin);
       if (!s || s.phase !== "QUESTION_ACTIVE" || s.paused) {
@@ -750,7 +807,7 @@ export class GameManager {
       const remainingMs = Math.max(s.endsAt - now, 0);
       const answers = await this.store.getAnswers(pin, s.questionIndex);
 
-      this.io.to(`host:${pin}`).emit("question:tick", {
+      this.io.to(`game:${pin}`).emit("question:tick", {
         questionIndex: s.questionIndex,
         remainingMs,
         answeredCount: answers.length,
@@ -878,6 +935,9 @@ export class GameManager {
         rank: i + 1,
       });
     }
+
+    // Players get a moment for the pembahasan, then the game moves on alone.
+    this.scheduleAutoAdvance(pin, REVEAL_AUTO_ADVANCE_MS);
   }
 
   private async transitionToLeaderboard(pin: string): Promise<void> {
@@ -902,6 +962,8 @@ export class GameManager {
       top,
       totalPlayers: players.length,
     });
+
+    this.scheduleAutoAdvance(pin, LEADERBOARD_AUTO_ADVANCE_MS);
   }
 
   private async advanceToNextQuestionOrPodium(pin: string): Promise<void> {
@@ -1052,5 +1114,7 @@ export class GameManager {
       clearInterval(interval);
       this.tickIntervals.delete(pin);
     }
+
+    this.clearAutoAdvance(pin);
   }
 }

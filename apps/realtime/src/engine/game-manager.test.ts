@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { Server } from "socket.io";
 import { createServer } from "http";
 import {
@@ -9,7 +9,13 @@ import {
   QuestionShow,
   QuestionTick,
 } from "@siqap/shared";
-import { GameManager, HostSnapshotEvent, TypedServer } from "./game-manager.js";
+import {
+  GameManager,
+  HostSnapshotEvent,
+  TypedServer,
+  REVEAL_AUTO_ADVANCE_MS,
+  LEADERBOARD_AUTO_ADVANCE_MS,
+} from "./game-manager.js";
 import { MemorySessionStore } from "../store/memory.js";
 
 describe("GameManager State Machine", () => {
@@ -279,5 +285,71 @@ describe("GameManager player rejoin snapshot", () => {
     expect(names).toContain("question:show");
     expect(names).toContain("game:end");
     expect(names[names.length - 1]).toBe("lobby:update");
+  });
+});
+
+describe("GameManager auto-advance", () => {
+  let store: MemorySessionStore;
+  let gameManager: GameManager;
+  let io: TypedServer;
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    store = new MemorySessionStore();
+    const httpServer = createServer();
+    io = new Server(httpServer) as unknown as TypedServer;
+    gameManager = new GameManager(store, io);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  /** One player answers, which ends the question immediately. */
+  async function startAndReveal(pin: string, playerId: string): Promise<void> {
+    await store.updateSession(pin, {
+      phase: "QUESTION_ACTIVE",
+      startedAt: Date.now() - 1000,
+      endsAt: Date.now() + 19000,
+    });
+
+    const ans = await gameManager.submitAnswer(pin, playerId, 0, [0]);
+    expect(ans.ok).toBe(true);
+    expect((await store.getSession(pin))?.phase).toBe("QUESTION_REVEAL");
+  }
+
+  it("moves reveal → leaderboard → next question without host:next", async () => {
+    const { pin, hostToken } = await gameManager.createGame("quiz-123");
+    const join = await gameManager.joinPlayer(pin, "Siti", "socket-1");
+    await gameManager.startGame(pin, hostToken);
+    await startAndReveal(pin, join.playerId!);
+
+    await vi.advanceTimersByTimeAsync(REVEAL_AUTO_ADVANCE_MS);
+    expect((await store.getSession(pin))?.phase).toBe("LEADERBOARD");
+
+    await vi.advanceTimersByTimeAsync(LEADERBOARD_AUTO_ADVANCE_MS);
+    expect((await store.getSession(pin))?.phase).toBe("QUESTION_INTRO");
+  });
+
+  it("cancels the reveal timer when the host advances manually", async () => {
+    const { pin, hostToken } = await gameManager.createGame("quiz-123");
+    const join = await gameManager.joinPlayer(pin, "Siti", "socket-1");
+    await gameManager.startGame(pin, hostToken);
+    await startAndReveal(pin, join.playerId!);
+
+    // Host presses next 3s into the reveal: the leaderboard's own 5s timer is
+    // now armed for +8s, and the reveal's original +7s timer must be dead —
+    // otherwise it would fire at +7s and skip the leaderboard early.
+    await vi.advanceTimersByTimeAsync(3000);
+    expect((await gameManager.nextStep(pin, hostToken)).ok).toBe(true);
+    expect((await store.getSession(pin))?.phase).toBe("LEADERBOARD");
+
+    await vi.advanceTimersByTimeAsync(REVEAL_AUTO_ADVANCE_MS - 3000 + 500);
+    expect((await store.getSession(pin))?.phase).toBe("LEADERBOARD");
+
+    // +500 lands exactly on the leaderboard's own deadline (+8s total), while
+    // the 3s intro timer that follows it must not have run yet.
+    await vi.advanceTimersByTimeAsync(500);
+    expect((await store.getSession(pin))?.phase).toBe("QUESTION_INTRO");
   });
 });
