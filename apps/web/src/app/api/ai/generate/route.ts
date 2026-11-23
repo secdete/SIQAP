@@ -7,7 +7,7 @@ import { GenerateQuizInput, GenerateQuizOutput } from "@siqap/shared";
 // AI Studio, so no proxy key (e.g. 9router) can be picked up by accident.
 const AI_BASE = "https://generativelanguage.googleapis.com/v1beta/openai";
 const AI_KEY = process.env.GEMINI_API_KEY || "";
-const MODEL_NAME = process.env.AI_MODEL || "gemini-3.8-flash";
+const MODEL_NAME = process.env.AI_MODEL || "gemini-3.6-flash";
 
 export async function POST(req: NextRequest) {
   try {
