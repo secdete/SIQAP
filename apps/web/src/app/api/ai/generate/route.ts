@@ -7,7 +7,7 @@ import { GenerateQuizInput, GenerateQuizOutput } from "@siqap/shared";
 // AI Studio, so no proxy key (e.g. 9router) can be picked up by accident.
 const AI_BASE = "https://generativelanguage.googleapis.com/v1beta/openai";
 const AI_KEY = process.env.GEMINI_API_KEY || "";
-const MODEL_NAME = process.env.AI_MODEL || "gemini-2.5-flash";
+const MODEL_NAME = process.env.AI_MODEL || "gemini-3.8-flash";
 
 export async function POST(req: NextRequest) {
   try {
@@ -71,6 +71,9 @@ Aturan penting:
       try {
         const response = await fetch(`${AI_BASE}/chat/completions`, {
           method: "POST",
+          // A hung upstream must not hang the route: fail the attempt after
+          // 90s, generous enough for a full 20-question generation.
+          signal: AbortSignal.timeout(90_000),
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${AI_KEY}`,
@@ -95,12 +98,21 @@ Aturan penting:
         const data = await response.json();
         const content = data.choices?.[0]?.message?.content;
         if (!content) {
-          throw new Error("Empty completion from AI router");
+          throw new Error("Empty completion from AI");
         }
 
-        // Clean markdown backticks if AI accidentally included them
+        // Clean markdown backticks if AI accidentally included them.
+        // Unparseable output counts as a validation failure so the loop can
+        // regenerate it, the same as a wrong-shaped payload.
         const cleaned = content.replace(/^```json\s*/i, "").replace(/```\s*$/i, "").trim();
-        const parsedJson = JSON.parse(cleaned);
+        let parsedJson: unknown;
+        try {
+          parsedJson = JSON.parse(cleaned);
+        } catch {
+          console.warn(`[AI Quiz Generator] Validation attempt ${attempt + 1} failed: malformed JSON`);
+          lastError = "AI returned malformed JSON";
+          continue;
+        }
 
         const validated = GenerateQuizOutput.safeParse(parsedJson);
         if (validated.success) {
@@ -117,7 +129,13 @@ Aturan penting:
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : String(err);
         console.warn(`[AI Quiz Generator] Request attempt ${attempt + 1} failed:`, message);
-        lastError = message;
+        // Google answered (or the network failed): retrying immediately only
+        // delays the error the user sees. The loop exists to regenerate
+        // malformed output, which surfaces as a validation failure instead.
+        return NextResponse.json(
+          { error: "AI_GENERATION_FAILED", message },
+          { status: 500 }
+        );
       }
     }
 
