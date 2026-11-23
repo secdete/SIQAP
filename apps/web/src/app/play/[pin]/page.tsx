@@ -517,6 +517,10 @@ export default function PlayPage({ params }: { params: Promise<{ pin: string }> 
     const qIndex = question.questionIndex + 1;
     const qTotal = question.total;
     const isCorrect = result?.isCorrect ?? false;
+    // A player who rejoined during the reveal has the question but not their
+    // own result yet: without this the screen would claim "kurang tepat" or a
+    // fabricated score for an answer it cannot see.
+    const synced = result != null;
     // null/undefined means the timer ran out before the player picked anything.
     const answeredThisRound = selectedOption !== null && selectedOption !== undefined;
     const chosenIdx = selectedOption ?? 0;
@@ -552,43 +556,53 @@ export default function PlayPage({ params }: { params: Promise<{ pin: string }> 
           {/* Jawaban benar / Feedback card [72] */}
           <div
             className={`border-2 rounded-3xl p-6 space-y-3 shadow-md ${
-              isCorrect
-                ? "bg-siqap-cream border-siqap-orange-dark"
-                : "bg-quiz-red/10 border-quiz-red"
+              !synced
+                ? "bg-white border-siqap-border"
+                : isCorrect
+                  ? "bg-siqap-cream border-siqap-orange-dark"
+                  : "bg-quiz-red/10 border-quiz-red"
             }`}
           >
             <span
               className={`inline-block px-2.5 py-1 rounded-md text-[12px] font-bold uppercase tracking-wide ${
-                isCorrect
-                  ? "bg-siqap-cream text-siqap-orange-dark"
-                  : "bg-quiz-red/10 text-quiz-red-dark"
+                !synced
+                  ? "bg-siqap-cream text-siqap-navy-dark"
+                  : isCorrect
+                    ? "bg-siqap-cream text-siqap-orange-dark"
+                    : "bg-quiz-red/10 text-quiz-red-dark"
               }`}
             >
-              {isCorrect
-                ? "✓ Jawabanmu benar"
-                : answeredThisRound
-                  ? "✗ Jawabanmu kurang tepat"
-                  : "✗ Tidak menjawab"}
+              {!synced
+                ? "Hasil belum tersinkron"
+                : isCorrect
+                  ? "✓ Jawabanmu benar"
+                  : answeredThisRound
+                    ? "✗ Jawabanmu kurang tepat"
+                    : "✗ Tidak menjawab"}
             </span>
 
             <div className="text-2xl sm:text-[28px] font-extrabold text-siqap-navy leading-tight">
-              {chosenBadge} · {chosenText}
+              {synced ? `${chosenBadge} · ${chosenText}` : "Jawabanmu belum tersinkron"}
             </div>
 
             <div className="text-4xl sm:text-[48px] font-extrabold text-siqap-orange-dark leading-none py-1">
-              {isCorrect ? `+${result?.pointsAwarded ?? 940}` : "+0"}
+              {result ? (isCorrect ? `+${result.pointsAwarded}` : "+0") : "—"}
             </div>
 
             <p className="text-[14px] font-normal text-siqap-navy-dark">
-              {isCorrect
-                ? "Poin dari kecepatan dan ketepatan jawaban."
-                : answeredThisRound
-                  ? "Tidak memperoleh poin pada soal ini."
-                  : "Waktu habis sebelum kamu memilih jawaban."}
+              {!synced
+                ? "Poin dan status jawabanmu menyusul setelah hasil ronde ini tersinkron."
+                : isCorrect
+                  ? "Poin dari kecepatan dan ketepatan jawaban."
+                  : answeredThisRound
+                    ? "Tidak memperoleh poin pada soal ini."
+                    : "Waktu habis sebelum kamu memilih jawaban."}
             </p>
 
             <div className="text-[12px] font-semibold text-siqap-muted pt-1">
-              {result?.streak && result.streak > 1 ? (
+              {!synced ? (
+                <span>Status streak menyusul.</span>
+              ) : result?.streak && result.streak > 1 ? (
                 <span className="text-siqap-orange-dark flex items-center space-x-1">
                   <Flame className="w-4 h-4 fill-current" />
                   <span>{result.streak} jawaban benar beruntun!</span>
@@ -606,7 +620,7 @@ export default function PlayPage({ params }: { params: Promise<{ pin: string }> 
                 Total poin
               </span>
               <span className="text-2xl sm:text-[30px] font-extrabold text-siqap-navy">
-                {result?.totalScore ?? 0}
+                {result?.totalScore ?? "—"}
               </span>
             </div>
 
@@ -615,7 +629,7 @@ export default function PlayPage({ params }: { params: Promise<{ pin: string }> 
                 Peringkat
               </span>
               <span className="text-2xl sm:text-[30px] font-extrabold text-siqap-navy">
-                #{result?.rank ?? 1}
+                {result ? `#${result.rank}` : "—"}
               </span>
             </div>
           </div>
@@ -681,7 +695,7 @@ export default function PlayPage({ params }: { params: Promise<{ pin: string }> 
               Papan Peringkat Ronde
             </span>
             <h2 className="text-3xl font-extrabold text-siqap-navy">
-              Peringkat #{result?.rank ?? 1}
+              {result ? `Peringkat #${result.rank}` : "Peringkat belum tersinkron"}
             </h2>
             <p className="text-[15px] font-normal text-siqap-muted">
               Perhatikan layar utama host untuk melihat pergerakan klasemen lengkap.
@@ -691,7 +705,7 @@ export default function PlayPage({ params }: { params: Promise<{ pin: string }> 
           <div className="bg-white border-2 border-siqap-border rounded-2xl p-5 w-full space-y-1 shadow-sm">
             <span className="text-xs font-semibold text-siqap-muted">Skor Kamu</span>
             <div className="text-3xl font-black text-siqap-orange-dark">
-              {result?.totalScore ?? 0} poin
+              {result ? `${result.totalScore} poin` : "Skor belum tersinkron"}
             </div>
           </div>
         </main>
