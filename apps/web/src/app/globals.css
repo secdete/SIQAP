@@ -26,41 +26,6 @@ h4 {
   font-family: var(--font-display);
 }
 
-/* Accessibility Geometry Symbols */
-.shape-triangle {
-  width: 0;
-  height: 0;
-  border-left: 16px solid transparent;
-  border-right: 16px solid transparent;
-  border-bottom: 28px solid white;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
-}
-
-.shape-diamond {
-  width: 24px;
-  height: 24px;
-  background-color: currentColor;
-  transform: rotate(45deg);
-  border-radius: 3px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
-}
-
-.shape-circle {
-  width: 26px;
-  height: 26px;
-  background-color: currentColor;
-  border-radius: 50%;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
-}
-
-.shape-square {
-  width: 24px;
-  height: 24px;
-  background-color: white;
-  border-radius: 4px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-}
-
 /* Fade-in animation for phase transitions */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }

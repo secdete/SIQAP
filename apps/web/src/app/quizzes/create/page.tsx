@@ -32,10 +32,10 @@ interface QuestionFormItem {
 }
 
 const OPTION_BADGES = [
-  { label: "▲ A", color: "bg-quiz-red text-white border-quiz-red" },
-  { label: "◆ B", color: "bg-quiz-yellow text-siqap-navy-dark border-quiz-yellow" },
-  { label: "● C", color: "bg-quiz-green text-siqap-navy-dark border-quiz-green" },
-  { label: "■ D", color: "bg-quiz-purple text-white border-quiz-purple" },
+  { label: "A", color: "bg-quiz-red text-white border-quiz-red" },
+  { label: "B", color: "bg-quiz-yellow text-siqap-navy-dark border-quiz-yellow" },
+  { label: "C", color: "bg-quiz-green text-siqap-navy-dark border-quiz-green" },
+  { label: "D", color: "bg-quiz-purple text-white border-quiz-purple" },
 ];
 
 export default function CreateQuizPage() {

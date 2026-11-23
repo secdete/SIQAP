@@ -20,35 +20,32 @@ import {
   AlertTriangle,
 } from "lucide-react";
 
-// 4 Kahoot-style Answer Theme Options for Host Screen
+// 4 Answer Theme Options for Host Screen — colour plus the option letter.
+// No shapes: the letter is what identifies each answer for the audience.
 const OPTION_THEMES = [
   {
     bg: "bg-quiz-red border-quiz-red-dark",
     dimBg: "bg-quiz-red/20 border-quiz-red/40 opacity-40",
     textColor: "text-white",
-    badge: "▲ A",
-    icon: <div className="shape-triangle shrink-0 mr-3" />,
+    badge: "A",
   },
   {
     bg: "bg-quiz-yellow border-quiz-yellow-dark",
     dimBg: "bg-quiz-yellow/20 border-quiz-yellow/40 opacity-40",
     textColor: "text-siqap-navy-dark",
-    badge: "◆ B",
-    icon: <div className="shape-diamond shrink-0 mr-3" />,
+    badge: "B",
   },
   {
     bg: "bg-quiz-green border-quiz-green-dark",
     dimBg: "bg-quiz-green/20 border-quiz-green/40 opacity-40",
     textColor: "text-siqap-navy-dark",
-    badge: "● C",
-    icon: <div className="shape-circle shrink-0 mr-3" />,
+    badge: "C",
   },
   {
     bg: "bg-quiz-purple border-quiz-purple-dark",
     dimBg: "bg-quiz-purple/20 border-quiz-purple/40 opacity-40",
     textColor: "text-white",
-    badge: "■ D",
-    icon: <div className="shape-square shrink-0 mr-3" />,
+    badge: "D",
   },
 ];
 
