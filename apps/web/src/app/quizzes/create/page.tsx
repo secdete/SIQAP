@@ -61,6 +61,8 @@ export default function CreateQuizPage() {
   const [aiText, setAiText] = useState("");
   const [aiCount, setAiCount] = useState(5);
   const [aiDifficulty, setAiDifficulty] = useState<"easy" | "medium" | "hard">("medium");
+  const [aiTimeLimit, setAiTimeLimit] = useState(20);
+  const [globalTimeLimit, setGlobalTimeLimit] = useState(20);
   const [isGenerating, setIsGenerating] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
 
@@ -128,6 +130,11 @@ export default function CreateQuizPage() {
     setQuestions(updated);
   };
 
+  const handleApplyGlobalTimeLimit = (val: number) => {
+    setGlobalTimeLimit(val);
+    setQuestions((prev) => prev.map((q) => ({ ...q, timeLimitSec: val })));
+  };
+
   // AI Generation Handler
   const handleGenerateAi = async () => {
     if (!aiTopic.trim() && !aiText.trim()) {
@@ -169,7 +176,7 @@ export default function CreateQuizPage() {
             text: q.text,
             options: q.options,
             correctIndexes: q.correctIndexes,
-            timeLimitSec: q.timeLimitSec,
+            timeLimitSec: aiTimeLimit || q.timeLimitSec || 20,
             pointsMode: q.pointsMode,
             explanation: q.explanation ?? "",
             isAiGenerated: true,
@@ -327,6 +334,38 @@ export default function CreateQuizPage() {
 
         {/* Questions List */}
         <div className="space-y-6">
+          {/* Global Batch Time Setting Toolbar */}
+          <div className="flex flex-wrap items-center justify-between bg-white border-2 border-siqap-border rounded-2xl p-4 gap-3 shadow-sm">
+            <div className="flex items-center space-x-2 text-xs font-black text-siqap-navy">
+              <Clock className="w-4 h-4 text-siqap-orange" />
+              <span>Durasi Waktu Default per Soal:</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <select
+                value={globalTimeLimit}
+                onChange={(e) => handleApplyGlobalTimeLimit(Number(e.target.value))}
+                className="bg-siqap-cream border border-siqap-border text-siqap-navy rounded-xl px-3 py-1.5 text-xs font-bold focus:outline-none focus:border-siqap-orange"
+              >
+                <option value={5}>5 Detik (Cepat / Blitz)</option>
+                <option value={10}>10 Detik</option>
+                <option value={15}>15 Detik</option>
+                <option value={20}>20 Detik (Standar)</option>
+                <option value={30}>30 Detik</option>
+                <option value={45}>45 Detik</option>
+                <option value={60}>60 Detik (1 Menit)</option>
+                <option value={90}>90 Detik</option>
+                <option value={120}>120 Detik (2 Menit)</option>
+              </select>
+              <button
+                type="button"
+                onClick={() => handleApplyGlobalTimeLimit(globalTimeLimit)}
+                className="px-3.5 py-1.5 bg-siqap-navy hover:bg-siqap-navy-dark text-white rounded-xl text-xs font-bold transition shadow-sm cursor-pointer"
+              >
+                Terapkan ke Semua ({questions.length})
+              </button>
+            </div>
+          </div>
+
           {questions.map((q, qIdx) => (
             <div
               key={qIdx}
@@ -345,10 +384,15 @@ export default function CreateQuizPage() {
                       onChange={(e) => handleTimeLimitChange(qIdx, Number(e.target.value))}
                       className="bg-white border border-siqap-border text-siqap-navy rounded-lg px-2 py-1 text-xs font-bold focus:outline-none"
                     >
+                      <option value={5}>5 Detik</option>
                       <option value={10}>10 Detik</option>
+                      <option value={15}>15 Detik</option>
                       <option value={20}>20 Detik</option>
                       <option value={30}>30 Detik</option>
+                      <option value={45}>45 Detik</option>
                       <option value={60}>60 Detik</option>
+                      <option value={90}>90 Detik</option>
+                      <option value={120}>120 Detik</option>
                     </select>
                   </div>
 
@@ -516,7 +560,7 @@ export default function CreateQuizPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-siqap-muted uppercase mb-1">
                     Jumlah Soal
@@ -546,6 +590,23 @@ export default function CreateQuizPage() {
                     <option value="easy">Mudah</option>
                     <option value="medium">Sedang</option>
                     <option value="hard">Sulit</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-siqap-muted uppercase mb-1">
+                    Durasi per Soal
+                  </label>
+                  <select
+                    value={aiTimeLimit}
+                    onChange={(e) => setAiTimeLimit(Number(e.target.value))}
+                    className="w-full text-xs font-bold p-2.5 rounded-xl bg-white border border-siqap-border text-siqap-navy focus:outline-none"
+                  >
+                    <option value={10}>10 Detik</option>
+                    <option value={15}>15 Detik</option>
+                    <option value={20}>20 Detik (Standar)</option>
+                    <option value={30}>30 Detik</option>
+                    <option value={60}>60 Detik (1 Menit)</option>
                   </select>
                 </div>
               </div>
