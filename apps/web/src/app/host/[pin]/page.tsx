@@ -423,7 +423,20 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
     // `players` is deliberately absent: every rejoin snapshot ends with
     // lobby:update, so listing it here would re-run this effect (and rejoin)
     // forever. The lobby handler updates the store on its own.
-  }, [pin, hostToken, soundEnabled]);
+  }, [
+    pin,
+    hostToken,
+    soundEnabled,
+    setHostInfo,
+    setPhase,
+    setLobby,
+    setQuestion,
+    setTick,
+    setReveal,
+    setLeaderboard,
+    setPodium,
+    setMonitor,
+  ]);
 
   const handleStartGame = () => {
     const socket = getSocket();
