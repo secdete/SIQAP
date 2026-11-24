@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Montserrat } from "next/font/google";
+import { Anton, Inter, Montserrat } from "next/font/google";
 import "./globals.css";
 
 // Self-hosted via next/font: no render-blocking request to fonts.googleapis.com
@@ -17,6 +17,13 @@ const montserrat = Montserrat({
   display: "swap",
 });
 
+const anton = Anton({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-anton",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: "SIQAP • Sistem Informasi Akademik Pelajar",
   description:
@@ -31,7 +38,7 @@ export default function RootLayout({
   return (
     <html
       lang="id"
-      className={`${inter.variable} ${montserrat.variable}`}
+      className={`${inter.variable} ${montserrat.variable} ${anton.variable}`}
     >
       <body className="bg-siqap-sand text-siqap-navy-dark min-h-screen antialiased selection:bg-siqap-orange selection:text-siqap-navy">
         {children}

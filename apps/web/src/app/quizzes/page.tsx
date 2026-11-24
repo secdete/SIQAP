@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import NextLink from "next/link";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 import { getSocket } from "@/lib/socket";
 import { useHostStore } from "@/lib/store";
 import {
@@ -165,10 +166,14 @@ export default function QuizzesPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {quizzes.map((quiz) => (
-              <div
+            {quizzes.map((quiz, idx) => (
+              <motion.div
                 key={quiz.id}
-                className="bg-siqap-cream border-2 border-siqap-border hover:border-siqap-orange-dark rounded-3xl p-6 shadow-md hover:shadow-xl transition flex flex-col justify-between group"
+                initial={{ opacity: 0, y: 20, scale: 0.97 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.4, delay: idx * 0.06 }}
+                whileHover={{ y: -6, scale: 1.01 }}
+                className="bg-siqap-cream border-2 border-siqap-border hover:border-siqap-orange-dark rounded-3xl p-6 shadow-md hover:shadow-xl transition-colors flex flex-col justify-between group"
               >
                 <div>
                   <div className="flex items-center justify-between text-xs font-bold text-siqap-muted mb-3">
@@ -207,7 +212,7 @@ export default function QuizzesPage() {
                     )}
                   </button>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         )}

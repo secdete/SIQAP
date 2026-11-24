@@ -7,6 +7,7 @@ import {
   PlayerResult,
   LeaderboardEntry,
   PlayerFinal,
+  HostMonitorUpdate,
 } from "@siqap/shared";
 
 interface PlayerState {
@@ -66,7 +67,11 @@ export const usePlayerStore = create<PlayerState>((set) => ({
       ...(phase === "QUESTION_ACTIVE" ? { selectedOption: null, hasAnswered: false, result: null, reveal: null } : {}),
     })),
 
-  setQuestion: (question) => set({ question }),
+  setQuestion: (question) =>
+    set({
+      question,
+      remainingMs: question ? question.timeLimitSec * 1000 : 0,
+    }),
   setRemainingMs: (remainingMs) => set({ remainingMs }),
   setSelectedOption: (selectedOption) => set({ selectedOption, hasAnswered: true }),
   setHasAnswered: (hasAnswered) => set({ hasAnswered }),
@@ -105,6 +110,7 @@ interface HostState {
   reveal: QuestionReveal | null;
   leaderboard: LeaderboardEntry[];
   podium: LeaderboardEntry[];
+  monitor: HostMonitorUpdate | null;
   isPaused: boolean;
 
   setHostInfo: (pin: string, hostToken: string) => void;
@@ -115,6 +121,7 @@ interface HostState {
   setReveal: (reveal: QuestionReveal | null) => void;
   setLeaderboard: (top: LeaderboardEntry[]) => void;
   setPodium: (podium: LeaderboardEntry[]) => void;
+  setMonitor: (monitor: HostMonitorUpdate | null) => void;
   setIsPaused: (isPaused: boolean) => void;
   reset: () => void;
 }
@@ -131,6 +138,7 @@ export const useHostStore = create<HostState>((set) => ({
   reveal: null,
   leaderboard: [],
   podium: [],
+  monitor: null,
   isPaused: false,
 
   setHostInfo: (pin, hostToken) => {
@@ -147,11 +155,17 @@ export const useHostStore = create<HostState>((set) => ({
     }),
 
   setLobby: (players, playerCount) => set({ players, playerCount }),
-  setQuestion: (question) => set({ question }),
+  setQuestion: (question) =>
+    set({
+      question,
+      remainingMs: question ? question.timeLimitSec * 1000 : 0,
+      answeredCount: 0,
+    }),
   setTick: (remainingMs, answeredCount) => set({ remainingMs, answeredCount }),
   setReveal: (reveal) => set({ reveal }),
   setLeaderboard: (leaderboard) => set({ leaderboard }),
   setPodium: (podium) => set({ podium }),
+  setMonitor: (monitor) => set({ monitor }),
   setIsPaused: (isPaused) => set({ isPaused }),
 
   reset: () =>
@@ -167,6 +181,7 @@ export const useHostStore = create<HostState>((set) => ({
       reveal: null,
       leaderboard: [],
       podium: [],
+      monitor: null,
       isPaused: false,
     }),
 }));

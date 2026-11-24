@@ -34,3 +34,21 @@ h4 {
 .animate-fade-in {
   animation: fadeIn 0.3s ease-out both;
 }
+
+/* Bold italic condensed outline + hard offset shadow (poster/ID-card display style) */
+.siqap-wordmark-outline {
+  font-family: var(--font-anton), var(--font-montserrat), system-ui, sans-serif;
+  color: theme("colors.siqap.cream");
+  -webkit-text-stroke: 2.5px theme("colors.siqap.navy");
+  paint-order: stroke fill;
+  text-shadow: 5px 5px 0 theme("colors.siqap.navy");
+  transform: skewX(-10deg) rotate(-2deg);
+}
+
+.siqap-bg-watermark {
+  font-family: var(--font-anton), var(--font-montserrat), system-ui, sans-serif;
+  color: rgba(255, 247, 242, 0.16);
+  -webkit-text-stroke: 1.5px rgba(30, 18, 64, 0.22);
+  paint-order: stroke fill;
+  text-shadow: 3px 3px 0 rgba(30, 18, 64, 0.12);
+}

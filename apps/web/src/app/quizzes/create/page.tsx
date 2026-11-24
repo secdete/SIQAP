@@ -3,7 +3,10 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import NextLink from "next/link";
+import { QRCodeSVG } from "qrcode.react";
 import { GenerateQuizOutput } from "@siqap/shared";
+import { getSocket } from "@/lib/socket";
+import { useHostStore } from "@/lib/store";
 import {
   Sparkles,
   Plus,
@@ -14,6 +17,10 @@ import {
   Loader2,
   ArrowLeft,
   X,
+  KeyRound,
+  Copy,
+  Check,
+  Play,
 } from "lucide-react";
 
 interface OptionItem {
@@ -49,7 +56,7 @@ export default function CreateQuizPage() {
       text: "",
       options: [{ text: "" }, { text: "" }, { text: "" }, { text: "" }],
       correctIndexes: [0],
-      timeLimitSec: 20,
+      timeLimitSec: 15,
       pointsMode: "standard",
       explanation: "",
     },
@@ -61,13 +68,17 @@ export default function CreateQuizPage() {
   const [aiText, setAiText] = useState("");
   const [aiCount, setAiCount] = useState(5);
   const [aiDifficulty, setAiDifficulty] = useState<"easy" | "medium" | "hard">("medium");
-  const [aiTimeLimit, setAiTimeLimit] = useState(20);
-  const [globalTimeLimit, setGlobalTimeLimit] = useState(20);
+  const [aiTimeLimit, setAiTimeLimit] = useState(15);
+  const [globalTimeLimit, setGlobalTimeLimit] = useState(15);
   const [isGenerating, setIsGenerating] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
 
   const [isSaving, setIsSaving] = useState(false);
+  const [isCreatingPin, setIsCreatingPin] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [createdPin, setCreatedPin] = useState<string | null>(null);
+  const [copiedPin, setCopiedPin] = useState(false);
+  const { setHostInfo } = useHostStore();
 
   // Close the AI modal on Escape while it is open (R-26: dialogs must be closable).
   useEffect(() => {
@@ -88,7 +99,7 @@ export default function CreateQuizPage() {
         text: "",
         options: [{ text: "" }, { text: "" }, { text: "" }, { text: "" }],
         correctIndexes: [0],
-        timeLimitSec: 20,
+        timeLimitSec: globalTimeLimit,
         pointsMode: "standard",
         explanation: "",
       },
@@ -176,7 +187,7 @@ export default function CreateQuizPage() {
             text: q.text,
             options: q.options,
             correctIndexes: q.correctIndexes,
-            timeLimitSec: aiTimeLimit || q.timeLimitSec || 20,
+            timeLimitSec: aiTimeLimit || q.timeLimitSec || 15,
             pointsMode: q.pointsMode,
             explanation: q.explanation ?? "",
             isAiGenerated: true,
@@ -197,8 +208,8 @@ export default function CreateQuizPage() {
     }
   };
 
-  // Save Quiz
-  const handleSaveQuiz = async () => {
+  // Save Quiz (optionally open live room immediately to get 6-digit PIN)
+  const handleSaveQuiz = async (openRoomImmediately = false) => {
     setSaveError(null);
 
     if (!title.trim()) {
@@ -220,7 +231,12 @@ export default function CreateQuizPage() {
       }
     }
 
-    setIsSaving(true);
+    if (openRoomImmediately) {
+      setIsCreatingPin(true);
+    } else {
+      setIsSaving(true);
+    }
+
     try {
       const payload = {
         title: title.trim(),
@@ -243,17 +259,46 @@ export default function CreateQuizPage() {
         body: JSON.stringify(payload),
       });
 
+      const data = await res.json();
       if (!res.ok) {
-        const data = await res.json();
         throw new Error(data.message || "Gagal menyimpan kuis.");
       }
 
-      router.push("/quizzes");
+      if (!openRoomImmediately) {
+        router.push("/quizzes");
+        return;
+      }
+
+      const socket = getSocket();
+      if (!socket.connected) {
+        socket.connect();
+      }
+
+      await new Promise<void>((resolve, reject) => {
+        socket.emit("host:create", { quizId: data.id }, (ack) => {
+          if (ack.ok) {
+            setHostInfo(ack.pin, ack.hostToken);
+            setCreatedPin(ack.pin);
+            window.scrollTo({ top: 0, behavior: "smooth" });
+            resolve();
+          } else {
+            reject(new Error(ack.message || ack.error || "Kuis tersimpan, namun gagal membuat PIN sesi."));
+          }
+        });
+      });
     } catch (err: unknown) {
       setSaveError(err instanceof Error ? err.message : "Gagal menyimpan kuis.");
     } finally {
       setIsSaving(false);
+      setIsCreatingPin(false);
     }
+  };
+
+  const handleCopyPin = () => {
+    if (!createdPin) return;
+    navigator.clipboard?.writeText(createdPin).catch(() => {});
+    setCopiedPin(true);
+    setTimeout(() => setCopiedPin(false), 2000);
   };
 
   return (
@@ -281,12 +326,25 @@ export default function CreateQuizPage() {
             </button>
 
             <button
-              onClick={handleSaveQuiz}
-              disabled={isSaving}
-              className="px-5 py-2 bg-siqap-orange hover:bg-siqap-orange-hover disabled:opacity-50 text-siqap-navy font-black text-xs rounded-xl flex items-center space-x-1.5 shadow-md shadow-siqap-orange/30 transition cursor-pointer"
+              onClick={() => handleSaveQuiz(false)}
+              disabled={isSaving || isCreatingPin}
+              className="px-4 py-2 bg-white/10 hover:bg-white/20 disabled:opacity-50 text-white font-bold text-xs rounded-xl flex items-center space-x-1.5 transition cursor-pointer"
             >
               {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-              <span>Simpan Kuis</span>
+              <span>Simpan Draf</span>
+            </button>
+
+            <button
+              onClick={() => handleSaveQuiz(true)}
+              disabled={isSaving || isCreatingPin}
+              className="px-5 py-2 bg-siqap-orange hover:bg-siqap-orange-hover disabled:opacity-50 text-siqap-navy font-black text-xs rounded-xl flex items-center space-x-1.5 shadow-md shadow-siqap-orange/30 transition cursor-pointer"
+            >
+              {isCreatingPin ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <KeyRound className="w-4 h-4" />
+              )}
+              <span>Simpan &amp; Buat PIN</span>
             </button>
           </div>
         </div>
@@ -294,6 +352,69 @@ export default function CreateQuizPage() {
 
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-4 py-8 flex-1 w-full space-y-6">
+        {/* PIN Akses Siswa Banner */}
+        {createdPin ? (
+          <div className="bg-siqap-navy text-white border-4 border-siqap-orange rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="space-y-3 text-center md:text-left">
+              <span className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-siqap-orange text-siqap-navy text-xs font-black uppercase tracking-wider">
+                <KeyRound className="w-3.5 h-3.5" />
+                <span>PIN Ruang Kuis Siap Dibagikan</span>
+              </span>
+              <div className="text-5xl sm:text-6xl font-black tracking-widest text-siqap-orange">
+                {createdPin}
+              </div>
+              <p className="text-xs sm:text-sm text-siqap-peach max-w-md">
+                Siswa dapat masuk ke <strong>/join</strong> dengan PIN di atas atau scan QR Code di samping.
+              </p>
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 pt-1">
+                <button
+                  type="button"
+                  onClick={handleCopyPin}
+                  className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl inline-flex items-center space-x-1.5 transition cursor-pointer"
+                >
+                  {copiedPin ? <Check className="w-4 h-4 text-quiz-green" /> : <Copy className="w-4 h-4" />}
+                  <span>{copiedPin ? "PIN Disalin" : "Salin PIN"}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => router.push(`/host/${createdPin}`)}
+                  className="px-5 py-2.5 bg-siqap-orange hover:bg-siqap-orange-hover text-siqap-navy font-black text-xs rounded-xl inline-flex items-center space-x-1.5 shadow-lg shadow-siqap-orange/30 transition cursor-pointer"
+                >
+                  <Play className="w-4 h-4 fill-current" />
+                  <span>Buka Dashboard Monitoring Host</span>
+                </button>
+              </div>
+            </div>
+            <div className="p-3.5 bg-white rounded-2xl shadow-lg shrink-0 flex flex-col items-center">
+              <QRCodeSVG
+                value={
+                  typeof window !== "undefined"
+                    ? `${window.location.origin}/join?pin=${createdPin}`
+                    : `/join?pin=${createdPin}`
+                }
+                size={140}
+              />
+              <span className="mt-2 text-[10px] font-black text-siqap-navy uppercase tracking-wider">
+                Scan untuk Gabung
+              </span>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-siqap-navy text-white border-2 border-siqap-orange/60 rounded-2xl px-5 py-4 flex flex-wrap items-center justify-between gap-3 shadow-md">
+            <div className="flex items-center space-x-3">
+              <div className="w-9 h-9 rounded-xl bg-siqap-orange/20 border border-siqap-orange text-siqap-orange flex items-center justify-center shrink-0">
+                <KeyRound className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-xs sm:text-sm font-black">PIN Akses Siswa Otomatis</p>
+                <p className="text-xs text-siqap-peach">
+                  Klik <strong>Simpan &amp; Buat PIN</strong> setelah soal siap untuk langsung mendapatkan PIN 6 digit &amp; QR Code bagi siswa.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {saveError && (
           <div
             role="alert"
@@ -348,8 +469,8 @@ export default function CreateQuizPage() {
               >
                 <option value={5}>5 Detik (Cepat / Blitz)</option>
                 <option value={10}>10 Detik</option>
-                <option value={15}>15 Detik</option>
-                <option value={20}>20 Detik (Standar)</option>
+                <option value={15}>15 Detik (Standar)</option>
+                <option value={20}>20 Detik</option>
                 <option value={30}>30 Detik</option>
                 <option value={45}>45 Detik</option>
                 <option value={60}>60 Detik (1 Menit)</option>
@@ -603,8 +724,8 @@ export default function CreateQuizPage() {
                     className="w-full text-xs font-bold p-2.5 rounded-xl bg-white border border-siqap-border text-siqap-navy focus:outline-none"
                   >
                     <option value={10}>10 Detik</option>
-                    <option value={15}>15 Detik</option>
-                    <option value={20}>20 Detik (Standar)</option>
+                    <option value={15}>15 Detik (Standar)</option>
+                    <option value={20}>20 Detik</option>
                     <option value={30}>30 Detik</option>
                     <option value={60}>60 Detik (1 Menit)</option>
                   </select>

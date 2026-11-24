@@ -13,8 +13,7 @@ import {
   GameManager,
   HostSnapshotEvent,
   TypedServer,
-  REVEAL_AUTO_ADVANCE_MS,
-  LEADERBOARD_AUTO_ADVANCE_MS,
+  INTRO_DURATION_MS,
 } from "./game-manager.js";
 import { MemorySessionStore } from "../store/memory.js";
 
@@ -288,7 +287,7 @@ describe("GameManager player rejoin snapshot", () => {
   });
 });
 
-describe("GameManager auto-advance", () => {
+describe("GameManager direct-advance flow", () => {
   let store: MemorySessionStore;
   let gameManager: GameManager;
   let io: TypedServer;
@@ -305,51 +304,101 @@ describe("GameManager auto-advance", () => {
     vi.useRealTimers();
   });
 
-  /** One player answers, which ends the question immediately. */
-  async function startAndReveal(pin: string, playerId: string): Promise<void> {
-    await store.updateSession(pin, {
-      phase: "QUESTION_ACTIVE",
-      startedAt: Date.now() - 1000,
-      endsAt: Date.now() + 19000,
-    });
-
-    const ans = await gameManager.submitAnswer(pin, playerId, 0, [0]);
-    expect(ans.ok).toBe(true);
-    expect((await store.getSession(pin))?.phase).toBe("QUESTION_REVEAL");
-  }
-
-  it("moves reveal → leaderboard → next question without host:next", async () => {
+  it("advances straight to next question without showing reveal when answered before 15 seconds", async () => {
     const { pin, hostToken } = await gameManager.createGame("quiz-123");
     const join = await gameManager.joinPlayer(pin, "Siti", "socket-1");
     await gameManager.startGame(pin, hostToken);
-    await startAndReveal(pin, join.playerId!);
 
-    await vi.advanceTimersByTimeAsync(REVEAL_AUTO_ADVANCE_MS);
-    expect((await store.getSession(pin))?.phase).toBe("LEADERBOARD");
+    await vi.advanceTimersByTimeAsync(INTRO_DURATION_MS);
+    expect((await store.getSession(pin))?.phase).toBe("QUESTION_ACTIVE");
 
-    await vi.advanceTimersByTimeAsync(LEADERBOARD_AUTO_ADVANCE_MS);
-    expect((await store.getSession(pin))?.phase).toBe("QUESTION_INTRO");
+    // Answer after 3 seconds (well before 15 seconds)
+    await vi.advanceTimersByTimeAsync(3_000);
+    const ans = await gameManager.submitAnswer(pin, join.playerId!, 0, [0]);
+    expect(ans.ok).toBe(true);
+
+    // Moves immediately to question #2 intro without QUESTION_REVEAL
+    const nextSession = await store.getSession(pin);
+    expect(nextSession?.questionIndex).toBe(1);
+    expect(nextSession?.phase).toBe("QUESTION_INTRO");
+
+    const player = await store.getPlayer(pin, join.playerId!);
+    expect(player?.score).toBeGreaterThan(0);
+
+    // After short intro, question #2 is active
+    await vi.advanceTimersByTimeAsync(INTRO_DURATION_MS);
+    expect((await store.getSession(pin))?.phase).toBe("QUESTION_ACTIVE");
   });
 
-  it("cancels the reveal timer when the host advances manually", async () => {
+  it("awards 0 points when a player does not answer within 15 seconds and moves to next question", async () => {
     const { pin, hostToken } = await gameManager.createGame("quiz-123");
     const join = await gameManager.joinPlayer(pin, "Siti", "socket-1");
     await gameManager.startGame(pin, hostToken);
-    await startAndReveal(pin, join.playerId!);
 
-    // Host presses next 3s into the reveal: the leaderboard's own 5s timer is
-    // now armed for +8s, and the reveal's original +7s timer must be dead —
-    // otherwise it would fire at +7s and skip the leaderboard early.
-    await vi.advanceTimersByTimeAsync(3000);
-    expect((await gameManager.nextStep(pin, hostToken)).ok).toBe(true);
-    expect((await store.getSession(pin))?.phase).toBe("LEADERBOARD");
+    await vi.advanceTimersByTimeAsync(INTRO_DURATION_MS);
+    const activeSession = await store.getSession(pin);
+    expect(activeSession?.phase).toBe("QUESTION_ACTIVE");
+    expect(activeSession?.questions[0].timeLimitSec).toBe(15);
 
-    await vi.advanceTimersByTimeAsync(REVEAL_AUTO_ADVANCE_MS - 3000 + 500);
-    expect((await store.getSession(pin))?.phase).toBe("LEADERBOARD");
+    // Let the full 15-second timer expire without answering
+    await vi.advanceTimersByTimeAsync(15_000);
+    const nextSession = await store.getSession(pin);
+    expect(nextSession?.questionIndex).toBe(1);
+    expect(nextSession?.phase).toBe("QUESTION_INTRO");
 
-    // +500 lands exactly on the leaderboard's own deadline (+8s total), while
-    // the 3s intro timer that follows it must not have run yet.
-    await vi.advanceTimersByTimeAsync(500);
-    expect((await store.getSession(pin))?.phase).toBe("QUESTION_INTRO");
+    const player = await store.getPlayer(pin, join.playerId!);
+    expect(player?.score).toBe(0);
+    expect(player?.streak).toBe(0);
+  });
+
+  it("moves straight to PODIUM after the last question finishes", async () => {
+    const { pin, hostToken } = await gameManager.createGame("quiz-123");
+    const join = await gameManager.joinPlayer(pin, "Siti", "socket-1");
+    await gameManager.startGame(pin, hostToken);
+
+    // Question 1
+    await vi.advanceTimersByTimeAsync(INTRO_DURATION_MS);
+    await gameManager.submitAnswer(pin, join.playerId!, 0, [0]);
+
+    // Question 2 (last demo question)
+    await vi.advanceTimersByTimeAsync(INTRO_DURATION_MS);
+    expect((await store.getSession(pin))?.questionIndex).toBe(1);
+    await gameManager.submitAnswer(pin, join.playerId!, 1, [0]);
+
+    expect((await store.getSession(pin))?.phase).toBe("PODIUM");
+    const player = await store.getPlayer(pin, join.playerId!);
+    expect(player?.score).toBeGreaterThan(0);
+  });
+
+  it("tracks fastest responder and correct answer counts in host monitor without leaking to players", async () => {
+    const { pin, hostToken } = await gameManager.createGame("quiz-123");
+    const siti = await gameManager.joinPlayer(pin, "Siti", "socket-1");
+    const budi = await gameManager.joinPlayer(pin, "Budi", "socket-2");
+    await gameManager.startGame(pin, hostToken);
+
+    await vi.advanceTimersByTimeAsync(INTRO_DURATION_MS);
+
+    // Siti answers correctly in 1.2s; Budi answers wrongly in 2.5s
+    await vi.advanceTimersByTimeAsync(1_200);
+    await gameManager.submitAnswer(pin, siti.playerId!, 0, [0]);
+
+    const midMonitor = await gameManager.buildHostMonitor(pin);
+    expect(midMonitor?.answeredCount).toBe(1);
+    expect(midMonitor?.fastestPlayer?.nickname).toBe("Siti");
+    expect(midMonitor?.fastestPlayer?.isCorrect).toBeNull(); // not revealed yet
+
+    await vi.advanceTimersByTimeAsync(1_300);
+    await gameManager.submitAnswer(pin, budi.playerId!, 0, [1]);
+
+    // Now on question #2: Siti has 1 correct answer, Budi has 0
+    const nextMonitor = await gameManager.buildHostMonitor(pin);
+    const sitiStats = nextMonitor?.players.find((p) => p.playerId === siti.playerId);
+    const budiStats = nextMonitor?.players.find((p) => p.playerId === budi.playerId);
+    expect(sitiStats?.correctCount).toBe(1);
+    expect(budiStats?.correctCount).toBe(0);
+
+    // Ensure players never receive host:monitor in snapshots
+    const playerSnap = await gameManager.buildPlayerSnapshot(pin, siti.playerId!);
+    expect(playerSnap.events.map((e) => e.event)).not.toContain("host:monitor");
   });
 });

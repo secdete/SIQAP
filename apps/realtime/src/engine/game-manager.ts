@@ -18,6 +18,8 @@ import {
   LeaderboardUpdate,
   GameEnd,
   PlayerFinal,
+  HostMonitorUpdate,
+  HostMonitorPlayer,
 } from "@siqap/shared";
 import { prisma } from "@siqap/db";
 import { SessionStore, StoredPlayer, StoredSession, StoredAnswer } from "../store/index.js";
@@ -29,8 +31,9 @@ import { sanitizeNickname, isNicknameAllowed } from "../socket/profanity.js";
  * starts — nobody waits for the host to press `host:next` (which still works
  * to skip ahead earlier).
  */
-export const REVEAL_AUTO_ADVANCE_MS = 7_000;
-export const LEADERBOARD_AUTO_ADVANCE_MS = 5_000;
+export const INTRO_DURATION_MS = 1_200;
+export const REVEAL_AUTO_ADVANCE_MS = 3_500;
+export const LEADERBOARD_AUTO_ADVANCE_MS = 3_000;
 
 export type TypedServer = Server<ClientToServerEvents, ServerToClientEvents>;
 
@@ -84,7 +87,8 @@ export type HostSnapshotEvent =
   | { event: "question:reveal"; payload: QuestionReveal }
   | { event: "leaderboard:update"; payload: LeaderboardUpdate }
   | { event: "game:end"; payload: GameEnd }
-  | { event: "lobby:update"; payload: LobbyUpdate };
+  | { event: "lobby:update"; payload: LobbyUpdate }
+  | { event: "host:monitor"; payload: HostMonitorUpdate };
 
 export class GameManager {
   private activeTimers = new Map<string, NodeJS.Timeout>();
@@ -144,7 +148,7 @@ export class GameManager {
             { text: "Sarana Informasi Kuis Anak Pintar" },
           ],
           correctIndexes: [0],
-          timeLimitSec: 20,
+          timeLimitSec: 15,
           pointsMode: "standard",
           explanation: "SIQAP adalah Sistem Informasi Akademik Pelajar.",
         },
@@ -326,7 +330,15 @@ export class GameManager {
       }
     }
 
-    // 4. Lobby last: the host view always wants the live roster.
+    // 4. Lobby & host monitor last: the host view always wants the live roster & stats.
+    const monitor = await this.buildHostMonitor(pin);
+    if (monitor) {
+      events.push({
+        event: "host:monitor",
+        payload: monitor,
+      });
+    }
+
     events.push({
       event: "lobby:update",
       payload: {
@@ -337,6 +349,116 @@ export class GameManager {
     });
 
     return events;
+  }
+
+  /**
+   * Live monitoring snapshot for the host dashboard: per-student answer status,
+   * total correct answers, average response speed, and fastest responder for
+   * the current question. Never emitted to players.
+   */
+  async buildHostMonitor(pin: string): Promise<HostMonitorUpdate | null> {
+    const session = await this.store.getSession(pin);
+    if (!session) return null;
+
+    const players = await this.store.getPlayers(pin);
+    const sorted = sortPlayersForStandings(players);
+    const allAnswers = await this.store.getAllAnswers(pin);
+
+    const isCurrentRevealed =
+      session.phase === "QUESTION_REVEAL" ||
+      session.phase === "LEADERBOARD" ||
+      session.phase === "PODIUM" ||
+      session.phase === "ENDED";
+
+    const currentAnswers = allAnswers[session.questionIndex] ?? [];
+    const currentAnswerByPlayer = new Map<string, StoredAnswer>(
+      currentAnswers.map((a) => [a.playerId, a])
+    );
+
+    const isAnswerCorrect = (qIdx: number, optionIndexes: number[]): boolean => {
+      const q = session.questions[qIdx];
+      if (!q) return false;
+      const correctSet = new Set(q.correctIndexes);
+      const playerSet = new Set(optionIndexes);
+      return (
+        playerSet.size === correctSet.size &&
+        [...playerSet].every((val) => correctSet.has(val))
+      );
+    };
+
+    const monitorPlayers: HostMonitorPlayer[] = sorted.map((player, idx) => {
+      let correctCount = 0;
+      let answeredTotal = 0;
+      let responseSumMs = 0;
+
+      for (let qIdx = 0; qIdx < session.questions.length; qIdx++) {
+        const ans = allAnswers[qIdx]?.find((a) => a.playerId === player.playerId);
+        if (!ans) continue;
+        answeredTotal++;
+        responseSumMs += ans.responseMs;
+
+        const canRevealQ = qIdx < session.questionIndex || (qIdx === session.questionIndex && isCurrentRevealed);
+        if (canRevealQ && isAnswerCorrect(qIdx, ans.optionIndexes)) {
+          correctCount++;
+        }
+      }
+
+      const currentAns = currentAnswerByPlayer.get(player.playerId);
+      const currentIsCorrect =
+        currentAns && isCurrentRevealed
+          ? isAnswerCorrect(session.questionIndex, currentAns.optionIndexes)
+          : null;
+
+      return {
+        playerId: player.playerId,
+        nickname: player.nickname,
+        connected: player.connected,
+        score: player.score,
+        rank: idx + 1,
+        correctCount,
+        answeredTotal,
+        avgResponseMs: answeredTotal > 0 ? Math.round(responseSumMs / answeredTotal) : 0,
+        currentAnswered: Boolean(currentAns),
+        currentResponseMs: currentAns ? currentAns.responseMs : null,
+        currentIsCorrect,
+      };
+    });
+
+    // Fastest responder for the current question (prefer fastest correct once revealed)
+    let fastestPlayer: HostMonitorUpdate["fastestPlayer"] = null;
+    if (currentAnswers.length > 0) {
+      const ordered = [...currentAnswers].sort((a, b) => a.responseMs - b.responseMs);
+      const preferred = isCurrentRevealed
+        ? ordered.find((a) => isAnswerCorrect(session.questionIndex, a.optionIndexes)) ?? ordered[0]
+        : ordered[0];
+      const matchedPlayer = players.find((p) => p.playerId === preferred.playerId);
+      if (matchedPlayer) {
+        fastestPlayer = {
+          playerId: matchedPlayer.playerId,
+          nickname: matchedPlayer.nickname,
+          responseMs: preferred.responseMs,
+          isCorrect: isCurrentRevealed
+            ? isAnswerCorrect(session.questionIndex, preferred.optionIndexes)
+            : null,
+        };
+      }
+    }
+
+    return {
+      questionIndex: session.questionIndex,
+      totalQuestions: session.questions.length,
+      answeredCount: currentAnswers.length,
+      totalPlayers: players.length,
+      fastestPlayer,
+      players: monitorPlayers,
+    };
+  }
+
+  private async emitHostMonitor(pin: string): Promise<void> {
+    const monitor = await this.buildHostMonitor(pin);
+    if (monitor) {
+      this.io.to(`host:${pin}`).emit("host:monitor", monitor);
+    }
   }
 
   /**
@@ -351,7 +473,7 @@ export class GameManager {
     pin: string,
     playerId: string
   ): Promise<{ events: HostSnapshotEvent[]; final?: PlayerFinal }> {
-    const events = await this.buildHostSnapshot(pin);
+    const events = (await this.buildHostSnapshot(pin)).filter((e) => e.event !== "host:monitor");
 
     const session = await this.store.getSession(pin);
     if (session?.phase !== "ENDED") return { events };
@@ -396,8 +518,15 @@ export class GameManager {
       } else {
         mistakes.push({
           questionIndex: qIdx,
+          questionText: question.text,
           yourAnswer: playerChoices,
+          yourAnswerTexts: playerChoices
+            .map((idx) => question.options[idx]?.text)
+            .filter((t): t is string => Boolean(t)),
           correctIndexes: question.correctIndexes,
+          correctAnswerTexts: question.correctIndexes
+            .map((idx) => question.options[idx]?.text)
+            .filter((t): t is string => Boolean(t)),
           explanation: question.explanation,
         });
       }
@@ -442,7 +571,7 @@ export class GameManager {
     if (session.phase !== "QUESTION_ACTIVE") return { ok: false, error: "INVALID_PHASE" };
 
     this.clearTimers(pin);
-    await this.transitionToReveal(pin);
+    await this.finishQuestionAndAdvance(pin);
     return { ok: true };
   }
 
@@ -587,6 +716,7 @@ export class GameManager {
       players: remainingPlayers.map((p) => ({ playerId: p.playerId, nickname: p.nickname })),
       count: remainingPlayers.length,
     });
+    await this.emitHostMonitor(pin);
 
     return { ok: true };
   }
@@ -643,6 +773,7 @@ export class GameManager {
       players: updatedPlayers.map((p) => ({ playerId: p.playerId, nickname: p.nickname })),
       count: updatedPlayers.length,
     });
+    await this.emitHostMonitor(pin);
 
     return { ok: true, playerId, rejoinToken };
   }
@@ -703,17 +834,18 @@ export class GameManager {
     const players = await this.store.getPlayers(pin);
     const connectedPlayers = players.filter((p) => p.connected);
 
-    // Notify host with updated answeredCount
+    // Notify host with updated answeredCount and live monitoring table
     const remainingMs = Math.max(session.endsAt - now, 0);
     this.io.to(`host:${pin}`).emit("question:tick", {
       questionIndex,
       remainingMs,
       answeredCount: answers.length,
     });
+    await this.emitHostMonitor(pin);
 
     if (answers.length >= connectedPlayers.length && connectedPlayers.length > 0) {
       this.clearTimers(pin);
-      await this.transitionToReveal(pin);
+      await this.finishQuestionAndAdvance(pin);
     }
 
     return { ok: true };
@@ -736,10 +868,10 @@ export class GameManager {
       paused: false,
     });
 
-    // 3 seconds intro countdown before activating question
+    // Short intro countdown before activating question
     const introTimer = setTimeout(async () => {
       await this.transitionToActiveQuestion(pin);
-    }, 3000);
+    }, INTRO_DURATION_MS);
 
     this.activeTimers.set(pin, introTimer);
   }
@@ -787,6 +919,14 @@ export class GameManager {
       pointsMode: currentQuestion.pointsMode,
     });
 
+    // Emit initial tick immediately so clients display full duration right away
+    this.io.to(`game:${pin}`).emit("question:tick", {
+      questionIndex: session.questionIndex,
+      remainingMs: durationMs,
+      answeredCount: 0,
+    });
+    await this.emitHostMonitor(pin);
+
     this.scheduleQuestionTimer(pin, durationMs);
   }
 
@@ -820,124 +960,70 @@ export class GameManager {
 
     this.tickIntervals.set(pin, interval);
 
-    // Timeout when time is up
+    // Timeout when time is up — score silently and move straight to next question
     const timeout = setTimeout(async () => {
       clearInterval(interval);
-      await this.transitionToReveal(pin);
+      await this.finishQuestionAndAdvance(pin);
     }, durationMs);
 
     this.activeTimers.set(pin, timeout);
   }
 
-  private async transitionToReveal(pin: string): Promise<void> {
+  /**
+   * Computes and persists scores for the active question without broadcasting
+   * right/wrong feedback to students, then moves immediately to the next
+   * question (or the final podium if this was the last question).
+   */
+  private async finishQuestionAndAdvance(pin: string): Promise<void> {
     const session = await this.store.getSession(pin);
     if (!session) return;
 
     this.clearTimers(pin);
-    const now = Date.now();
-    await this.store.updateSession(pin, { phase: "QUESTION_REVEAL" });
-
-    this.io.to(`game:${pin}`).emit("game:phase", {
-      phase: "QUESTION_REVEAL",
-      at: now,
-      paused: false,
-    });
 
     const currentQuestion = session.questions[session.questionIndex];
-    const answers = await this.store.getAnswers(pin, session.questionIndex);
-    const answerMap = new Map<string, StoredAnswer>(answers.map((a) => [a.playerId, a]));
+    if (currentQuestion) {
+      const answers = await this.store.getAnswers(pin, session.questionIndex);
+      const answerMap = new Map<string, StoredAnswer>(answers.map((a) => [a.playerId, a]));
+      const players = await this.store.getPlayers(pin);
+      const correctSet = new Set(currentQuestion.correctIndexes);
 
-    // Calculate answer distribution per option
-    const distribution = new Array(currentQuestion.options.length).fill(0);
-    for (const ans of answers) {
-      for (const idx of ans.optionIndexes) {
-        if (idx >= 0 && idx < distribution.length) {
-          distribution[idx]++;
+      for (const player of players) {
+        const ans = answerMap.get(player.playerId);
+        let pointsAwarded = 0;
+        let newStreak = 0;
+        let responseMs = 0;
+
+        if (ans) {
+          responseMs = ans.responseMs;
+          const playerSet = new Set(ans.optionIndexes);
+          const isCorrect =
+            playerSet.size === correctSet.size &&
+            [...playerSet].every((val) => correctSet.has(val));
+
+          if (isCorrect) {
+            const basePoints = calcPoints({
+              isCorrect: true,
+              responseMs,
+              timeLimitMs: currentQuestion.timeLimitSec * 1000,
+              maxPoints: MAX_POINTS_DEFAULT,
+              pointsMode: currentQuestion.pointsMode,
+            });
+            newStreak = player.streak + 1;
+            const bonus = session.settings.streakBonus ? streakBonus(newStreak) : 0;
+            pointsAwarded = basePoints + bonus;
+          }
         }
+
+        await this.store.updatePlayer(pin, player.playerId, {
+          score: player.score + pointsAwarded,
+          streak: newStreak,
+          totalResponseMs: player.totalResponseMs + responseMs,
+        });
       }
     }
 
-    // Emit question:reveal to game room
-    this.io.to(`game:${pin}`).emit("question:reveal", {
-      questionIndex: session.questionIndex,
-      correctIndexes: currentQuestion.correctIndexes,
-      explanation: currentQuestion.explanation,
-      distribution,
-    });
-
-    // Score calculation per player
-    const players = await this.store.getPlayers(pin);
-    const correctSet = new Set(currentQuestion.correctIndexes);
-
-    for (const player of players) {
-      const ans = answerMap.get(player.playerId);
-      let isCorrect = false;
-      let pointsAwarded = 0;
-      let newStreak = 0;
-      let responseMs = 0;
-
-      if (ans) {
-        responseMs = ans.responseMs;
-        const playerSet = new Set(ans.optionIndexes);
-        isCorrect =
-          playerSet.size === correctSet.size &&
-          [...playerSet].every((val) => correctSet.has(val));
-
-        if (isCorrect) {
-          const basePoints = calcPoints({
-            isCorrect: true,
-            responseMs,
-            timeLimitMs: currentQuestion.timeLimitSec * 1000,
-            maxPoints: MAX_POINTS_DEFAULT,
-            pointsMode: currentQuestion.pointsMode,
-          });
-
-          newStreak = player.streak + 1;
-          const bonus = session.settings.streakBonus ? streakBonus(newStreak) : 0;
-          pointsAwarded = basePoints + bonus;
-        } else {
-          newStreak = 0;
-        }
-      } else {
-        newStreak = 0;
-      }
-
-      const newScore = player.score + pointsAwarded;
-      const newTotalResponseMs = player.totalResponseMs + responseMs;
-
-      await this.store.updatePlayer(pin, player.playerId, {
-        score: newScore,
-        streak: newStreak,
-        totalResponseMs: newTotalResponseMs,
-      });
-    }
-
-    // Calculate updated ranks
-    const updatedPlayers = await this.store.getPlayers(pin);
-    const sorted = sortPlayersForStandings(updatedPlayers);
-
-    // Send private player:result to each player
-    for (let i = 0; i < sorted.length; i++) {
-      const p = sorted[i];
-      const ans = answerMap.get(p.playerId);
-      const isCorrect = Boolean(
-        ans &&
-        ans.optionIndexes.length === currentQuestion.correctIndexes.length &&
-        ans.optionIndexes.every((val) => correctSet.has(val))
-      );
-
-      this.io.to(`player:${p.playerId}`).emit("player:result", {
-        questionIndex: session.questionIndex,
-        isCorrect,
-        pointsAwarded: isCorrect ? p.score - (players.find((pl) => pl.playerId === p.playerId)?.score || 0) : 0,
-        streak: p.streak,
-        totalScore: p.score,
-        rank: i + 1,
-      });
-    }
-
-    // Players get a moment for the pembahasan, then the game moves on alone.
-    this.scheduleAutoAdvance(pin, REVEAL_AUTO_ADVANCE_MS);
+    await this.advanceToNextQuestionOrPodium(pin);
+    await this.emitHostMonitor(pin);
   }
 
   private async transitionToLeaderboard(pin: string): Promise<void> {
@@ -998,6 +1084,16 @@ export class GameManager {
     const podium: LeaderboardEntry[] = sorted.slice(0, 3).map((p, idx) => toLeaderboardEntry(p, idx + 1));
 
     this.io.to(`game:${pin}`).emit("game:end", { podium });
+
+    // Send final personal summary to each player so their final screen renders immediately
+    const allAnswers = await this.store.getAllAnswers(pin);
+    for (const player of players) {
+      this.io
+        .to(`player:${player.playerId}`)
+        .emit("player:final", this.buildPlayerFinal(session, players, player, allAnswers));
+    }
+
+    await this.emitHostMonitor(pin);
 
     // Persist session to PostgreSQL in background
     this.persistToDatabase(pin, sorted, session);
