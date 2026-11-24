@@ -258,10 +258,10 @@ export default function HomePage() {
               whileHover={{ y: -4 }}
               className="relative overflow-hidden bg-gradient-to-br from-siqap-orange via-siqap-peach to-siqap-orange border-2 border-siqap-cream/40 rounded-3xl p-8 sm:p-10 shadow-2xl flex flex-col items-center justify-center text-center min-h-[360px]"
             >
-              {/* Stiker kartun melayang di sudut kartu */}
-              <CartoonStar size={44} className="absolute top-4 left-4 z-10 hidden sm:block" />
-              <CartoonBolt size={40} className="absolute top-5 right-5 z-10 hidden sm:block" />
-              <SiqapMascot size={78} className="absolute -bottom-1 right-3 z-20 hidden sm:block" />
+              {/* Stiker kartun melayang di sudut kartu (tampil di HP & desktop) */}
+              <CartoonStar size={36} className="absolute top-3 left-3 z-10 sm:scale-110" />
+              <CartoonBolt size={34} className="absolute top-3 right-3 z-10 sm:scale-110" />
+              <SiqapMascot size={64} className="absolute -bottom-1 right-2 z-20 sm:scale-125" />
               {/* Pola latar tulisan SIQAP bertumpuk miring */}
               <div
                 aria-hidden="true"
@@ -732,10 +732,10 @@ export default function HomePage() {
       ====================================================================== */}
       <section className="w-full bg-siqap-cream py-16 text-center">
         <div className="max-w-[1440px] mx-auto px-6 sm:px-12 lg:px-20 space-y-6">
-          <div className="flex items-center justify-center gap-4">
-            <CartoonStar size={46} className="hidden sm:block" />
-            <SiqapMascot size={84} />
-            <CartoonTrophy size={50} className="hidden sm:block" />
+          <div className="flex items-center justify-center gap-3 sm:gap-4">
+            <CartoonStar size={38} className="sm:scale-110" />
+            <SiqapMascot size={78} className="sm:scale-110" />
+            <CartoonTrophy size={42} className="sm:scale-110" />
           </div>
           <ScrollRevealTitle
             as="h2"
