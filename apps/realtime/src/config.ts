@@ -8,9 +8,11 @@ dotenv.config({
   path: resolve(dirname(fileURLToPath(import.meta.url)), "../../../.env"),
 });
 
+const rawCors = (process.env.CORS_ORIGIN || "http://localhost:3000").trim();
+
 export const config = {
   port: Number(process.env.PORT || 3001),
   host: process.env.HOST || "0.0.0.0",
-  corsOrigins: (process.env.CORS_ORIGIN || "http://localhost:3000").split(","),
+  corsOrigins: rawCors === "*" ? true : rawCors.split(",").map((origin) => origin.trim()).filter(Boolean),
   redisUrl: process.env.REDIS_URL,
 };

@@ -2,7 +2,7 @@ import { io, Socket } from "socket.io-client";
 import { ClientToServerEvents, ServerToClientEvents } from "@siqap/shared";
 
 const SOCKET_URL =
-  process.env.NEXT_PUBLIC_SOCKET_URL ||
+  process.env.NEXT_PUBLIC_SOCKET_URL?.trim() ||
   (typeof window !== "undefined"
     ? `http://${window.location.hostname}:3001`
     : "http://localhost:3001");
