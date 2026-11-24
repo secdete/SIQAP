@@ -8,8 +8,10 @@ export class RedisSessionStore implements SessionStore {
   constructor(redisUrl: string) {
     this.redis = new Redis(redisUrl, {
       maxRetriesPerRequest: 3,
+      // Never give up: a stopped connection means every game action fails
+      // until the process restarts, so keep retrying with a capped backoff
+      // and let the store self-heal when Redis comes back.
       retryStrategy(times: number) {
-        if (times > 3) return null;
         return Math.min(times * 100, 2000);
       },
     });
