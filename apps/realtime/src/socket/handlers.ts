@@ -312,6 +312,9 @@ function emitSnapshotEvent(socket: TypedSocket, item: HostSnapshotEvent): void {
     case "lobby:update":
       socket.emit("lobby:update", item.payload);
       break;
+    case "host:monitor":
+      socket.emit("host:monitor", item.payload);
+      break;
   }
 }
 

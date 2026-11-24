@@ -136,12 +136,48 @@ export const PlayerFinal = z.object({
   totalQuestions: z.number().int(),
   mistakes: z.array(z.object({
     questionIndex: z.number().int(),
+    questionText: z.string().optional(),
     yourAnswer: z.array(OptionIndex),
+    yourAnswerTexts: z.array(z.string()).optional(),
     correctIndexes: z.array(OptionIndex),
+    correctAnswerTexts: z.array(z.string()).optional(),
     explanation: z.string().optional(),
   })),
 });
 export type PlayerFinal = z.infer<typeof PlayerFinal>;
+
+// Dikirim hanya ke room host:<pin> untuk monitoring siswa secara realtime
+export const HostMonitorPlayer = z.object({
+  playerId: z.string(),
+  nickname: Nickname,
+  connected: z.boolean(),
+  score: z.number().int(),
+  rank: z.number().int().min(1),
+  correctCount: z.number().int().min(0),
+  answeredTotal: z.number().int().min(0),
+  avgResponseMs: z.number().int().min(0),
+  currentAnswered: z.boolean(),
+  currentResponseMs: z.number().int().min(0).nullable(),
+  currentIsCorrect: z.boolean().nullable(),
+});
+export type HostMonitorPlayer = z.infer<typeof HostMonitorPlayer>;
+
+export const HostMonitorUpdate = z.object({
+  questionIndex: z.number().int(),
+  totalQuestions: z.number().int(),
+  answeredCount: z.number().int(),
+  totalPlayers: z.number().int(),
+  fastestPlayer: z
+    .object({
+      playerId: z.string(),
+      nickname: Nickname,
+      responseMs: z.number().int().min(0),
+      isCorrect: z.boolean().nullable(),
+    })
+    .nullable(),
+  players: z.array(HostMonitorPlayer),
+});
+export type HostMonitorUpdate = z.infer<typeof HostMonitorUpdate>;
 
 export interface ServerToClientEvents {
   "lobby:update":       (p: LobbyUpdate) => void;
@@ -154,4 +190,5 @@ export interface ServerToClientEvents {
   "game:end":           (p: GameEnd) => void;
   "player:final":       (p: PlayerFinal) => void;
   "player:kicked":      (p: { reason: "host" }) => void;
+  "host:monitor":       (p: HostMonitorUpdate) => void;
 }

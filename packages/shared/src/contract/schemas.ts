@@ -24,13 +24,13 @@ export type GamePhase = z.infer<typeof GamePhase>;
 export const QuestionInput = z.object({
   id: z.string(),
   type: QuestionType,
-  text: z.string().min(1).max(200),
+  text: z.string().min(1).max(2000),
   imageUrl: z.string().url().optional(),
-  options: z.array(z.object({ text: z.string().min(1).max(100) })).min(2).max(4),
+  options: z.array(z.object({ text: z.string().min(1).max(500) })).min(2).max(4),
   correctIndexes: z.array(OptionIndex).min(1),   // MVP: UI hanya mengizinkan satu jawaban benar
-  timeLimitSec: z.number().int().min(5).max(120).default(20),
+  timeLimitSec: z.number().int().min(5).max(120).default(15),
   pointsMode: PointsMode.default("standard"),
-  explanation: z.string().max(500).optional(),   // tampil saat reveal
+  explanation: z.string().max(1500).optional(),  // tampil saat reveal
 });
 export type QuestionInput = z.infer<typeof QuestionInput>;
 

@@ -26,7 +26,7 @@ export const NICKNAME_MAX = 20;
 export const MAX_PLAYERS_HARD_CAP = 300;      // angka final ditentukan setelah load test
 export const QUESTION_TIME_MIN_SEC = 5;
 export const QUESTION_TIME_MAX_SEC = 120;
-export const QUESTION_TIME_DEFAULT_SEC = 20;
+export const QUESTION_TIME_DEFAULT_SEC = 15;
 export const MAX_POINTS_DEFAULT = 1000;
 export const STREAK_BONUS_STEP = 100;
 export const STREAK_BONUS_CAP = 500;
@@ -62,13 +62,13 @@ export type GamePhase = z.infer<typeof GamePhase>;
 export const QuestionInput = z.object({
   id: z.string(),
   type: QuestionType,
-  text: z.string().min(1).max(200),
+  text: z.string().min(1).max(2000),
   imageUrl: z.string().url().optional(),
-  options: z.array(z.object({ text: z.string().min(1).max(100) })).min(2).max(4),
+  options: z.array(z.object({ text: z.string().min(1).max(500) })).min(2).max(4),
   correctIndexes: z.array(OptionIndex).min(1),   // MVP: UI hanya mengizinkan satu jawaban benar
-  timeLimitSec: z.number().int().min(5).max(120).default(20),
+  timeLimitSec: z.number().int().min(5).max(120).default(15),
   pointsMode: PointsMode.default("standard"),
-  explanation: z.string().max(500).optional(),   // tampil saat reveal
+  explanation: z.string().max(1500).optional(),  // tampil saat reveal
 });
 export type QuestionInput = z.infer<typeof QuestionInput>;
 
@@ -233,10 +233,43 @@ export const PlayerFinal = z.object({
   totalQuestions: z.number().int(),
   mistakes: z.array(z.object({
     questionIndex: z.number().int(),
+    questionText: z.string().optional(),
     yourAnswer: z.array(OptionIndex),
+    yourAnswerTexts: z.array(z.string()).optional(),
     correctIndexes: z.array(OptionIndex),
+    correctAnswerTexts: z.array(z.string()).optional(),
     explanation: z.string().optional(),
   })),
+});
+
+export const HostMonitorPlayer = z.object({
+  playerId: z.string(),
+  nickname: Nickname,
+  connected: z.boolean(),
+  score: z.number().int(),
+  rank: z.number().int().min(1),
+  correctCount: z.number().int().min(0),
+  answeredTotal: z.number().int().min(0),
+  avgResponseMs: z.number().int().min(0),
+  currentAnswered: z.boolean(),
+  currentResponseMs: z.number().int().min(0).nullable(),
+  currentIsCorrect: z.boolean().nullable(),
+});
+
+export const HostMonitorUpdate = z.object({
+  questionIndex: z.number().int(),
+  totalQuestions: z.number().int(),
+  answeredCount: z.number().int(),
+  totalPlayers: z.number().int(),
+  fastestPlayer: z
+    .object({
+      playerId: z.string(),
+      nickname: Nickname,
+      responseMs: z.number().int().min(0),
+      isCorrect: z.boolean().nullable(),
+    })
+    .nullable(),
+  players: z.array(HostMonitorPlayer),
 });
 
 export interface ServerToClientEvents {
@@ -250,6 +283,7 @@ export interface ServerToClientEvents {
   "game:end":           (p: z.infer<typeof GameEnd>) => void;
   "player:final":       (p: z.infer<typeof PlayerFinal>) => void;
   "player:kicked":      (p: { reason: "host" }) => void;
+  "host:monitor":       (p: z.infer<typeof HostMonitorUpdate>) => void;
 }
 ```
 

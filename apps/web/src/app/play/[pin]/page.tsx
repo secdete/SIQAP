@@ -3,6 +3,8 @@
 import { useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { motion } from "framer-motion";
+import confetti from "canvas-confetti";
 import { getSocket } from "@/lib/socket";
 import { usePlayerStore } from "@/lib/store";
 import { sounds } from "@/lib/sound";
@@ -13,6 +15,12 @@ import {
   Loader2,
   LogOut,
 } from "lucide-react";
+import {
+  SiqapMascot,
+  CartoonStar,
+  CartoonBolt,
+  CartoonTrophy,
+} from "@/components/CartoonMascots";
 
 // 4 Kahoot-style Answer Buttons matching FigCraft Frame 95
 const OPTION_STYLES = [
@@ -143,6 +151,8 @@ export default function PlayPage({ params }: { params: Promise<{ pin: string }> 
     socket.on("player:final", (data) => {
       setFinalStats(data);
       setPhase("ENDED");
+      sounds.podium();
+      confetti({ particleCount: 90, spread: 70, origin: { y: 0.65 } });
     });
 
     socket.on("player:kicked", () => {
@@ -334,14 +344,17 @@ export default function PlayPage({ params }: { params: Promise<{ pin: string }> 
           </div>
 
           {/* Menunggu host [157] */}
-          <div className="bg-siqap-cream border border-siqap-border rounded-2xl p-5 space-y-2 shadow-sm">
-            <h3 className="text-[17px] font-bold text-siqap-orange-dark flex items-center space-x-2">
-              <Loader2 className="w-4 h-4 animate-spin text-siqap-orange-dark" />
-              <span>Menunggu host memulai</span>
-            </h3>
-            <p className="text-[14px] font-normal text-siqap-navy-dark leading-relaxed">
-              Pertanyaan dan pilihan jawaban akan muncul otomatis. Kamu tidak perlu menekan tombol apa pun.
-            </p>
+          <div className="bg-siqap-cream border border-siqap-border rounded-2xl p-5 flex items-center justify-between gap-4 shadow-sm">
+            <div className="space-y-2">
+              <h3 className="text-[17px] font-bold text-siqap-orange-dark flex items-center space-x-2">
+                <Loader2 className="w-4 h-4 animate-spin text-siqap-orange-dark" />
+                <span>Menunggu host memulai</span>
+              </h3>
+              <p className="text-[14px] font-normal text-siqap-navy-dark leading-relaxed">
+                Pertanyaan dan pilihan jawaban akan muncul otomatis. Kamu tidak perlu menekan tombol apa pun.
+              </p>
+            </div>
+            <SiqapMascot size={68} className="shrink-0" />
           </div>
 
           <p className="text-center text-[13px] font-normal text-siqap-muted">
@@ -358,6 +371,39 @@ export default function PlayPage({ params }: { params: Promise<{ pin: string }> 
             Terhubung · Koneksi aktif
           </div>
         </footer>
+      </div>
+    );
+  }
+
+  // ===========================================================================
+  // 1B. QUESTION_INTRO — transisi animasi menuju soal berikutnya
+  // ===========================================================================
+  if (phase === "QUESTION_INTRO") {
+    const nextNumber = question ? question.questionIndex + 2 : 1;
+    return (
+      <div className="min-h-screen bg-siqap-navy flex flex-col items-center justify-center p-6 text-center selection:bg-siqap-orange selection:text-siqap-navy overflow-hidden">
+        <motion.div
+          key={`intro-${nextNumber}`}
+          initial={{ opacity: 0, scale: 0.8, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ type: "spring", stiffness: 260, damping: 20 }}
+          className="flex flex-col items-center space-y-5 max-w-sm"
+        >
+          <div className="flex items-center justify-center gap-3">
+            <CartoonBolt size={44} />
+            <SiqapMascot size={104} />
+            <CartoonStar size={44} delay={0.3} />
+          </div>
+          <span className="px-4 py-1.5 rounded-full bg-white/10 border border-siqap-orange/40 text-siqap-orange font-black text-xs uppercase tracking-widest">
+            Bersiap!
+          </span>
+          <h1 className="text-3xl sm:text-4xl font-black text-white leading-tight">
+            Soal Berikutnya...
+          </h1>
+          <p className="text-sm font-medium text-siqap-peach">
+            Fokus! Kamu punya 15 detik untuk menjawab.
+          </p>
+        </motion.div>
       </div>
     );
   }
@@ -380,6 +426,9 @@ export default function PlayPage({ params }: { params: Promise<{ pin: string }> 
     const qIndex = question.questionIndex + 1;
     const qTotal = question.total;
     const options = question.options;
+    const totalMs = Math.max(question.timeLimitSec * 1000, 1000);
+    const timePercent = Math.max(0, Math.min(100, (remainingMs / totalMs) * 100));
+    const isUrgent = remainingSec <= 5 && !hasAnswered;
 
     return (
       <div className="min-h-screen bg-siqap-sand flex flex-col justify-between selection:bg-siqap-orange selection:text-siqap-navy">
@@ -392,6 +441,16 @@ export default function PlayPage({ params }: { params: Promise<{ pin: string }> 
             {nickname}
           </span>
         </header>
+
+        {/* Live countdown bar */}
+        <div className="w-full h-2 bg-siqap-navy/15 overflow-hidden">
+          <motion.div
+            className={`h-full transition-colors ${isUrgent ? "bg-quiz-red" : "bg-siqap-orange"}`}
+            initial={false}
+            animate={{ width: `${timePercent}%` }}
+            transition={{ duration: 0.4, ease: "linear" }}
+          />
+        </div>
 
         {/* Area menjawab [99] */}
         <main className="flex-1 max-w-md w-full mx-auto p-4 py-5 space-y-4 text-left">
@@ -406,38 +465,51 @@ export default function PlayPage({ params }: { params: Promise<{ pin: string }> 
           </div>
 
           {/* Soal aktif [103] - KARTU SOAL DILIHAT LANGSUNG OLEH PESERTA! */}
-          <div className="bg-white border-2 border-siqap-orange-dark rounded-2xl p-5 sm:p-6 space-y-2 shadow-sm">
+          <motion.div
+            key={`q-card-${question.questionIndex}`}
+            initial={{ opacity: 0, y: 18, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ type: "spring", stiffness: 280, damping: 22 }}
+            className="bg-white border-2 border-siqap-orange-dark rounded-2xl p-5 sm:p-6 space-y-2 shadow-sm"
+          >
             <span className="text-[11px] font-extrabold uppercase tracking-wider text-siqap-muted block">
               PILIHAN GANDA
             </span>
             <h1 className="text-xl sm:text-[25px] font-extrabold text-siqap-navy leading-snug">
               {question?.text || "Pertanyaan sedang dimuat..."}
             </h1>
-          </div>
+          </motion.div>
 
           {/* Waktu dan instruksi [106] */}
           <div className="flex items-center space-x-4">
             {/* Hitung mundur [107] */}
-            <div className="w-24 h-20 bg-siqap-navy rounded-xl flex flex-col items-center justify-center text-white shrink-0 shadow-sm">
+            <motion.div
+              animate={isUrgent ? { scale: [1, 1.08, 1] } : { scale: 1 }}
+              transition={isUrgent ? { duration: 0.5, repeat: Infinity } : { duration: 0.2 }}
+              className={`w-24 h-20 rounded-xl flex flex-col items-center justify-center text-white shrink-0 shadow-sm transition-colors ${
+                isUrgent ? "bg-quiz-red" : "bg-siqap-navy"
+              }`}
+            >
               <span className="text-[32px] font-extrabold leading-none">
                 {remainingSec}
               </span>
               <span className="text-[11px] font-semibold text-white/80 mt-0.5">
                 detik tersisa
               </span>
-            </div>
+            </motion.div>
 
             {/* Petunjuk jawaban [110] */}
-            <div className="space-y-1">
+            <div className="space-y-1 flex-1">
               <h3 className="text-[15px] font-bold text-siqap-navy">
-                {hasAnswered ? "Jawaban telah terkunci." : "Pilih satu jawaban."}
+                {hasAnswered ? "Jawaban terkirim!" : "Pilih satu jawaban."}
               </h3>
               <p className="text-[13px] font-normal text-siqap-muted leading-tight">
                 {hasAnswered
-                  ? "Menunggu pemain lain dan waktu timer habis..."
+                  ? "Menuju soal berikutnya setelah semua peserta selesai..."
                   : "Jawab tepat dan cepat untuk mendapat lebih banyak poin."}
               </p>
             </div>
+            <SiqapMascot size={58} className="shrink-0" />
           </div>
 
           {/* Pilihan jawaban [113] - 4 TOMBOL DENGAN TEKS LENGKAP SESUAI FIGCRAFT */}
@@ -447,18 +519,23 @@ export default function PlayPage({ params }: { params: Promise<{ pin: string }> 
               const isSelected = selectedOption === idx;
 
               return (
-                <button
-                  key={idx}
+                <motion.button
+                  key={`${question.questionIndex}-opt-${idx}`}
+                  initial={{ opacity: 0, x: -16 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: idx * 0.06, type: "spring", stiffness: 300, damping: 24 }}
+                  whileHover={!hasAnswered ? { scale: 1.015 } : undefined}
+                  whileTap={!hasAnswered ? { scale: 0.96 } : undefined}
                   onClick={() => handleSelectOption(idx)}
                   disabled={hasAnswered}
-                  className={`w-full min-h-[68px] sm:min-h-[72px] px-5 py-3 rounded-2xl border flex items-center space-x-4 transition-all shadow-md touch-manipulation select-none text-left cursor-pointer ${
+                  className={`w-full min-h-[68px] sm:min-h-[72px] px-5 py-3 rounded-2xl border flex items-center space-x-4 transition-colors shadow-md touch-manipulation select-none text-left cursor-pointer ${
                     optStyle.bgClass
                   } ${
                     isSelected
                       ? "ring-4 ring-offset-2 ring-siqap-orange scale-[1.02] shadow-xl"
                       : hasAnswered
-                      ? "opacity-60 cursor-not-allowed"
-                      : "hover:scale-[1.01] active:scale-[0.99]"
+                      ? "opacity-55 cursor-not-allowed"
+                      : ""
                   }`}
                 >
                   <span
@@ -472,7 +549,7 @@ export default function PlayPage({ params }: { params: Promise<{ pin: string }> 
                   {isSelected && (
                     <CheckCircle2 className="w-6 h-6 text-white shrink-0 drop-shadow" />
                   )}
-                </button>
+                </motion.button>
               );
             })}
           </div>
@@ -582,7 +659,11 @@ export default function PlayPage({ params }: { params: Promise<{ pin: string }> 
             </span>
 
             <div className="text-2xl sm:text-[28px] font-extrabold text-siqap-navy leading-tight">
-              {synced ? `${chosenBadge} · ${chosenText}` : "Jawabanmu belum tersinkron"}
+              {!synced
+                ? "Jawabanmu belum tersinkron"
+                : answeredThisRound
+                  ? `${chosenBadge} · ${chosenText}`
+                  : chosenText}
             </div>
 
             <div className="text-4xl sm:text-[48px] font-extrabold text-siqap-orange-dark leading-none py-1">
@@ -746,16 +827,21 @@ export default function PlayPage({ params }: { params: Promise<{ pin: string }> 
       {/* Hasil pribadi dan review [6] */}
       <main className="flex-1 max-w-md w-full mx-auto p-4 py-6 space-y-6 text-left">
         {/* Pengantar hasil [7] */}
-        <div className="space-y-2">
-          <span className="text-[12px] font-extrabold uppercase tracking-wide text-siqap-orange-dark block">
-            KUIS · SELESAI
-          </span>
-          <h1 className="text-2xl sm:text-[30px] font-extrabold text-siqap-navy leading-tight">
-            Ini hasilmu, {nickname}.
-          </h1>
-          <p className="text-[14px] font-normal text-siqap-muted">
-            {totalQuestions > 0 ? `${totalQuestions} soal tuntas. ` : ""}Lihat lagi yang terlewat.
-          </p>
+        <div className="flex items-center justify-between gap-4">
+          <div className="space-y-2">
+            <span className="text-[12px] font-extrabold uppercase tracking-wide text-siqap-orange-dark block">
+              KUIS · SELESAI
+            </span>
+            <h1 className="text-2xl sm:text-[30px] font-extrabold text-siqap-navy leading-tight">
+              Ini hasilmu, {nickname}.
+            </h1>
+            <p className="text-[14px] font-normal text-siqap-muted">
+              {totalQuestions > 0 ? `${totalQuestions} soal tuntas. ` : ""}Lihat lagi yang terlewat.
+            </p>
+          </div>
+          <div className="flex items-center shrink-0">
+            <CartoonTrophy size={56} />
+          </div>
         </div>
 
         {/* Ringkasan hasil akhir [11] */}
@@ -826,30 +912,55 @@ export default function PlayPage({ params }: { params: Promise<{ pin: string }> 
           {/* Review kesalahan list */}
           {mistakes.length > 0 ? (
             <div className="space-y-3">
-              {mistakes.map((m, idx) => (
-                <div
-                  key={idx}
-                  className="bg-white border border-siqap-border rounded-2xl p-5 space-y-3 shadow-sm"
-                >
-                  <div className="flex items-center justify-between text-xs font-bold">
-                    <span className="text-siqap-muted">
-                      SOAL {m.questionIndex + 1}
-                    </span>
-                    <span className="text-quiz-red font-extrabold">Salah</span>
-                  </div>
+              {mistakes.map((m, idx) => {
+                const yourAnswerLabel =
+                  m.yourAnswerTexts && m.yourAnswerTexts.length > 0
+                    ? m.yourAnswerTexts.join(", ")
+                    : m.yourAnswer.length === 0
+                      ? "Tidak menjawab"
+                      : m.yourAnswer.map((a) => `Opsi ${a + 1}`).join(", ");
+                const correctAnswerLabel =
+                  m.correctAnswerTexts && m.correctAnswerTexts.length > 0
+                    ? m.correctAnswerTexts.join(", ")
+                    : m.correctIndexes.map((a) => `Opsi ${a + 1}`).join(", ");
 
-                  <div className="space-y-1.5 text-xs">
-                    <div className="p-2.5 rounded-lg bg-quiz-red/10 text-quiz-red-dark flex justify-between">
-                      <span>Jawabanmu</span>
-                      <span className="font-bold">Opsi {m.yourAnswer.map((a) => a + 1).join(", ")}</span>
+                return (
+                  <div
+                    key={idx}
+                    className="bg-white border border-siqap-border rounded-2xl p-5 space-y-3 shadow-sm"
+                  >
+                    <div className="flex items-center justify-between text-xs font-bold">
+                      <span className="text-siqap-muted">
+                        SOAL {m.questionIndex + 1}
+                      </span>
+                      <span className="text-quiz-red font-extrabold">Salah</span>
                     </div>
-                    <div className="p-2.5 rounded-lg bg-siqap-cream text-siqap-orange-dark flex justify-between">
-                      <span>Kunci jawaban</span>
-                      <span className="font-bold">Opsi {m.correctIndexes.map((a) => a + 1).join(", ")}</span>
+
+                    {m.questionText && (
+                      <p className="text-sm font-bold text-siqap-navy leading-snug">
+                        {m.questionText}
+                      </p>
+                    )}
+
+                    <div className="space-y-1.5 text-xs">
+                      <div className="p-2.5 rounded-lg bg-quiz-red/10 text-quiz-red-dark flex items-start justify-between gap-3">
+                        <span className="shrink-0">Jawabanmu</span>
+                        <span className="font-bold text-right">{yourAnswerLabel}</span>
+                      </div>
+                      <div className="p-2.5 rounded-lg bg-siqap-cream text-siqap-orange-dark flex items-start justify-between gap-3">
+                        <span className="shrink-0">Kunci jawaban</span>
+                        <span className="font-bold text-right">{correctAnswerLabel}</span>
+                      </div>
                     </div>
+
+                    {m.explanation && (
+                      <p className="text-xs text-siqap-muted leading-relaxed pt-1 border-t border-siqap-border/60">
+                        {m.explanation}
+                      </p>
+                    )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <div className="bg-white border border-siqap-border rounded-2xl p-6 text-center text-sm font-semibold text-siqap-muted">

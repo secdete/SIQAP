@@ -3,9 +3,11 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { getSocket } from "@/lib/socket";
 import { usePlayerStore } from "@/lib/store";
 import { AlertCircle, ArrowRight, Loader2, ArrowLeft } from "lucide-react";
+import { SiqapMascot, CartoonStar } from "@/components/CartoonMascots";
 
 function JoinContent() {
   const router = useRouter();
@@ -113,8 +115,18 @@ function JoinContent() {
       {/* Main Form Container [Frame 961] */}
       <main className="flex-1 flex items-center justify-center p-4">
         <div className="w-full max-w-[390px]">
+          <div className="flex items-end justify-center gap-2 -mb-3 relative z-10">
+            <CartoonStar size={34} delay={0.3} />
+            <SiqapMascot size={82} />
+            <CartoonStar size={30} delay={0.8} />
+          </div>
           {/* Card Form Gabung (FigCraft Node 962 Style) */}
-          <div className="bg-siqap-sand border-2 border-siqap-orange rounded-3xl p-6 sm:p-7 shadow-lg relative space-y-6">
+          <motion.div
+            initial={{ opacity: 0, y: 24, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ type: "spring", stiffness: 260, damping: 22 }}
+            className="bg-siqap-sand border-2 border-siqap-orange rounded-3xl p-6 sm:p-7 shadow-lg relative space-y-6"
+          >
             {/* Judul Formulir [963] */}
             <div className="text-left space-y-1">
               <h1 className="text-[28px] font-extrabold text-siqap-navy tracking-tight leading-tight">
@@ -127,10 +139,15 @@ function JoinContent() {
 
             <form onSubmit={handleJoin} className="flex flex-col space-y-5">
               {errorMessage && (
-                <div className="flex items-start space-x-2 p-3 bg-quiz-red/10 border border-quiz-red/40 text-quiz-red-dark rounded-xl text-xs font-medium">
+                <motion.div
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: [0, -6, 6, -4, 4, 0] }}
+                  transition={{ duration: 0.35 }}
+                  className="flex items-start space-x-2 p-3 bg-quiz-red/10 border border-quiz-red/40 text-quiz-red-dark rounded-xl text-xs font-medium"
+                >
                   <AlertCircle className="w-4 h-4 text-quiz-red-dark shrink-0 mt-0.5" />
                   <span>{errorMessage}</span>
-                </div>
+                </motion.div>
               )}
 
               {/* Input PIN [966] */}
@@ -175,8 +192,10 @@ function JoinContent() {
 
               {/* Tombol Masuk [976] */}
               <div className="space-y-2 pt-1">
-                <button
+                <motion.button
                   type="submit"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.97 }}
                   disabled={isLoading || pin.trim().length !== 6 || nickname.trim().length < 2}
                   className="w-full h-[52px] rounded-xl bg-siqap-navy hover:bg-siqap-navy-dark disabled:bg-siqap-border disabled:text-siqap-navy/70 disabled:shadow-none text-white font-bold text-[16px] flex items-center justify-center space-x-2 shadow-md transition cursor-pointer disabled:cursor-not-allowed"
                 >
@@ -191,13 +210,13 @@ function JoinContent() {
                       <ArrowRight className="w-4 h-4 ml-1" />
                     </>
                   )}
-                </button>
+                </motion.button>
                 <p className="text-center text-[12px] font-normal text-siqap-muted">
                   Pastikan koneksi internet tetap aktif.
                 </p>
               </div>
             </form>
-          </div>
+          </motion.div>
         </div>
       </main>
 

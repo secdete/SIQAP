@@ -43,7 +43,7 @@ const mockQuizzes: StoredQuiz[] = [
           { text: "Sistem Cepat Akurasi Pintar" },
         ],
         correctIndexes: [0],
-        timeLimitSec: 20,
+        timeLimitSec: 15,
         pointsMode: "standard",
         explanation: "SIQAP adalah Sistem Informasi Akademik Pelajar.",
       },
@@ -71,7 +71,7 @@ const mockQuizzes: StoredQuiz[] = [
           { text: "Danau Matano" },
         ],
         correctIndexes: [0],
-        timeLimitSec: 20,
+        timeLimitSec: 15,
         pointsMode: "double",
         explanation:
           "Danau Toba di Sumatera Utara merupakan danau vulkanik terbesar di dunia.",

@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: siqap-realtime
+    runtime: node
+    plan: free
+    buildCommand: >-
+      corepack enable && corepack prepare pnpm@9.12.0 --activate &&
+      pnpm install --frozen-lockfile &&
+      pnpm --filter @siqap/shared build &&
+      pnpm --filter @siqap/db db:generate &&
+      pnpm --filter @siqap/db build &&
+      pnpm --filter @siqap/realtime build
+    startCommand: pnpm --filter @siqap/realtime start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: CORS_ORIGIN
+        value: "*"

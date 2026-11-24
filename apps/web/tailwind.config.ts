@@ -3,6 +3,7 @@ import type { Config } from "tailwindcss";
 const config: Config = {
   content: [
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
     extend: {
@@ -37,6 +38,7 @@ const config: Config = {
       fontFamily: {
         sans: ["var(--font-inter)", "system-ui", "sans-serif"],
         display: ["var(--font-montserrat)", "var(--font-inter)", "system-ui", "sans-serif"],
+        brand: ["var(--font-anton)", "var(--font-montserrat)", "system-ui", "sans-serif"],
       },
     },
   },

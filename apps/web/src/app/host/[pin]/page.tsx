@@ -2,11 +2,13 @@
 
 import { useEffect, useState, use } from "react";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 import { QRCodeSVG } from "qrcode.react";
 import confetti from "canvas-confetti";
 import { getSocket } from "@/lib/socket";
 import { useHostStore } from "@/lib/store";
 import { sounds } from "@/lib/sound";
+import type { HostMonitorUpdate } from "@siqap/shared";
 import {
   Play,
   SkipForward,
@@ -18,7 +20,16 @@ import {
   Sparkles,
   Volume2,
   AlertTriangle,
+  Zap,
+  Clock,
+  Activity,
 } from "lucide-react";
+import {
+  SiqapMascot,
+  CartoonStar,
+  CartoonBolt,
+  CartoonTrophy,
+} from "@/components/CartoonMascots";
 
 // 4 Answer Theme Options for Host Screen — colour plus the option letter.
 // No shapes: the letter is what identifies each answer for the audience.
@@ -80,6 +91,217 @@ function ActionErrorToast({
   );
 }
 
+/**
+ * Live student monitoring panel for the host dashboard: shows the fastest
+ * responder, live answer progress, and each student's correct count & speed.
+ */
+function HostMonitoringPanel({
+  monitor,
+  isReveal,
+  lightTheme = false,
+}: {
+  monitor: HostMonitorUpdate | null;
+  isReveal: boolean;
+  lightTheme?: boolean;
+}) {
+  if (!monitor || monitor.players.length === 0) return null;
+
+  const topCorrectPlayer = [...monitor.players].sort((a, b) => {
+    if (b.correctCount !== a.correctCount) return b.correctCount - a.correctCount;
+    return b.score - a.score;
+  })[0];
+
+  const formatSec = (ms: number | null) =>
+    ms !== null ? `${(ms / 1000).toFixed(1)} dtk` : "—";
+
+  return (
+    <section
+      className={`mt-6 rounded-3xl border-2 p-5 sm:p-6 shadow-xl ${
+        lightTheme
+          ? "bg-white border-siqap-border text-siqap-navy"
+          : "bg-siqap-navy-dark border-siqap-orange/40 text-white"
+      }`}
+    >
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <div className="flex items-center space-x-2">
+          <Activity className="w-5 h-5 text-siqap-orange" />
+          <h3 className="text-base sm:text-lg font-black tracking-tight">
+            Monitoring Siswa Realtime
+          </h3>
+        </div>
+        <span
+          className={`text-xs font-bold px-3 py-1 rounded-full ${
+            lightTheme
+              ? "bg-siqap-cream text-siqap-navy border border-siqap-border"
+              : "bg-white/10 text-siqap-peach"
+          }`}
+        >
+          {monitor.answeredCount} / {monitor.totalPlayers} siswa sudah menjawab
+        </span>
+      </div>
+
+      {/* KPI Cards: Fastest, Progress, Most Correct */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
+        <div
+          className={`rounded-2xl p-3.5 border ${
+            lightTheme
+              ? "bg-siqap-cream border-siqap-orange/40"
+              : "bg-siqap-navy border-siqap-orange/40"
+          }`}
+        >
+          <div className="flex items-center space-x-1.5 text-[11px] font-bold uppercase tracking-wider text-siqap-orange">
+            <Zap className="w-3.5 h-3.5" />
+            <span>Tercepat Soal Ini</span>
+          </div>
+          {monitor.fastestPlayer ? (
+            <div className="mt-1 flex items-baseline justify-between gap-2">
+              <span className="font-black text-base truncate">
+                {monitor.fastestPlayer.nickname}
+              </span>
+              <span className="text-xs font-extrabold text-siqap-orange shrink-0">
+                {formatSec(monitor.fastestPlayer.responseMs)}
+              </span>
+            </div>
+          ) : (
+            <div className="mt-1 text-xs opacity-70 font-semibold">
+              Menunggu jawaban pertama...
+            </div>
+          )}
+        </div>
+
+        <div
+          className={`rounded-2xl p-3.5 border ${
+            lightTheme
+              ? "bg-siqap-cream border-siqap-border"
+              : "bg-siqap-navy border-white/15"
+          }`}
+        >
+          <div className="flex items-center space-x-1.5 text-[11px] font-bold uppercase tracking-wider text-quiz-green">
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            <span>Jawaban Benar Terbanyak</span>
+          </div>
+          {topCorrectPlayer ? (
+            <div className="mt-1 flex items-baseline justify-between gap-2">
+              <span className="font-black text-base truncate">
+                {topCorrectPlayer.nickname}
+              </span>
+              <span className="text-xs font-extrabold text-quiz-green shrink-0">
+                {topCorrectPlayer.correctCount} / {monitor.totalQuestions} benar
+              </span>
+            </div>
+          ) : (
+            <div className="mt-1 text-xs opacity-70 font-semibold">Belum ada data</div>
+          )}
+        </div>
+
+        <div
+          className={`rounded-2xl p-3.5 border ${
+            lightTheme
+              ? "bg-siqap-cream border-siqap-border"
+              : "bg-siqap-navy border-white/15"
+          }`}
+        >
+          <div className="flex items-center space-x-1.5 text-[11px] font-bold uppercase tracking-wider text-siqap-peach">
+            <Clock className="w-3.5 h-3.5" />
+            <span>Progres Kuis</span>
+          </div>
+          <div className="mt-1 flex items-baseline justify-between gap-2">
+            <span className="font-black text-base">
+              Soal {monitor.questionIndex + 1} / {monitor.totalQuestions}
+            </span>
+            <span className="text-xs font-bold opacity-80">
+              {monitor.totalPlayers} siswa
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Live Student Monitoring Table */}
+      <div className="overflow-x-auto">
+        <table className="w-full text-left text-xs sm:text-sm border-collapse">
+          <thead>
+            <tr
+              className={`border-b text-[11px] uppercase tracking-wider ${
+                lightTheme
+                  ? "border-siqap-border text-siqap-muted"
+                  : "border-white/15 text-siqap-peach"
+              }`}
+            >
+              <th className="py-2 pr-3 font-extrabold">Rank</th>
+              <th className="py-2 pr-3 font-extrabold">Nama Siswa</th>
+              <th className="py-2 pr-3 font-extrabold">Status Soal Ini</th>
+              <th className="py-2 pr-3 font-extrabold">Jawaban Benar</th>
+              <th className="py-2 pr-3 font-extrabold">Rata-rata Kecepatan</th>
+              <th className="py-2 text-right font-extrabold">Skor</th>
+            </tr>
+          </thead>
+          <tbody
+            className={
+              lightTheme ? "divide-y divide-siqap-border/60" : "divide-y divide-white/10"
+            }
+          >
+            {monitor.players.map((p) => {
+              const isFastest = monitor.fastestPlayer?.playerId === p.playerId;
+              return (
+                <tr key={p.playerId}>
+                  <td className="py-2.5 pr-3 font-black">#{p.rank}</td>
+                  <td className="py-2.5 pr-3 font-bold">
+                    <div className="flex items-center space-x-2">
+                      <span>{p.nickname}</span>
+                      {isFastest && (
+                        <span className="px-2 py-0.5 rounded-full bg-siqap-orange text-siqap-navy text-[10px] font-black uppercase">
+                          Tercepat
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="py-2.5 pr-3">
+                    {!p.currentAnswered ? (
+                      <span className="opacity-65 font-semibold">
+                        {isReveal ? "Tidak menjawab (+0)" : "Sedang mengerjakan..."}
+                      </span>
+                    ) : isReveal && p.currentIsCorrect !== null ? (
+                      <span
+                        className={`inline-flex items-center space-x-1 font-extrabold ${
+                          p.currentIsCorrect ? "text-quiz-green" : "text-quiz-red"
+                        }`}
+                      >
+                        {p.currentIsCorrect ? (
+                          <CheckCircle2 className="w-4 h-4" />
+                        ) : (
+                          <XCircle className="w-4 h-4" />
+                        )}
+                        <span>
+                          {p.currentIsCorrect ? "Benar" : "Salah"} ·{" "}
+                          {formatSec(p.currentResponseMs)}
+                        </span>
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center space-x-1 font-bold text-siqap-orange">
+                        <CheckCircle2 className="w-4 h-4" />
+                        <span>Sudah jawab · {formatSec(p.currentResponseMs)}</span>
+                      </span>
+                    )}
+                  </td>
+                  <td className="py-2.5 pr-3 font-extrabold">
+                    {p.correctCount} / {monitor.totalQuestions}
+                  </td>
+                  <td className="py-2.5 pr-3 font-semibold opacity-90">
+                    {p.answeredTotal > 0 ? formatSec(p.avgResponseMs) : "—"}
+                  </td>
+                  <td className="py-2.5 text-right font-black text-siqap-orange">
+                    {p.score.toLocaleString("id-ID")} pts
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
+
 export default function HostLivePage({ params }: { params: Promise<{ pin: string }> }) {
   const resolvedParams = use(params);
   const pin = resolvedParams.pin;
@@ -95,6 +317,7 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
     reveal,
     leaderboard,
     podium,
+    monitor,
     isPaused,
     setHostInfo,
     setPhase,
@@ -104,6 +327,7 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
     setReveal,
     setLeaderboard,
     setPodium,
+    setMonitor,
     setIsPaused,
   } = useHostStore();
 
@@ -182,6 +406,10 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
       }
     });
 
+    socket.on("host:monitor", (payload) => {
+      setMonitor(payload);
+    });
+
     return () => {
       socket.off("lobby:update");
       socket.off("game:phase");
@@ -190,11 +418,25 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
       socket.off("question:reveal");
       socket.off("leaderboard:update");
       socket.off("game:end");
+      socket.off("host:monitor");
     };
     // `players` is deliberately absent: every rejoin snapshot ends with
     // lobby:update, so listing it here would re-run this effect (and rejoin)
     // forever. The lobby handler updates the store on its own.
-  }, [pin, hostToken, soundEnabled]);
+  }, [
+    pin,
+    hostToken,
+    soundEnabled,
+    setHostInfo,
+    setPhase,
+    setLobby,
+    setQuestion,
+    setTick,
+    setReveal,
+    setLeaderboard,
+    setPodium,
+    setMonitor,
+  ]);
 
   const handleStartGame = () => {
     const socket = getSocket();
@@ -317,8 +559,11 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
           ) : (
             <div className="flex flex-wrap gap-3 max-h-56 overflow-y-auto p-2">
               {players.map((p) => (
-                <div
+                <motion.div
                   key={p.playerId}
+                  initial={{ opacity: 0, scale: 0.75 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ type: "spring", stiffness: 320, damping: 20 }}
                   className="group px-4 py-2 bg-siqap-navy-dark border-2 border-siqap-orange/50 rounded-xl flex items-center space-x-2 font-bold text-white shadow-md hover:border-quiz-red transition"
                 >
                   <span>{p.nickname}</span>
@@ -329,7 +574,7 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
                   >
                     <XCircle className="w-4 h-4" />
                   </button>
-                </div>
+                </motion.div>
               ))}
             </div>
           )}
@@ -343,17 +588,29 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
   // ---------------------------------------------------------------------------
   if (phase === "QUESTION_INTRO") {
     return (
-      <div className="min-h-screen bg-siqap-navy flex flex-col items-center justify-center p-6 text-center animate-fade-in">
+      <div className="min-h-screen bg-siqap-navy flex flex-col items-center justify-center p-6 text-center overflow-hidden">
         <ActionErrorToast message={actionError} onClose={() => setActionError(null)} />
-        <div className="text-xl font-black text-siqap-orange tracking-widest uppercase mb-4">
-          SOAL #{Number(question?.questionIndex ?? 0) + 1}
-        </div>
-        <h1 className="text-5xl sm:text-7xl font-black text-white max-w-4xl leading-tight">
-          {question?.text || "Pertanyaan Siap Dimulai..."}
-        </h1>
-        <div className="mt-8 text-siqap-peach font-bold text-lg animate-pulse">
-          Mulai dalam beberapa detik...
-        </div>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.75, y: 24 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ type: "spring", stiffness: 260, damping: 20 }}
+          className="flex flex-col items-center"
+        >
+          <div className="flex items-center justify-center gap-4 mb-6">
+            <CartoonBolt size={50} />
+            <SiqapMascot size={112} />
+            <CartoonStar size={50} delay={0.3} />
+          </div>
+          <div className="text-xl font-black text-siqap-orange tracking-widest uppercase mb-4">
+            SOAL #{Number(question?.questionIndex ?? -1) + 2}
+          </div>
+          <h1 className="text-5xl sm:text-7xl font-black text-white max-w-4xl leading-tight">
+            Bersiap untuk Soal Berikutnya!
+          </h1>
+          <div className="mt-8 text-siqap-peach font-bold text-lg animate-pulse">
+            Dimulai sebentar lagi...
+          </div>
+        </motion.div>
       </div>
     );
   }
@@ -415,7 +672,13 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
         </div>
 
         {/* Question Panel Box (FigCraft Node 847 Style: Warm Cream with Thick Orange Border) */}
-        <div className="bg-siqap-cream border-4 border-siqap-orange-dark rounded-3xl p-8 mb-6 shadow-2xl flex items-center justify-between min-h-36">
+        <motion.div
+          key={`host-q-${question?.questionIndex ?? 0}`}
+          initial={{ opacity: 0, y: 18, scale: 0.97 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ type: "spring", stiffness: 260, damping: 22 }}
+          className="bg-siqap-cream border-4 border-siqap-orange-dark rounded-3xl p-8 mb-6 shadow-2xl flex items-center justify-between min-h-36"
+        >
           <h2 className="text-2xl sm:text-4xl font-black text-siqap-navy leading-snug max-w-4xl">
             {question?.text}
           </h2>
@@ -424,9 +687,25 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
           {!isReveal ? (
             <div className="flex items-center space-x-6 shrink-0 pl-6 border-l-2 border-siqap-border">
               <div className="flex flex-col items-center">
-                <div className="w-18 h-18 rounded-full border-4 border-siqap-orange-dark bg-white flex items-center justify-center font-black text-2xl text-siqap-navy shadow-md">
+                <motion.div
+                  animate={
+                    Math.ceil(remainingMs / 1000) <= 5
+                      ? { scale: [1, 1.12, 1] }
+                      : { scale: 1 }
+                  }
+                  transition={
+                    Math.ceil(remainingMs / 1000) <= 5
+                      ? { duration: 0.5, repeat: Infinity }
+                      : { duration: 0.2 }
+                  }
+                  className={`w-18 h-18 rounded-full border-4 bg-white flex items-center justify-center font-black text-2xl shadow-md transition-colors ${
+                    Math.ceil(remainingMs / 1000) <= 5
+                      ? "border-quiz-red text-quiz-red"
+                      : "border-siqap-orange-dark text-siqap-navy"
+                  }`}
+                >
                   {Math.ceil(remainingMs / 1000)}
-                </div>
+                </motion.div>
                 <span className="text-[10px] text-siqap-muted uppercase tracking-widest font-bold mt-1">Detik</span>
               </div>
 
@@ -445,7 +724,7 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
               </div>
             )
           )}
-        </div>
+        </motion.div>
 
         {/* 4 Answer Choice Buttons Grid (Kahoot-Style Multiple Choice) */}
         <div className="grid grid-cols-2 gap-4 flex-1">
@@ -456,8 +735,11 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
             const theme = OPTION_THEMES[idx % OPTION_THEMES.length];
 
             return (
-              <div
-                key={idx}
+              <motion.div
+                key={`${question?.questionIndex ?? 0}-opt-${idx}`}
+                initial={{ opacity: 0, y: 16, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ delay: idx * 0.06, type: "spring", stiffness: 280, damping: 24 }}
                 className={`relative rounded-2xl p-6 border-3 flex flex-col justify-between overflow-hidden shadow-xl transition ${
                   isReveal
                     ? isCorrect
@@ -499,10 +781,13 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
                     style={{ width: `${votePercent}%` }}
                   />
                 )}
-              </div>
+              </motion.div>
             );
           })}
         </div>
+
+        {/* Live Student Monitoring Dashboard */}
+        <HostMonitoringPanel monitor={monitor} isReveal={isReveal} />
       </div>
     );
   }
@@ -555,6 +840,8 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
             </div>
           ))}
         </div>
+
+        <HostMonitoringPanel monitor={monitor} isReveal={true} />
       </div>
     );
   }
@@ -594,6 +881,12 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
       <main className="max-w-5xl mx-auto w-full px-6 py-8 flex-1 flex flex-col justify-center space-y-8">
         {/* Judul Hasil [699] */}
         <div className="text-center space-y-2">
+          <div className="flex items-center justify-center gap-3 mb-2">
+            <CartoonStar size={44} />
+            <CartoonTrophy size={58} />
+            <SiqapMascot size={78} />
+            <CartoonStar size={44} delay={0.4} />
+          </div>
           <span className="text-xs font-bold uppercase tracking-widest text-siqap-orange-dark block">
             PENGETAHUAN UMUM
           </span>
@@ -705,6 +998,9 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
             </div>
           </div>
         )}
+
+        {/* Rekap Lengkap Monitoring Siswa (Tercepat, Jumlah Benar, Skor) */}
+        <HostMonitoringPanel monitor={monitor} isReveal={true} lightTheme={true} />
 
         {/* Action Footer [Buttons from Poster Laptop Mockup] */}
         <div className="flex items-center justify-center space-x-4 pt-2">
