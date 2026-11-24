@@ -30,7 +30,7 @@ export const QuestionInput = z.object({
   correctIndexes: z.array(OptionIndex).min(1),   // MVP: UI hanya mengizinkan satu jawaban benar
   timeLimitSec: z.number().int().min(5).max(120).default(15),
   pointsMode: PointsMode.default("standard"),
-  explanation: z.string().max(1500).optional(),  // tampil saat reveal
+  explanation: z.string().max(1500).optional(),  // tampil di player:final (soal yang salah)
 });
 export type QuestionInput = z.infer<typeof QuestionInput>;
 

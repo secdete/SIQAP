@@ -1,4 +1,4 @@
-# SIQAP Contract (v0.1)
+# SIQAP Contract (v0.2)
 
 Kontrak bersama antara `apps/web`, `apps/realtime`, dan `packages/*`. Sumber kebenaran untuk nama event, bentuk payload, state machine, dan rumus skor.
 
@@ -12,7 +12,7 @@ Kode di bawah memakai Zod. Salin ke `packages/shared/src/contract/` apa adanya, 
 
 - Server adalah sumber kebenaran: state sesi, timer, penilaian, dan skor hanya dihitung di server.
 - Semua payload dari client divalidasi dengan Zod di server. Payload tidak valid ditolak dengan `INVALID_PAYLOAD`.
-- Kunci jawaban (`correctIndexes`) dan `explanation` tidak pernah dikirim ke player sebelum event `question:reveal`.
+- Kunci jawaban (`correctIndexes`) tidak pernah dikirim ke player selama game berjalan; kunci dan `explanation` hanya muncul di `player:final` untuk soal yang salah, di akhir game.
 - Semua timestamp adalah milisecond epoch **dari jam server** (`Date.now()` di server). Client hanya menghitung mundur dari `endsAt - serverNow`.
 - Satu player hanya boleh menjawab satu kali per soal; jawaban pertama yang dipakai.
 - Nama event memakai format `domain:aksi` (huruf kecil).
@@ -68,7 +68,7 @@ export const QuestionInput = z.object({
   correctIndexes: z.array(OptionIndex).min(1),   // MVP: UI hanya mengizinkan satu jawaban benar
   timeLimitSec: z.number().int().min(5).max(120).default(15),
   pointsMode: PointsMode.default("standard"),
-  explanation: z.string().max(1500).optional(),  // tampil saat reveal
+  explanation: z.string().max(1500).optional(),  // tampil di player:final (soal yang salah)
 });
 export type QuestionInput = z.infer<typeof QuestionInput>;
 
@@ -159,8 +159,8 @@ export interface ClientToServerEvents {
 
 Arti `host:*`:
 - `start`: dari `LOBBY` ke soal pertama (minimal 1 player).
-- `next`: maju ke langkah berikutnya sesuai state machine (reveal → leaderboard → soal berikutnya).
-- `skip`: lewati timer soal aktif, langsung ke `QUESTION_REVEAL`.
+- `next`: hanya berlaku di `PODIUM` (→ `ENDED`); di fase lain mengembalikan `INVALID_PHASE`.
+- `skip`: lewati timer soal aktif; skor dihitung lalu game langsung maju ke soal berikutnya, atau `PODIUM` bila soal terakhir.
 - `pause` / `resume`: bekukan dan lanjutkan timer; sisa waktu dipertahankan.
 - `end`: akhiri game, langsung ke `PODIUM` lalu `ENDED`.
 
@@ -289,40 +289,39 @@ export interface ServerToClientEvents {
 
 Catatan:
 - `question:tick` interval 1 detik dikirim ke seluruh ruang `game:{pin}` sebagai sumber waktu bersama: layar host dan pemain membaca detik yang sama, dan saat pause tick berhenti sehingga semua layar beku bersamaan. Tick jawaban (dengan `answeredCount`) tetap hanya ke `host:{pin}`.
-- `player:result` dikirim saat `QUESTION_REVEAL`, bukan saat menjawab. Saat menjawab player hanya menerima ack `{ ok: true }`.
+- `player:result` dan `question:reveal` saat ini tidak dipancarkan sama sekali (lihat bagian 8): skor dihitung senyap tanpa broadcast benar/salah, dan poin per soal hanya terlihat di `player:final` di akhir game. Saat menjawab player hanya menerima ack `{ ok: true }`.
 
 ## 7. Room Socket.IO
 
 | Room | Isi | Dipakai untuk |
 |---|---|---|
-| `game:{pin}` | host + semua player | broadcast fase, soal, `question:tick`, reveal, leaderboard |
-| `host:{pin}` | hanya host | `question:tick` (dengan `answeredCount`), event khusus host |
-| `player:{playerId}` | satu player | `player:result`, `player:final`, `player:kicked` |
+| `game:{pin}` | host + semua player | broadcast fase, soal, `question:tick`, `game:end` |
+| `host:{pin}` | hanya host | `question:tick` (dengan `answeredCount`), `host:monitor`, event khusus host |
+| `player:{playerId}` | satu player | `player:final`, `player:kicked` |
 
 ## 8. State machine
 
+Flow "15 detik senyap": setiap soal dinilai tanpa fase reveal, dan game maju sendiri ke soal berikutnya tanpa menunggu host.
+
 ```
-LOBBY → QUESTION_INTRO → QUESTION_ACTIVE → QUESTION_REVEAL → LEADERBOARD
-                ▲                                                   │
-                └───────────── (masih ada soal berikutnya) ─────────┘
-                                                                    │ (soal habis)
-                                                                    ▼
-                                                                 PODIUM → ENDED
+LOBBY → QUESTION_INTRO → QUESTION_ACTIVE ─┬─ masih ada soal ─→ QUESTION_INTRO (ulang)
+                                          └─ soal terakhir ──→ PODIUM → ENDED
 ```
 
 | Dari | Pemicu | Ke | Catatan |
 |---|---|---|---|
 | `LOBBY` | `host:start` | `QUESTION_INTRO` | minimal 1 player |
-| `QUESTION_INTRO` | timer 3 dtk | `QUESTION_ACTIVE` | kirim `question:show`, timer soal mulai |
-| `QUESTION_ACTIVE` | timer habis, semua sudah menjawab, atau `host:skip` | `QUESTION_REVEAL` | hitung skor, kirim `question:reveal` + `player:result` |
-| `QUESTION_REVEAL` | timer 7 dtk atau `host:next` | `LEADERBOARD` | kirim `leaderboard:update` |
-| `LEADERBOARD` | timer 5 dtk atau `host:next` | `QUESTION_INTRO` atau `PODIUM` | `PODIUM` jika soal terakhir |
-| `PODIUM` | `host:next` atau `host:end` | `ENDED` | kirim `game:end` + `player:final` |
+| `QUESTION_INTRO` | timer 1,2 dtk | `QUESTION_ACTIVE` | kirim `question:show`, timer soal mulai |
+| `QUESTION_ACTIVE` | timer habis, semua player sudah menjawab, atau `host:skip` | `QUESTION_INTRO` atau `PODIUM` | hitung skor senyap tanpa broadcast, lalu langsung maju; ke `PODIUM` bila soal terakhir (di sana kirim `game:end` + `player:final`) |
+| `PODIUM` | `host:next` atau `host:end` | `ENDED` | menunggu host |
 | fase apa pun | `host:end` | `PODIUM` | |
 
-Jika `showLeaderboardEachQuestion = false`, fase `LEADERBOARD` dilewati kecuali setelah soal terakhir.
+Catatan:
 
-Fase `QUESTION_REVEAL` dan `LEADERBOARD` maju otomatis lewat timer (7 dtk dan 5 dtk) supaya peserta tidak menunggu konfirmasi host antar soal; `host:next` tetap berlaku untuk maju lebih cepat. `PODIUM` tetap menunggu host.
+- Fase `QUESTION_REVEAL` dan `LEADERBOARD` masih terdaftar di enum `GamePhase` tetapi tidak pernah tercapai pada flow saat ini. Akibatnya `question:reveal` dan `player:result` tidak pernah dipancarkan; `leaderboard:update` hanya muncul pada replay snapshot saat rejoin di fase `PODIUM`/`ENDED`.
+- Setting `showLeaderboardEachQuestion` saat ini tidak berpengaruh apa pun.
+- `host:next` hanya berlaku di `PODIUM`; di fase lain mengembalikan `INVALID_PHASE`.
+- Setelah soal terakhir tidak ada auto-advance: `PODIUM` tetap menunggu host.
 
 Aksi di luar tabel ini mengembalikan `INVALID_PHASE`.
 
@@ -430,3 +429,4 @@ Implementasi memanggil model dengan instruksi output JSON, memvalidasi hasilnya 
 ## 15. Changelog
 
 - v0.1: versi awal (event, skema, state machine, skor, Redis, REST, kontrak AI generator).
+- v0.2: flow "15 detik senyap" — `QUESTION_REVEAL`/`LEADERBOARD` tidak dipancarkan, skor dihitung tanpa broadcast, kunci jawaban dan pembahasan pindah ke `player:final` (soal yang salah), event `host:monitor` ditambahkan, durasi soal default 15 dtk.
