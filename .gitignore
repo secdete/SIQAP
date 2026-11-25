@@ -34,7 +34,13 @@ Thumbs.db
 # Secret files - never commit
 api key*.txt
 
+# Vercel CLI link file (created by `vercel deploy`)
+.vercel/
+
 # Graphify cache
 graphify-out/cache/
 graphify-out/.graphify_labels*
 
+
+.vercel
+.env*

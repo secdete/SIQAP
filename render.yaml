@@ -6,8 +6,10 @@ services:
     # `corepack enable` writes to /usr/bin, which is read-only in Render's
     # build image (EROFS). Run the pinned pnpm through npx instead, and start
     # node directly so the runtime never needs a package manager.
+    # NODE_ENV=development only for install: with NODE_ENV=production pnpm
+    # skips devDependencies, and `prisma` (devDep) then does not exist.
     buildCommand: >-
-      npx -y pnpm@9.12.0 install --frozen-lockfile &&
+      NODE_ENV=development npx -y pnpm@9.12.0 install --frozen-lockfile &&
       npx -y pnpm@9.12.0 --filter @siqap/shared build &&
       npx -y pnpm@9.12.0 --filter @siqap/db db:generate &&
       npx -y pnpm@9.12.0 --filter @siqap/db build &&
