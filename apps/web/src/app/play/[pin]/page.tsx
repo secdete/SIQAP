@@ -810,10 +810,13 @@ export default function PlayPage({ params }: { params: Promise<{ pin: string }> 
   const finalRank = finalStats?.finalRank || result?.rank || 1;
   const finalScore = finalStats?.finalScore || result?.totalScore || 0;
   const mistakes = finalStats?.mistakes || [];
-  const allReviews =
+  const allReviews = (
     finalStats?.reviews && finalStats.reviews.length > 0
       ? finalStats.reviews
-      : mistakes.map((m) => ({ ...m, isCorrect: false }));
+      : mistakes.map((m) => ({ ...m, isCorrect: false }))
+  )
+    .slice()
+    .sort((a, b) => a.questionIndex - b.questionIndex);
   const displayedReviews =
     reviewFilter === "wrong"
       ? allReviews.filter((r) => !r.isCorrect)
@@ -902,7 +905,7 @@ export default function PlayPage({ params }: { params: Promise<{ pin: string }> 
                   : "bg-white border border-siqap-border text-siqap-navy-dark"
               }`}
             >
-              Semua
+              Semua ({allReviews.length})
             </button>
             <button
               onClick={() => setReviewFilter("wrong")}

@@ -1011,7 +1011,7 @@ export default function HostLivePage({ params }: { params: Promise<{ pin: string
             Main Lagi
           </button>
           <button
-            onClick={() => router.push("/quizzes")}
+            onClick={() => router.push(`/reports/${pin}`)}
             className="px-6 py-3 rounded-xl bg-siqap-navy hover:bg-siqap-navy-dark text-white font-bold text-sm transition shadow-md cursor-pointer"
           >
             Lihat Laporan
