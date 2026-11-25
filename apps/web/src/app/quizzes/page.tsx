@@ -13,6 +13,7 @@ import {
   Sparkles,
   Loader2,
   AlertCircle,
+  Trash2,
 } from "lucide-react";
 
 // GET /api/quizzes returns metadata only: answer keys and explanations never
@@ -31,6 +32,7 @@ export default function QuizzesPage() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [hostingQuizId, setHostingQuizId] = useState<string | null>(null);
+  const [deletingQuizId, setDeletingQuizId] = useState<string | null>(null);
   const [sessionError, setSessionError] = useState<string | null>(null);
 
   const { setHostInfo } = useHostStore();
@@ -55,6 +57,30 @@ export default function QuizzesPage() {
   useEffect(() => {
     loadQuizzes();
   }, []);
+
+  const handleDeleteQuiz = async (quiz: QuizSummary) => {
+    if (!confirm(`Hapus kuis "${quiz.title}"? Riwayat sesi terkait juga akan dihapus.`)) {
+      return;
+    }
+
+    setDeletingQuizId(quiz.id);
+    setSessionError(null);
+
+    try {
+      const res = await fetch(`/api/quizzes/${encodeURIComponent(quiz.id)}`, {
+        method: "DELETE",
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        throw new Error(data?.message || "Gagal menghapus kuis.");
+      }
+      setQuizzes((prev) => prev.filter((q) => q.id !== quiz.id));
+    } catch (err: unknown) {
+      setSessionError(err instanceof Error ? err.message : "Gagal menghapus kuis.");
+    } finally {
+      setDeletingQuizId(null);
+    }
+  };
 
   const handleHostQuiz = (quizId: string) => {
     setHostingQuizId(quizId);
@@ -193,11 +219,11 @@ export default function QuizzesPage() {
                   )}
                 </div>
 
-                <div className="mt-6 pt-4 border-t border-siqap-border flex items-center justify-between">
+                <div className="mt-6 pt-4 border-t border-siqap-border flex items-center space-x-2">
                   <button
                     onClick={() => handleHostQuiz(quiz.id)}
-                    disabled={hostingQuizId === quiz.id}
-                    className="w-full py-2.5 bg-siqap-orange hover:bg-siqap-orange-hover disabled:opacity-50 text-siqap-navy font-black text-xs rounded-xl flex items-center justify-center space-x-2 shadow-md shadow-siqap-orange/20 transition cursor-pointer"
+                    disabled={hostingQuizId === quiz.id || deletingQuizId === quiz.id}
+                    className="flex-1 py-2.5 bg-siqap-orange hover:bg-siqap-orange-hover disabled:opacity-50 text-siqap-navy font-black text-xs rounded-xl flex items-center justify-center space-x-2 shadow-md shadow-siqap-orange/20 transition cursor-pointer"
                   >
                     {hostingQuizId === quiz.id ? (
                       <>
@@ -209,6 +235,21 @@ export default function QuizzesPage() {
                         <Play className="w-4 h-4 fill-current" />
                         <span>Mulai Host Kuis</span>
                       </>
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteQuiz(quiz)}
+                    disabled={deletingQuizId === quiz.id || hostingQuizId === quiz.id}
+                    aria-label={`Hapus kuis ${quiz.title}`}
+                    title="Hapus kuis"
+                    className="p-2.5 bg-white hover:bg-quiz-red/10 border border-siqap-border hover:border-quiz-red text-quiz-red disabled:opacity-50 rounded-xl transition cursor-pointer shrink-0"
+                  >
+                    {deletingQuizId === quiz.id ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="w-4 h-4" />
                     )}
                   </button>
                 </div>
