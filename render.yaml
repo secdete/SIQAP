@@ -17,3 +17,8 @@ services:
         value: production
       - key: CORS_ORIGIN
         value: "*"
+      # Shared PostgreSQL (Neon). sync: false => set the value in the dashboard
+      # once; blueprints never overwrite it. No REDIS_URL on purpose: the
+      # realtime server falls back to its single-instance memory store.
+      - key: DATABASE_URL
+        sync: false

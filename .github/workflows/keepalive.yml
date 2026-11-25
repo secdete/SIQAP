@@ -1,0 +1,24 @@
+# The realtime service runs on Render's free plan, which spins instances down
+# after 15 minutes without traffic. A ping every 10 minutes keeps it awake so
+# the exhibition never hits a 50-second cold start (or loses in-memory
+# sessions) mid-game.
+name: keep-alive
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wake the realtime service
+        run: |
+          curl -fsS \
+            --retry 6 \
+            --retry-delay 20 \
+            --retry-all-errors \
+            --connect-timeout 10 \
+            --max-time 60 \
+            https://siqap-realtime.onrender.com/health
