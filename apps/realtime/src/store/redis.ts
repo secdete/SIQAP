@@ -172,9 +172,7 @@ export class RedisSessionStore implements SessionStore {
 
   async recordAnswer(pin: string, questionIndex: number, answer: StoredAnswer): Promise<boolean> {
     const key = `game:${pin}:answers:${questionIndex}`;
-    const exists = await this.redis.hexists(key, answer.playerId);
-    if (exists) return false;
-
+    // Allow players to update their answer while the question is still active.
     await this.redis.multi().hset(key, answer.playerId, JSON.stringify(answer)).expire(key, REDIS_TTL_SEC).exec();
     return true;
   }

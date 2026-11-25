@@ -143,6 +143,16 @@ export const PlayerFinal = z.object({
     correctAnswerTexts: z.array(z.string()).optional(),
     explanation: z.string().optional(),
   })),
+  reviews: z.array(z.object({
+    questionIndex: z.number().int(),
+    questionText: z.string().optional(),
+    isCorrect: z.boolean(),
+    yourAnswer: z.array(OptionIndex),
+    yourAnswerTexts: z.array(z.string()).optional(),
+    correctIndexes: z.array(OptionIndex),
+    correctAnswerTexts: z.array(z.string()).optional(),
+    explanation: z.string().optional(),
+  })).optional(),
 });
 export type PlayerFinal = z.infer<typeof PlayerFinal>;
 

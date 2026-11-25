@@ -193,7 +193,7 @@ export default function PlayPage({ params }: { params: Promise<{ pin: string }> 
   ]);
 
   const handleSelectOption = (index: number) => {
-    if (hasAnswered || phase !== "QUESTION_ACTIVE" || !question) return;
+    if (phase !== "QUESTION_ACTIVE" || !question || selectedOption === index) return;
 
     sounds.tap();
     setSelectedOption(index);
@@ -501,11 +501,11 @@ export default function PlayPage({ params }: { params: Promise<{ pin: string }> 
             {/* Petunjuk jawaban [110] */}
             <div className="space-y-1 flex-1">
               <h3 className="text-[15px] font-bold text-siqap-navy">
-                {hasAnswered ? "Jawaban terkirim!" : "Pilih satu jawaban."}
+                {hasAnswered ? "Jawaban terpilih!" : "Pilih satu jawaban."}
               </h3>
               <p className="text-[13px] font-normal text-siqap-muted leading-tight">
                 {hasAnswered
-                  ? "Menuju soal berikutnya setelah semua peserta selesai..."
+                  ? "Kamu masih bisa mengganti pilihan sebelum waktu habis."
                   : "Jawab tepat dan cepat untuk mendapat lebih banyak poin."}
               </p>
             </div>
@@ -524,17 +524,16 @@ export default function PlayPage({ params }: { params: Promise<{ pin: string }> 
                   initial={{ opacity: 0, x: -16 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: idx * 0.06, type: "spring", stiffness: 300, damping: 24 }}
-                  whileHover={!hasAnswered ? { scale: 1.015 } : undefined}
-                  whileTap={!hasAnswered ? { scale: 0.96 } : undefined}
+                  whileHover={{ scale: 1.015 }}
+                  whileTap={{ scale: 0.96 }}
                   onClick={() => handleSelectOption(idx)}
-                  disabled={hasAnswered}
                   className={`w-full min-h-[68px] sm:min-h-[72px] px-5 py-3 rounded-2xl border flex items-center space-x-4 transition-colors shadow-md touch-manipulation select-none text-left cursor-pointer ${
                     optStyle.bgClass
                   } ${
                     isSelected
                       ? "ring-4 ring-offset-2 ring-siqap-orange scale-[1.02] shadow-xl"
                       : hasAnswered
-                      ? "opacity-55 cursor-not-allowed"
+                      ? "opacity-75 hover:opacity-100"
                       : ""
                   }`}
                 >
@@ -811,6 +810,14 @@ export default function PlayPage({ params }: { params: Promise<{ pin: string }> 
   const finalRank = finalStats?.finalRank || result?.rank || 1;
   const finalScore = finalStats?.finalScore || result?.totalScore || 0;
   const mistakes = finalStats?.mistakes || [];
+  const allReviews =
+    finalStats?.reviews && finalStats.reviews.length > 0
+      ? finalStats.reviews
+      : mistakes.map((m) => ({ ...m, isCorrect: false }));
+  const displayedReviews =
+    reviewFilter === "wrong"
+      ? allReviews.filter((r) => !r.isCorrect)
+      : allReviews;
 
   return (
     <div className="min-h-screen bg-siqap-sand flex flex-col justify-between selection:bg-siqap-orange selection:text-siqap-navy">
@@ -909,10 +916,10 @@ export default function PlayPage({ params }: { params: Promise<{ pin: string }> 
             </button>
           </div>
 
-          {/* Review kesalahan list */}
-          {mistakes.length > 0 ? (
+          {/* Review semua & kesalahan list */}
+          {displayedReviews.length > 0 ? (
             <div className="space-y-3">
-              {mistakes.map((m, idx) => {
+              {displayedReviews.map((m, idx) => {
                 const yourAnswerLabel =
                   m.yourAnswerTexts && m.yourAnswerTexts.length > 0
                     ? m.yourAnswerTexts.join(", ")
@@ -927,13 +934,23 @@ export default function PlayPage({ params }: { params: Promise<{ pin: string }> 
                 return (
                   <div
                     key={idx}
-                    className="bg-white border border-siqap-border rounded-2xl p-5 space-y-3 shadow-sm"
+                    className={`bg-white border rounded-2xl p-5 space-y-3 shadow-sm ${
+                      m.isCorrect ? "border-quiz-green/40" : "border-siqap-border"
+                    }`}
                   >
                     <div className="flex items-center justify-between text-xs font-bold">
                       <span className="text-siqap-muted">
                         SOAL {m.questionIndex + 1}
                       </span>
-                      <span className="text-quiz-red font-extrabold">Salah</span>
+                      {m.isCorrect ? (
+                        <span className="px-2.5 py-0.5 rounded-full bg-quiz-green/15 text-quiz-green-dark font-extrabold">
+                          Benar
+                        </span>
+                      ) : (
+                        <span className="px-2.5 py-0.5 rounded-full bg-quiz-red/15 text-quiz-red font-extrabold">
+                          Salah
+                        </span>
+                      )}
                     </div>
 
                     {m.questionText && (
@@ -943,14 +960,22 @@ export default function PlayPage({ params }: { params: Promise<{ pin: string }> 
                     )}
 
                     <div className="space-y-1.5 text-xs">
-                      <div className="p-2.5 rounded-lg bg-quiz-red/10 text-quiz-red-dark flex items-start justify-between gap-3">
+                      <div
+                        className={`p-2.5 rounded-lg flex items-start justify-between gap-3 ${
+                          m.isCorrect
+                            ? "bg-quiz-green/15 text-quiz-green-dark"
+                            : "bg-quiz-red/10 text-quiz-red-dark"
+                        }`}
+                      >
                         <span className="shrink-0">Jawabanmu</span>
                         <span className="font-bold text-right">{yourAnswerLabel}</span>
                       </div>
-                      <div className="p-2.5 rounded-lg bg-siqap-cream text-siqap-orange-dark flex items-start justify-between gap-3">
-                        <span className="shrink-0">Kunci jawaban</span>
-                        <span className="font-bold text-right">{correctAnswerLabel}</span>
-                      </div>
+                      {!m.isCorrect && (
+                        <div className="p-2.5 rounded-lg bg-siqap-cream text-siqap-orange-dark flex items-start justify-between gap-3">
+                          <span className="shrink-0">Kunci jawaban</span>
+                          <span className="font-bold text-right">{correctAnswerLabel}</span>
+                        </div>
+                      )}
                     </div>
 
                     {m.explanation && (
@@ -964,7 +989,9 @@ export default function PlayPage({ params }: { params: Promise<{ pin: string }> 
             </div>
           ) : (
             <div className="bg-white border border-siqap-border rounded-2xl p-6 text-center text-sm font-semibold text-siqap-muted">
-              Luar biasa! Tidak ada jawaban yang salah!
+              {reviewFilter === "wrong"
+                ? "Luar biasa! Tidak ada jawaban yang salah!"
+                : "Belum ada data review soal."}
             </div>
           )}
         </div>

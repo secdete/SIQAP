@@ -82,10 +82,12 @@ describe("GameManager State Machine", () => {
     const ans = await gameManager.submitAnswer(pin, playerId, 0, [0]);
     expect(ans.ok).toBe(true);
 
-    // Second submission must be rejected with ALREADY_ANSWERED because Budi hasn't answered yet
-    const ansDup = await gameManager.submitAnswer(pin, playerId, 0, [0]);
-    expect(ansDup.ok).toBe(false);
-    expect(ansDup.error).toBe("ALREADY_ANSWERED");
+    // Player can change their answer while QUESTION_ACTIVE is still open
+    const ansUpdate = await gameManager.submitAnswer(pin, playerId, 0, [1]);
+    expect(ansUpdate.ok).toBe(true);
+
+    const recorded = await store.getAnswers(pin, 0);
+    expect(recorded.find((a) => a.playerId === playerId)?.optionIndexes).toEqual([1]);
   });
 });
 

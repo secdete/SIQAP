@@ -501,6 +501,7 @@ export class GameManager {
 
     let correctCount = 0;
     const mistakes: PlayerFinal["mistakes"] = [];
+    const reviews: NonNullable<PlayerFinal["reviews"]> = [];
 
     for (let qIdx = 0; qIdx < session.questions.length; qIdx++) {
       const question = session.questions[qIdx];
@@ -513,22 +514,26 @@ export class GameManager {
         playerSet.size === correctSet.size &&
         [...playerSet].every((val) => correctSet.has(val));
 
+      const item = {
+        questionIndex: qIdx,
+        questionText: question.text,
+        yourAnswer: playerChoices,
+        yourAnswerTexts: playerChoices
+          .map((idx) => question.options[idx]?.text)
+          .filter((t): t is string => Boolean(t)),
+        correctIndexes: question.correctIndexes,
+        correctAnswerTexts: question.correctIndexes
+          .map((idx) => question.options[idx]?.text)
+          .filter((t): t is string => Boolean(t)),
+        explanation: question.explanation,
+      };
+
+      reviews.push({ ...item, isCorrect });
+
       if (isCorrect) {
         correctCount++;
       } else {
-        mistakes.push({
-          questionIndex: qIdx,
-          questionText: question.text,
-          yourAnswer: playerChoices,
-          yourAnswerTexts: playerChoices
-            .map((idx) => question.options[idx]?.text)
-            .filter((t): t is string => Boolean(t)),
-          correctIndexes: question.correctIndexes,
-          correctAnswerTexts: question.correctIndexes
-            .map((idx) => question.options[idx]?.text)
-            .filter((t): t is string => Boolean(t)),
-          explanation: question.explanation,
-        });
+        mistakes.push(item);
       }
     }
 
@@ -540,6 +545,7 @@ export class GameManager {
       correctCount,
       totalQuestions: session.questions.length,
       mistakes,
+      reviews,
     };
   }
 

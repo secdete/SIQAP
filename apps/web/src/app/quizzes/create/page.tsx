@@ -21,6 +21,8 @@ import {
   Copy,
   Check,
   Play,
+  FileUp,
+  FileText,
 } from "lucide-react";
 
 interface OptionItem {
@@ -71,6 +73,8 @@ export default function CreateQuizPage() {
   const [aiTimeLimit, setAiTimeLimit] = useState(15);
   const [globalTimeLimit, setGlobalTimeLimit] = useState(15);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isParsingPdf, setIsParsingPdf] = useState(false);
+  const [pdfInfo, setPdfInfo] = useState<string | null>(null);
   const [aiError, setAiError] = useState<string | null>(null);
 
   const [isSaving, setIsSaving] = useState(false);
@@ -147,6 +151,41 @@ export default function CreateQuizPage() {
   };
 
   // AI Generation Handler
+  const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setAiError(null);
+    setPdfInfo(null);
+    setIsParsingPdf(true);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/ai/parse-pdf", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || data.error || "Gagal membaca file PDF.");
+      }
+
+      setAiText(data.text);
+      if (!aiTopic.trim()) {
+        setAiTopic(file.name.replace(/\.pdf$/i, ""));
+      }
+      setPdfInfo(
+        `Berhasil membaca "${data.fileName}" (${data.totalPages} halaman${data.wasTruncated ? ", dipotong ke 14.500 karakter" : ""}).`
+      );
+    } catch (err: unknown) {
+      setAiError(err instanceof Error ? err.message : "Gagal mengimpor file PDF.");
+    } finally {
+      setIsParsingPdf(false);
+      e.target.value = "";
+    }
+  };
+
   const handleGenerateAi = async () => {
     if (!aiTopic.trim() && !aiText.trim()) {
       setAiError("Mohon masukkan topik atau materi teks referensi.");
@@ -669,14 +708,44 @@ export default function CreateQuizPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-black text-siqap-navy uppercase tracking-wider mb-1.5">
-                  Atau Tempel Materi / Teks Referensi
-                </label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-xs font-black text-siqap-navy uppercase tracking-wider">
+                    Import File PDF atau Tempel Teks Materi
+                  </label>
+                  <label className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-siqap-navy hover:bg-siqap-navy-dark text-white text-[11px] font-bold cursor-pointer transition shadow-sm">
+                    {isParsingPdf ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <span>Membaca PDF...</span>
+                      </>
+                    ) : (
+                      <>
+                        <FileUp className="w-3.5 h-3.5 text-siqap-orange" />
+                        <span>Pilih File PDF</span>
+                      </>
+                    )}
+                    <input
+                      type="file"
+                      accept="application/pdf,.pdf"
+                      onChange={handlePdfUpload}
+                      disabled={isParsingPdf}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+
+                {pdfInfo && (
+                  <div className="mb-2 p-2.5 rounded-xl bg-quiz-green/15 border border-quiz-green/40 text-quiz-green-dark text-[11px] font-bold flex items-center space-x-2">
+                    <FileText className="w-4 h-4 shrink-0" />
+                    <span>{pdfInfo}</span>
+                  </div>
+                )}
+
                 <textarea
                   rows={3}
                   value={aiText}
                   onChange={(e) => setAiText(e.target.value)}
-                  placeholder="Tempelkan paragraf materi kuliah, artikel, atau modul ajar..."
+                  placeholder="Pilih file PDF di atas atau tempelkan paragraf materi kuliah, artikel, atau modul ajar..."
                   className="w-full text-xs font-medium p-3 rounded-xl bg-white border-2 border-siqap-border text-siqap-navy-dark focus:outline-none focus:border-siqap-orange transition"
                 />
               </div>

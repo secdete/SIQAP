@@ -125,9 +125,7 @@ export class MemorySessionStore implements SessionStore {
       qAnswers = new Map();
       pinAnswers.set(questionIndex, qAnswers);
     }
-    if (qAnswers.has(answer.playerId)) {
-      return false; // already answered
-    }
+    // Allow players to change their selected answer while QUESTION_ACTIVE is still open.
     qAnswers.set(answer.playerId, answer);
     return true;
   }

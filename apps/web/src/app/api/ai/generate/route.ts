@@ -60,9 +60,9 @@ Aturan penting:
 5. Tingkat kesulitan: ${difficulty}.
 6. Jumlah soal: persis ${count} soal.`;
 
-    const userPrompt = topic
-      ? `Buatkan kuis mengenai topik: "${topic}".`
-      : `Buatkan kuis berdasarkan teks materi berikut:\n\n${text}`;
+    const userPrompt = text
+      ? `${topic ? `Topik/Judul: "${topic}".\n\n` : ""}Buatkan kuis berdasarkan teks materi berikut:\n\n${text}`
+      : `Buatkan kuis mengenai topik: "${topic}".`;
 
     let lastError = "Gagal memproses AI generator";
 
