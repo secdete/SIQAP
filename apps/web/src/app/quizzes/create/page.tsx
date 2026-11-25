@@ -356,6 +356,25 @@ export default function CreateQuizPage() {
           </div>
 
           <div className="flex items-center space-x-3">
+            <label className="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-xs rounded-xl flex items-center space-x-1.5 transition cursor-pointer">
+              {isParsingPdf ? (
+                <Loader2 className="w-4 h-4 animate-spin text-siqap-orange" />
+              ) : (
+                <FileUp className="w-4 h-4 text-siqap-orange" />
+              )}
+              <span>{isParsingPdf ? "Membaca PDF..." : "Import PDF"}</span>
+              <input
+                type="file"
+                accept="application/pdf,.pdf"
+                onChange={(e) => {
+                  setIsAiModalOpen(true);
+                  handlePdfUpload(e);
+                }}
+                disabled={isParsingPdf}
+                className="hidden"
+              />
+            </label>
+
             <button
               onClick={() => setIsAiModalOpen(true)}
               className="px-4 py-2 bg-siqap-orange/20 border border-siqap-orange text-siqap-peach hover:text-siqap-navy hover:bg-siqap-orange font-bold text-xs rounded-xl flex items-center space-x-1.5 transition cursor-pointer"
