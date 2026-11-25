@@ -763,6 +763,11 @@ export default function CreateQuizPage() {
                     <option value={3}>3 Butir Soal</option>
                     <option value={5}>5 Butir Soal</option>
                     <option value={10}>10 Butir Soal</option>
+                    <option value={15}>15 Butir Soal</option>
+                    <option value={20}>20 Butir Soal</option>
+                    <option value={30}>30 Butir Soal</option>
+                    <option value={40}>40 Butir Soal</option>
+                    <option value={50}>50 Butir Soal (Maks)</option>
                   </select>
                 </div>
 

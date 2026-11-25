@@ -448,7 +448,7 @@ export default function PlayPage({ params }: { params: Promise<{ pin: string }> 
             className={`h-full transition-colors ${isUrgent ? "bg-quiz-red" : "bg-siqap-orange"}`}
             initial={false}
             animate={{ width: `${timePercent}%` }}
-            transition={{ duration: 0.4, ease: "linear" }}
+            transition={{ duration: 0.9, ease: "linear" }}
           />
         </div>
 
@@ -553,11 +553,15 @@ export default function PlayPage({ params }: { params: Promise<{ pin: string }> 
             })}
           </div>
 
-          {/* Progres [126] */}
-          <div className="w-full h-1.5 bg-siqap-navy/10 rounded-full overflow-hidden mt-2">
-            <div
-              className="h-full bg-siqap-orange rounded-full transition-all duration-300"
-              style={{ width: `${(qIndex / qTotal) * 100}%` }}
+          {/* Progres waktu realtime [126] */}
+          <div className="w-full h-2 bg-siqap-navy/10 rounded-full overflow-hidden mt-2">
+            <motion.div
+              className={`h-full rounded-full transition-colors ${
+                isUrgent ? "bg-quiz-red" : "bg-siqap-orange"
+              }`}
+              initial={false}
+              animate={{ width: `${timePercent}%` }}
+              transition={{ duration: 0.9, ease: "linear" }}
             />
           </div>
         </main>
