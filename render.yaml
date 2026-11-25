@@ -3,14 +3,16 @@ services:
     name: siqap-realtime
     runtime: node
     plan: free
+    # `corepack enable` writes to /usr/bin, which is read-only in Render's
+    # build image (EROFS). Run the pinned pnpm through npx instead, and start
+    # node directly so the runtime never needs a package manager.
     buildCommand: >-
-      corepack enable && corepack prepare pnpm@9.12.0 --activate &&
-      pnpm install --frozen-lockfile &&
-      pnpm --filter @siqap/shared build &&
-      pnpm --filter @siqap/db db:generate &&
-      pnpm --filter @siqap/db build &&
-      pnpm --filter @siqap/realtime build
-    startCommand: pnpm --filter @siqap/realtime start
+      npx -y pnpm@9.12.0 install --frozen-lockfile &&
+      npx -y pnpm@9.12.0 --filter @siqap/shared build &&
+      npx -y pnpm@9.12.0 --filter @siqap/db db:generate &&
+      npx -y pnpm@9.12.0 --filter @siqap/db build &&
+      npx -y pnpm@9.12.0 --filter @siqap/realtime build
+    startCommand: node apps/realtime/dist/index.js
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV
