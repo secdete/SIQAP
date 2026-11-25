@@ -6,7 +6,10 @@ name: keep-alive
 
 on:
   schedule:
-    - cron: "*/10 * * * *"
+    # Offset by 7 minutes: GitHub docs recommend avoiding the top of the hour
+    # (highest Actions load), and changing this expression also re-registers
+    # the schedule if GitHub silently stopped honoring it.
+    - cron: "7,17,27,37,47,57 * * * *"
   workflow_dispatch:
 
 jobs:
